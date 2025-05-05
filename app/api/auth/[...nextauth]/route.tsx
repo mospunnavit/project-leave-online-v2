@@ -1,49 +1,72 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/firebase/clientApp';
-import { JWT, User, Session } from "next-auth/jwt";
+import type { SessionStrategy, Session, User} from 'next-auth';
+import { db } from '@/firebase/clientApp';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import bcrypt from 'bcryptjs';
+import type { JWT } from 'next-auth/jwt';
+import { Users } from '@/app/types/users';
+import type { AdapterUser } from 'next-auth/adapters'
+
+
 export const authOptions = {
   providers: [
     CredentialsProvider({
-      name: 'Email',
+      name: "credentials",
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials.password) return null;
-        try {
-          const userCred = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-          const user = userCred.user;
-          return {
-            id: user.uid,
-            email: user.email,
-            name: user.displayName,
-          };
-        } catch {
-          return null;
+      async authorize(credentials, req) {
+        const { email, password } = credentials!;
+        const userRef = collection(db, 'Users');
+        const q = query(userRef, where('email', '==', email));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          throw new Error('No user found with this email');
         }
-      },
-    }),
+
+        const userDoc = querySnapshot.docs[0];
+        const userData = userDoc.data();
+        const passwordMatch = await bcrypt.compare(password, userData.password);
+
+        if (!passwordMatch) {
+          throw new Error('Invalid password');
+        }
+
+        return {
+          id: userDoc.id,
+          email: userData.email,
+          role: userData.role, // ต้องมีใน Firestore ด้วย
+        };
+      }
+    })
   ],
-  pages: {
-    signIn: '/auth/signin',
-  },
+
   session: {
-    strategy: 'jwt',
+    strategy: "jwt" as SessionStrategy,
   },
+  secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: '/login',
+    logout: '/login',
+  },
+
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: User })  {
-      if (user) token.id = user.id;
+    async jwt({ token, user }: { token: JWT; user?: User | AdapterUser | Users }) {
+      if (user && 'role' in user) {
+        token.role = user.role as string;
+      }
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
-      if (token) session.user.id = token.id as string;
+      if (session.user) {
+        session.user.role = token.role as string;
+      }
       return session;
-    },
-  },
-  secret: process.env.NEXTAUTH_SECRET,
+    }
+  }
 };
 
 const handler = NextAuth(authOptions);

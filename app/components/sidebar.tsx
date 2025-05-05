@@ -2,10 +2,21 @@
 import Link from 'next/link';
 import { Home, Info, Briefcase, Phone, X, Menu } from 'lucide-react';
 import { useState } from 'react';
+import { signOut } from 'next-auth/react';
+import { useRouter, redirect } from 'next/navigation'
+
+import { useSession } from 'next-auth/react';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
-
+  const { data: session } = useSession();
+   const router = useRouter();
+  console.log(session?.user?.email) 
+  console.log("role" + session?.user?.role)
+  const handleLogout = () => {
+    console.log("logout");
+    signOut({ callbackUrl: '/login' }); // Redirect ไปที่หน้า login หลัง logout
+  };
   return (
     <>
       {/* Button to open/close the sidebar (Hamburger / X) */}
@@ -26,7 +37,7 @@ const Sidebar = () => {
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-6 font-bold border-b border-gray-700">
-          <div className="text-2xl">MyApp</div>
+          <div className="text-2xl">MyApp {session?.user?.email}</div>
         </div>
 
         {/* Navigation Links */}
@@ -47,6 +58,10 @@ const Sidebar = () => {
             <Phone size={20} />
             <span>Contact</span>
           </Link>
+          <button onClick={() => handleLogout()} className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Phone size={20} />
+            <span>Logout</span>
+          </button>
         </nav>
       </aside>
     </>

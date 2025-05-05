@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, redirect } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 
 
 function LoginPage() {
@@ -12,7 +13,24 @@ function LoginPage() {
 
     const router = useRouter();
 
-  
+    const handleSubmit = async (e : React.FormEvent) => {
+        e.preventDefault();
+
+        try{
+            const res = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+            })
+            if(res?.error){
+                setError(res.error);
+            }else{
+                router.push("/dashboard");
+            }
+        }catch(err){
+            console.log(err);
+        }
+    }
    
 
   return (
@@ -23,7 +41,8 @@ function LoginPage() {
                         <h3 className="text-3xl">เข้าสู่ระบบ</h3>
                         </div>
                         <hr className='my-3' />
-                        <form >
+                        <form onSubmit={handleSubmit}>
+                            {error  && <p className='text-red-500'>{error}</p>}
                             <label htmlFor="">ชื่อผู้ใช้</label>
                             <input type="text" onChange={(e) => setEmail(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your email' />
                             <label htmlFor="">รหัสผ่าน</label>

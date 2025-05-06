@@ -3,14 +3,15 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, redirect } from 'next/navigation'
 import { signIn } from 'next-auth/react'
-
-
+import { SessionProvider } from 'next-auth/react'
+import { useSession } from 'next-auth/react';
+import { getSession } from 'next-auth/react'
 function LoginPage() {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-
+    const { data: session } = useSession();
     const router = useRouter();
 
     const handleSubmit = async (e : React.FormEvent) => {
@@ -25,7 +26,16 @@ function LoginPage() {
             if(res?.error){
                 setError(res.error);
             }else{
-                router.push("/dashboard");
+                const updatedSession = await getSession(); 
+                const role = updatedSession?.user?.role;
+                console.log(role)
+                if(role === "admin"){
+                    router.push("/pages/dashboard/admin");
+                }else if(role === "user"){
+                    router.push("/pages/dashboard/user");
+                }else{
+                     router.push("/");
+                }
             }
         }catch(err){
             console.log(err);

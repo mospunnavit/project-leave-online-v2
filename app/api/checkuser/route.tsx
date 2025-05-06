@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import { db } from '@/firebase/clientApp';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 

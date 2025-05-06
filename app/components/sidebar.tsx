@@ -1,18 +1,16 @@
 'use client'; // Only if you're using the app directory
 import Link from 'next/link';
-import { Home, Info, Briefcase, Phone, X, Menu } from 'lucide-react';
+import { Home, Phone, X, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
-import { useRouter, redirect } from 'next/navigation'
-
 import { useSession } from 'next-auth/react';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
-   const router = useRouter();
   console.log(session?.user?.email) 
   console.log("role" + session?.user?.role)
+
   const handleLogout = () => {
     console.log("logout");
     signOut({ callbackUrl: '/login' }); // Redirect ไปที่หน้า login หลัง logout
@@ -36,33 +34,38 @@ const Sidebar = () => {
         md:translate-x-0 md:relative md:block`}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-6 font-bold border-b border-gray-700">
-          <div className="text-2xl">MyApp {session?.user?.email}</div>
+        <div className="flex items-center justify-between p-6 mt-6 font-bold border-b border-gray-700 ">
+          <div className="text-2xl">MyApp {session?.user?.email} {session?.user?.role} </div>
         </div>
 
         {/* Navigation Links */}
-        <nav className="mt-6 flex flex-col space-y-2 px-4">
-          <Link href="/" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+        {session?.user?.role === 'admin' && (
+          <nav className="mt-6 flex flex-col space-y-2 px-4">
+            <Link href="/dashboard/admin" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
-            <span>Home</span>
+            <span>Admin</span>
+            </Link>
+          </nav>
+        )}
+        {session?.user?.role === 'user' && (
+          <nav className="mt-6 flex flex-col space-y-2 px-4">
+            <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>Leave</span>
           </Link>
-          <Link href="/about" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Info size={20} />
-            <span>About</span>
+          <Link href="/pages/dashboard/user/form-leave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>Form-leave</span>
           </Link>
-          <Link href="/services" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Briefcase size={20} />
-            <span>Services</span>
-          </Link>
-          <Link href="/contact" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Phone size={20} />
-            <span>Contact</span>
-          </Link>
-          <button onClick={() => handleLogout()} className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          </nav>
+          
+        )}
+        <div className='ml-4 mr-5 mt-4'>
+          <button onClick={() => handleLogout()} className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700 w-full">
             <Phone size={20} />
             <span>Logout</span>
           </button>
-        </nav>
+        </div>
       </aside>
     </>
   );

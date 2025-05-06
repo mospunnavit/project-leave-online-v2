@@ -2,17 +2,18 @@
 import DashboardLayout from "@/app/components/dashboardLayout";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-
+type LeaveField = {
+  date: string;
+  days: string;
+};
 const UserformleaveDashboard = () => {
-  const [leaveFields, setLeaveFields] = useState([
-    { date: '', days: '' }
-  ]);
+  const [leaveFields, setLeaveFields] = useState<LeaveField[]>([]);
   const { data: session } = useSession();
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
   
 
-  const handleChange = (index: number, field: 'date' | 'days', value: string) => {
+  const handleChange = (index: number,field: keyof LeaveField , value: string) => {
     const updated = [...leaveFields];
     updated[index][field] = value;
     setLeaveFields(updated);
@@ -23,14 +24,21 @@ const UserformleaveDashboard = () => {
   };
 
   const handleSubmit = async(e: React.FormEvent) => {
+    e.preventDefault();
     const hasEmpty = leaveFields.some(field => !field.date || !field.days);
-
+    const dates = leaveFields.map(field => field.date);
+    const hasDuplicateDate = new Set(dates).size !== dates.length;
     if (hasEmpty) {
       setError('กรุณาระบุวันที่ลาและจำนวนวันที่ลา');
-      
+      return;
+    }
+    if(hasDuplicateDate){
+      setError('กรุณาระบุวันที่ลาไม่ซ้ํากัน');
+      return;
     }
     if (!reason) {
       setError('กรุณาระบุเหตุผล');
+      return;
       
     }
     e.preventDefault();
@@ -38,7 +46,7 @@ const UserformleaveDashboard = () => {
     console.log(reason);
     try{
         const email = session?.user?.email;
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/formleave", {
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/user/formleave", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -49,10 +57,15 @@ const UserformleaveDashboard = () => {
                 reason
             })
         });
-        if(res.ok){
-            console.log("success");
+        if (res.ok) {
+          const data = await res.json(); // <-- ดึง message จาก response
+          console.log(data.message);
+        } else {
+          const errorData = await res.json();
+          setError(errorData.error || "Something went wrong.");
         }
     }catch(err){
+        
         console.log(err);
     }
   };

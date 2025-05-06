@@ -1,8 +1,10 @@
 'use client'; // Add this if using app directory
 import Link from "next/link";
 import Sidebar from "../components/sidebar";
-
+import { useSession } from 'next-auth/react';
 const Dashboard = () => {
+  const { data: session, status } = useSession();
+  if (status === "loading") return <p>Loading...</p>;
   return (
     <div className="flex">
        

@@ -1,7 +1,4 @@
-'use client'; // ถ้าอยู่ใน app directory
-
-import { db } from '@/firebase/clientApp';
-import { collection, getDocs } from 'firebase/firestore';
+'use client';
 import { useEffect, useState } from 'react';
 
 export default function TestFirebase() {
@@ -12,16 +9,17 @@ export default function TestFirebase() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const colRef = collection(db, 'Users'); // 🔁 ใช้ชื่อ collection ที่คุณมีใน Firestore
-        const snapshot = await getDocs(colRef);
-        const data = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setDocs(data);
+        const res = await fetch(`/api/user/getleave?email=Test1&limit=5&cursor=2025-05-01T00:00:00.000Z`);
+        const result = await res.json();
+
+        if (res.ok) {
+          setDocs(result.data || []);
+        } else {
+          setError('API error: ' + (result.error || 'Unknown error'));
+        }
       } catch (err) {
         console.error('Error fetching documents:', err);
-        setError('Failed to connect to Firebase.');
+        setError('Failed to connect to server.');
       } finally {
         setLoading(false);
       }
@@ -37,8 +35,8 @@ export default function TestFirebase() {
     <div>
       <h1>Firebase Data</h1>
       <ul>
-        {docs.map(doc => (
-          <li key={doc.id}>{JSON.stringify(doc)}</li>
+        {docs.map((doc) => (
+          <li key={doc.email}>{JSON.stringify(doc)}</li>
         ))}
       </ul>
     </div>

@@ -7,6 +7,9 @@ export async function POST(req:Request) {
     try{
         const{
             email,
+            firstname,
+            lastname,
+            Department,
             password,
             cpassword
         } = await req.json();   

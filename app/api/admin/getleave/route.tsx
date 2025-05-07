@@ -26,7 +26,20 @@ export async function GET(req: Request) {
     if (!email) {
       return NextResponse.json({ error: "Missing email" }, { status: 400 });
     }
-    
+    const userRef = collection(db, 'Users');
+    const check = query(userRef, where('email', '==', email));
+    const checkSnapshot = await getDocs(check);
+
+    if (checkSnapshot.empty) {
+      throw new Error('No user found with this email');
+    }
+
+    const userDoc = checkSnapshot.docs[0];
+    const userData = userDoc.data();
+    if(userData.role !== 'admin') {
+      return NextResponse.json({ error: "You are not admin" }, { status: 403 });
+    }
+
     const formLeaveRef = collection(db, "FormLeave");
     let q;
     
@@ -47,7 +60,6 @@ export async function GET(req: Request) {
       // Previous page - use endBefore and limitToLast
       q = query(
         formLeaveRef,
-        where("email", "==", email),
         orderBy("createdAt", "desc"),
         endBefore(lastDocRef),
         limitToLast(limitParam)
@@ -56,7 +68,6 @@ export async function GET(req: Request) {
       // Next page - use startAfter
       q = query(
         formLeaveRef,
-        where("email", "==", email),
         orderBy("createdAt", "desc"),
         startAfter(lastDocRef),
         limit(limitParam)
@@ -65,7 +76,6 @@ export async function GET(req: Request) {
       // First page
       q = query(
         formLeaveRef,
-        where("email", "==", email),
         orderBy("createdAt", "desc"),
         limit(limitParam)
       );
@@ -87,7 +97,6 @@ export async function GET(req: Request) {
     // Check if there are more documents after this batch
     const nextBatchQuery = query(
       formLeaveRef,
-      where("email", "==", email),
       orderBy("createdAt", "desc"),
       startAfter(lastVisible),
       limit(1)

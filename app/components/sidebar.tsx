@@ -41,7 +41,7 @@ const Sidebar = () => {
         {/* Navigation Links */}
         {session?.user?.role === 'admin' && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
-            <Link href="/dashboard/admin" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Link href="/pages/dashboard/admin" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>Admin</span>
             </Link>

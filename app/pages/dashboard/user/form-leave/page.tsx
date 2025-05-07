@@ -23,12 +23,16 @@ const UserformleaveDashboard = () => {
     setLeaveFields([...leaveFields, { date: '', days: '' }]);
   };
 
+  const removeField = () => {
+    setLeaveFields(leaveFields.slice(0, -1));
+  };
+
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     const hasEmpty = leaveFields.some(field => !field.date || !field.days);
     const dates = leaveFields.map(field => field.date);
     const hasDuplicateDate = new Set(dates).size !== dates.length;
-    if (hasEmpty) {
+    if (hasEmpty || leaveFields.length === 0) {
       setError('กรุณาระบุวันที่ลาและจำนวนวันที่ลา');
       return;
     }
@@ -71,7 +75,7 @@ const UserformleaveDashboard = () => {
   };
 
   return (
-    <DashboardLayout title="Userformleave Dashboard">
+    <DashboardLayout title="UserFormLeave">
       <div className="bg-white p-4 rounded shadow">
         {error && <p className="text-red-500">{error}</p>}
         <form onSubmit={handleSubmit}>
@@ -103,13 +107,20 @@ const UserformleaveDashboard = () => {
               </div>
             ))}
 
-            <div className="flex justify-end mt-2">
+            <div className="flex gap-2 justify-end mt-2">
               <button
                 type="button"
                 onClick={addField}
                 className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
               >
                 + เพิ่มวันลา
+              </button>
+              <button
+                type="button"
+                onClick={removeField}
+                className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+              >
+                - ลบวันลา
               </button>
             </div>
             <div className="flex flex-col">

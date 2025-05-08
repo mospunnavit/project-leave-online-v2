@@ -6,7 +6,7 @@ import { Leave } from '@/app/types/formleave';
 import { useSession } from "next-auth/react";
 const UserDashboard = () => {
     const [docs, setDocs] = useState<Leave[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<String>('');
     const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
     const [currentPage, setCurrentPage] = useState<number>(0);
@@ -50,19 +50,19 @@ const UserDashboard = () => {
       }
     };
 
-    useEffect(() => {
-      if (status === "loading") return;
+    // useEffect(() => {
+    //   if (status === "loading") return;
     
   
-      const loadInitialData = async () => {
-        const lastVisible = await fetchData();
-        if (lastVisible) {
-          setLastDocIds([lastVisible]);
-        }
-      };
+    //   const loadInitialData = async () => {
+    //     const lastVisible = await fetchData();
+    //     if (lastVisible) {
+    //       setLastDocIds([lastVisible]);
+    //     }
+    //   };
       
-      loadInitialData();
-    },  [status]);
+    //   loadInitialData();
+    // },  [status]);
 
     const handleNext = async () => {
       if (!hasMore) return;
@@ -92,13 +92,53 @@ const UserDashboard = () => {
     };
 
     if (loading && docs.length === 0) return <p>Loading...</p>;
-    if (error) return <p>{error}</p>;
   return (
-    <DashboardLayout title="Form leave">
+    <DashboardLayout title="Want to Leave">
       <div className="bg-white p-4 rounded shadow">
-        User contents here
+       <div className="flex flex-row flex-wrap gap-4 ">
+          <div className="flex flex-col basis-0 flex-1 min-w-64 bg-white p-4 rounded shadow">
+              <label htmlFor="">ชื่อ: เทส เทส</label>
+              <label htmlFor="">แผนก: PR</label>
+          </div>
+          <div className="flex flex-col basis-0 flex-1 min-w-64 bg-white p-4 rounded shadow">ข้อมูลการประเภทการลา
+              <table className="min-w-full border border-collapse border-gray-300">
+                 <thead>
+                  <tr>
+                      <th className="border px-4 py-2">ประเภทการลา</th>
+                      <th className="border px-4 py-2">ลาได้</th>
+                      <th className="border px-4 py-2">ใช้ไปแล้ว</th>
+                      <th className="border px-4 py-2">คงเหลือ</th>
+                  </tr>
+                 </thead>
+                 <tbody>
+                  <tr>
+                    <td className="border px-4 py-2">ลากิจ</td>
+                        <td className="border px-4 py-2">1</td>
+                        <td className="border px-4 py-2">1</td>
+                        <td className="border px-4 py-2">0</td>
+                   </tr>     
+
+                    <tr>
+                    <td className="border px-4 py-2">ลาป่วย </td>
+                        <td className="border px-4 py-2">1</td>
+                        <td className="border px-4 py-2">1</td>
+                        <td className="border px-4 py-2">0</td>
+                     </tr>   
+                   <tr>
+                    <td className="border px-4 py-2">ลาพักร้อน</td>
+                        <td className="border px-4 py-2">1</td>
+                        <td className="border px-4 py-2">1</td>
+                        <td className="border px-4 py-2">0</td>
+                       </tr> 
+                    
+                  </tbody>
+              </table>
+          </div>
+       </div>
+        {/* Content */}
           <div>
-        <h1>Firebase Data</h1>
+        <h1>ข้อมูลประวัติการลา</h1>
+        {error && <p>{error}</p>}
         <table className="min-w-full border border-collapse border-gray-300">
           <thead className="bg-gray-100">
             <tr>

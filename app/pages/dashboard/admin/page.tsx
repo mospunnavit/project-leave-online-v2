@@ -96,13 +96,14 @@ const AdminDashboard = () => {
     };
 
     if (loading && docs.length === 0) return <p>Loading...</p>;
-    if (error) return <p>{error}</p>;
+  
   return (
     <DashboardLayout title="Form leave">
       <div className="bg-white p-4 rounded shadow">
         User contents here
           <div>
         <h1>Firebase Data</h1>
+        {error ? <p>{error}</p> : null}
         <table className="min-w-full border border-collapse border-gray-300">
           <thead className="bg-gray-100">
             <tr>

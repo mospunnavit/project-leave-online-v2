@@ -10,7 +10,7 @@ const Sidebar = () => {
   const { data: session } = useSession();
   console.log(session?.user?.email) 
   console.log("role" + session?.user?.role)
-
+  const testenvadmin = 1;
   const handleLogout = () => {
     console.log("logout");
     signOut({ callbackUrl: '/login' }); // Redirect ไปที่หน้า login หลัง logout
@@ -39,13 +39,22 @@ const Sidebar = () => {
         </div>
 
         {/* Navigation Links */}
-        {session?.user?.role === 'admin' && (
+        {testenvadmin === 1 || session?.user?.role === 'admin' && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
             <Link href="/pages/dashboard/admin" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>Admin</span>
             </Link>
+            <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>User</span>
+            </Link>
+            <Link href="/pages/dashboard/user/form-leave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>Form leave</span>
+            </Link>
           </nav>
+          
         )}
         {session?.user?.role === 'user' && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">

@@ -33,10 +33,10 @@ export function createFirebaseAdmin(config: firebaseAdminConfig) {
 export async function initAdmin(){
     
     const adminApp = {
-        project_id: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
-        client_email: process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL as string,
-        private_key: process.env.NEXT_PUBLIC_FIREBASE_PRIVATE_KEY as string,
-        storage_bucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string
+        project_id: process.env.FIREBASE_PROJECT_ID as string,
+        client_email: process.env.FIREBASE_CLIENT_EMAIL as string,
+        private_key: process.env.FIREBASE_PRIVATE_KEY as string,
+        storage_bucket: process.env.FIREBASE_STORAGE_BUCKET as string
     }
 
     return createFirebaseAdmin(adminApp);

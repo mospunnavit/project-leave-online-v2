@@ -6,10 +6,13 @@ import { useRouter, redirect } from 'next/navigation'
 
 function RegisterPage() {
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [cpassword, setcPassword] = useState("");
-    const [error, setError] = useState("");
+    const [username, setUsername] = useState<string>();
+    const [password, setPassword] = useState<string>();;
+    const [cpassword, setcPassword] = useState<string>();;
+    const [firstname, setFirstname] = useState<string>();;
+    const [lastname, setLastname] = useState<string>();;
+    const [department, setdepartment] = useState<string>();;
+    const [error, setError] = useState<string>();;
 
     const router = useRouter();
 
@@ -21,7 +24,7 @@ function RegisterPage() {
             return;
         }
 
-        if ( !email || !password || !cpassword) {
+        if ( !username || !password || !cpassword || !firstname || !lastname || !department) {
             setError("Please complete all inputs.");
             return;
         }
@@ -33,7 +36,7 @@ function RegisterPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    email
+                    username
                 })
             })
 
@@ -51,9 +54,12 @@ function RegisterPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    email,
+                    username,
                     password,
-                    cpassword
+                    cpassword,
+                    firstname,
+                    lastname,
+                    department
                 })
             });
             if(res.ok){
@@ -61,6 +67,7 @@ function RegisterPage() {
             }
         }catch(err){
             console.log(err);
+            setError("Something went wrong.");
         }
     }
   return (
@@ -74,7 +81,13 @@ function RegisterPage() {
                         <form onSubmit={handleSubmit}>
                             {error && <p className='text-red-500'>{error}</p>}
                             <label htmlFor="">ชื่อผู้ใช้</label>
-                            <input type="text" onChange={(e) => setEmail(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your email' />
+                            <input type="text" onChange={(e) => setUsername(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your username' />
+                            <label htmlFor="">ชื่อจริง</label>
+                            <input type="text" onChange={(e) => setFirstname(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your username' />
+                            <label htmlFor="">นามสกุล</label>
+                            <input type="text" onChange={(e) => setLastname(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your username' />
+                            <label htmlFor="">แผนก</label>
+                            <input type="text" onChange={(e) => setdepartment(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your username' />
                             <label htmlFor="">รหัสผ่าน</label>
                             <input type="password" onChange={(e) => setPassword(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your password' />
                             <label htmlFor="">ใส่รหัสผ่านอีกครั้ง</label>
@@ -86,7 +99,7 @@ function RegisterPage() {
                              </div>
                         </form>
                         <hr className='my-3' />
-                        <p>Go to <Link href="/register" className='text-blue-500 hover:underline'>Register</Link> Page</p>
+                        <p>Go to <Link href="/login" className='text-blue-500 hover:underline'>Login</Link> Page</p>
                     </div>
                 </div>
             </div>

@@ -1,8 +1,10 @@
 export interface Users {
     id?: string;
-    email: string;
+    username: string;
     password: string;
-    name?: string; // make name optional
+    firstname?: string;
+    lastname?: string;
+    department?: string; 
     role?: string; // make role optional
     createdAt?: Date;
   }

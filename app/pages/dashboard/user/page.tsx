@@ -97,8 +97,8 @@ const UserDashboard = () => {
       <div className="bg-white p-4 rounded shadow">
        <div className="flex flex-row flex-wrap gap-4 ">
           <div className="flex flex-col basis-0 flex-1 min-w-64 bg-white p-4 rounded shadow">
-              <label htmlFor="">ชื่อ: เทส เทส</label>
-              <label htmlFor="">แผนก: PR</label>
+              <label htmlFor="">ชื่อ: {session?.user?.firstname}  {session?.user?.lastname}</label>
+              <label htmlFor="">แผนก: {session?.user?.department}</label>
           </div>
           <div className="flex flex-col basis-0 flex-1 min-w-64 bg-white p-4 rounded shadow">ข้อมูลการประเภทการลา
               <table className="min-w-full border border-collapse border-gray-300">

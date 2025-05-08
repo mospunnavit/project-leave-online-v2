@@ -8,10 +8,9 @@ import { useSession } from 'next-auth/react';
 import { getSession } from 'next-auth/react'
 function LoginPage() {
 
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const { data: session } = useSession();
     const router = useRouter();
 
     const handleSubmit = async (e : React.FormEvent) => {
@@ -19,7 +18,7 @@ function LoginPage() {
 
         try{
             const res = await signIn("credentials", {
-                email,
+                username,
                 password,
                 redirect: false,
             })
@@ -54,7 +53,7 @@ function LoginPage() {
                         <form onSubmit={handleSubmit}>
                             {error  && <p className='text-red-500'>{error}</p>}
                             <label htmlFor="">ชื่อผู้ใช้</label>
-                            <input type="text" onChange={(e) => setEmail(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your email' />
+                            <input type="text" onChange={(e) => setUsername(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your email' />
                             <label htmlFor="">รหัสผ่าน</label>
                             <input type="password" onChange={(e) => setPassword(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your password' />
                             <div className='flex justify-end'>

@@ -11,8 +11,7 @@ import {
   endBefore,
   limitToLast,
   doc,
-  getDoc,
-  Timestamp,
+  getDoc
 } from 'firebase/firestore';
 
 export async function GET(req: Request) {

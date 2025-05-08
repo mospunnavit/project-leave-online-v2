@@ -3,22 +3,12 @@ import DashboardLayout from "@/app/components/dashboardLayout";
 import { Timestamp } from "firebase-admin/firestore";
 import { useSession } from "next-auth/react";
 import { use, useEffect, useState } from "react";
-type LeaveField = {
-  date: string;
-  days: string;
-};
+
 type LeaveTime = {
   startTime: string;
   endTime: string;
 };
 const UserformleaveDashboard = () => {
-  const mockupuser = {
-    id: '1',
-    email: 'sZbYh@example.com',
-    username: 'test',
-    role: 'user',
-  };
-  const [leaveFields, setLeaveFields] = useState<LeaveField[]>([]);
   const { data: session } = useSession();
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
@@ -50,13 +40,73 @@ const UserformleaveDashboard = () => {
  
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
+    
     console.log(selectedLeavetype, leaveTime, reason, leaveDays);
-  };
+    if (leaveDays === undefined || leaveDays === '') {
+      return;
+    }
+    const leaveDate = new Date(leaveDays);  // leaveDays คือ string จาก input
+    const today = new Date();
+    
+    // เคลียร์เวลาให้เป็นเที่ยงคืนทั้งสอง
+    leaveDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    
+    // คำนวณต่างแบบวัน
+    const diffInDays = Math.ceil((leaveDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    console.log(`เหลืออีก ${diffInDays} วัน`);
+
+    console.log(`เหลืออีก ${diffInDays} วัน`);
+    if(!selectedLeavetype){
+      setError('กรุณาระบุประเภทการลา');
+      return;
+    }
+    if(!leaveTime.startTime){
+      setError('กรุณาระบุเวลาเริ่มต้น');
+      return;
+    }
+    if(!leaveTime.endTime){
+      setError('กรุณาระบุเวลาสิ้นสุด');
+      return;
+    }
+    if(!reason){
+      setError('กรุณาระบุเหตุผล');
+      return;
+    }
+    if(diffInDays < 3 && (selectedLeavetype == "ลากิจ" || selectedLeavetype == "ลากิจพิเศษ")){
+      setError('ไม่สามารถลากิจก่อนวันลาน้อยกว่า 3 วันได้');
+      return;
+    }
+    try{
+
+  
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/user/formleave", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+              selectedLeavetype,
+              leaveTime,
+              reason,
+              leaveDays
+
+            
+          })
+      })
+      const result = await res.json();
+      console.log(result);
+    }catch(err){
+      console.log(err);
+    }
+  }
 
   return (
     <DashboardLayout title="ฟอร์มการลา">
       <div className="bg-white p-4 rounded shadow">
-        {today}
+
+       <div className="flex  text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
         {error && <p className="text-red-500">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="max-w-4xl mx-auto p-4 space-y-4">
@@ -114,7 +164,7 @@ const UserformleaveDashboard = () => {
             
 
            
-            <div className="flex flex-col">
+            <div className="flex flex-col p-4">
             <label className="font-medium mb-1">เหตุผล</label>
             <input
                     type="textarea"

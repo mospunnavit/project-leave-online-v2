@@ -1,18 +1,28 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/firebase/clientApp';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { getFirestore } from "firebase-admin/firestore";
+import { initAdmin } from "@/firebase/firebaseAdmin";
 
-export async function POST(req:Request) {
-    try{
-        const { email } = await req.json();
-        const user = collection(db, 'Users');
-        const q = query(user, where('email', '==', email));
-        const querySnapshot = await getDocs(q);
-        
-        return NextResponse.json({ user : !querySnapshot.empty }, {status: 200});
-        
+export async function POST(req: Request) {
+  try {
+    await initAdmin();
+    const db = getFirestore();
 
-    }catch(err){
-        console.log(err);
+    const { username } = await req.json(); // สมมุติ username คือ email
+
+    const snapshot = await db
+      .collection("Users")
+      .where("username", "==", username)
+      .get();
+
+    if (snapshot.empty) {
+      return NextResponse.json({ user: null, message: "User not found" }, { status: 200 });
     }
+
+    else{
+      return NextResponse.json({ user: snapshot.docs[0].data().username, message: "User found" }, { status: 200 });
+    }
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }

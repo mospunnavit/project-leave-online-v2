@@ -8,9 +8,7 @@ import { useSession } from 'next-auth/react';
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
-  console.log(session?.user?.email) 
-  console.log("role" + session?.user?.role)
-  const testenvadmin = 1;
+  console.log(session?.user?.role);
   const handleLogout = () => {
     console.log("logout");
     signOut({ callbackUrl: '/login' }); // Redirect ไปที่หน้า login หลัง logout
@@ -39,7 +37,7 @@ const Sidebar = () => {
         </div>
 
         {/* Navigation Links */}
-        {testenvadmin === 1 || session?.user?.role === 'admin' && (
+        {session?.user?.role === 'admin' && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
             <Link href="/pages/dashboard/admin" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />

@@ -8,7 +8,6 @@ import { useSession } from 'next-auth/react';
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
-  console.log(session?.user?.role);
   const handleLogout = () => {
     console.log("logout");
     signOut({ callbackUrl: '/login' }); // Redirect ไปที่หน้า login หลัง logout
@@ -33,7 +32,7 @@ const Sidebar = () => {
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-6 mt-6 font-bold border-b border-gray-700 ">
-          <div className="text-2xl">MyApp {session?.user?.email} {session?.user?.role} </div>
+          <div className="text-2xl">MyApp {session?.user?.firstname} {session?.user?.lastname} </div>
         </div>
 
         {/* Navigation Links */}
@@ -60,7 +59,7 @@ const Sidebar = () => {
             <Home size={20} />
             <span>Leave</span>
           </Link>
-          <Link href="/pages/dashboard/user/form-leave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>Form-leave</span>
           </Link>

@@ -1,7 +1,7 @@
 'use client'
 import DashboardLayout from "@/app/components/dashboardLayout";
 import { Timestamp } from "firebase-admin/firestore";
-import { useSession } from "next-auth/react";
+import { useSession } from 'next-auth/react';
 import { use, useEffect, useState } from "react";
 
 type LeaveTime = {
@@ -79,7 +79,7 @@ const UserformleaveDashboard = () => {
       return;
     }
     try{
-
+      console.log("env api url"+process.env.NEXT_PUBLIC_API_URL);
   
       const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/user/formleave", {
           method: "POST",
@@ -145,9 +145,17 @@ const UserformleaveDashboard = () => {
                                 <label htmlFor="startTime" className="font-medium ">เวลาเริ่ม</label>
                             </div>
                             
-                            <input type="time" id="startTime" name="startTime" value= {leaveTime.startTime} 
-                            onChange={(e) => setLeaveTime({ ...leaveTime, startTime: e.target.value })}
-                            className="w-full border p-2 rounded" required />
+                            <input
+                              type="time"
+                              id="startTime"
+                              name="startTime"
+                              value={leaveTime.startTime}
+                              onChange={(e) => setLeaveTime({ ...leaveTime, startTime: e.target.value })}
+                              className="w-full border p-2 rounded"
+                              required
+                              lang="en-GB" // ✅ หรือ lang="th"
+                              step="60" // optional: step เป็นวินาที (60 = 1 นาที)
+                              />
                         </div>
 
                         <span className="mt-8">ถึง</span>

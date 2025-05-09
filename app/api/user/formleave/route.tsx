@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
 import { initAdmin } from "@/firebase/firebaseAdmin";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 export async function POST(req: Request) {
-  const mockupusersession = {
-    eamil: "test",
-    department: "IT",
-    role: "user",
-  };
+  const session = await getServerSession(authOptions);
+  console.log(session);
 
   try {
     await initAdmin();
@@ -18,8 +17,7 @@ export async function POST(req: Request) {
     if (!selectedLeavetype || !leaveTime || !leaveDays || !reason) {
       return NextResponse.json({ error: "Please complete all inputs" }, { status: 400 });
     }
-
-    if (mockupusersession.role == null) {
+    if(session?.user?.role == null){
       return NextResponse.json({ error: "login" }, { status: 400 });
     }
 
@@ -28,9 +26,11 @@ export async function POST(req: Request) {
       leaveTime,
       reason,
       leaveDays,
-      email: mockupusersession.eamil,
-      department: mockupusersession.department,
-      role: mockupusersession.role,
+      fullname: session?.user?.firstname + " " + session?.user?.lastname,
+      username: session?.user?.username,
+      department: session?.user?.department,
+      role: session?.user?.role,
+      status: "waiting head approval",
       createdAt: new Date(),
     });
 

@@ -1,117 +1,109 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/firebase/clientApp';
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-  startAfter,
-  endBefore,
-  limitToLast,
-  doc,
-  getDoc,
-  Timestamp,
-} from 'firebase/firestore';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import { getFirestore } from "firebase-admin/firestore";
+import { initAdmin } from "@/firebase/firebaseAdmin";
+import { Timestamp } from 'firebase/firestore';
 
 export async function GET(req: Request) {
+  const session = await getServerSession(authOptions);
   try {
     const { searchParams } = new URL(req.url);
-    const email = searchParams.get("email");
     const lastDoc = searchParams.get("lastDoc");
     const direction = searchParams.get("direction") || "next"; // "next" or "prev"
     const limitParam = Number(searchParams.get("limit")) || 5;
-    
-    if (!email) {
-      return NextResponse.json({ error: "Missing email" }, { status: 400 });
+   
+
+    if (!session?.user?.username)  {
+      return NextResponse.json({ error: "You are not authorized" }, { status: 403 });
     }
-    
-    const formLeaveRef = collection(db, "FormLeave");
+    await initAdmin();
+    const db = getFirestore();
+    const formLeaveRef = db.collection("FormLeave");
     let q;
-    
+
     // If we have a lastDoc reference, we need to get the actual document first
     let lastDocRef = null;
     if (lastDoc) {
-      const docRef = doc(db, "FormLeave", lastDoc);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
+      const docRef = db.collection("FormLeave").doc(lastDoc);
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
         lastDocRef = docSnap;
       } else {
+        console.error("Last document reference not found");
         return NextResponse.json({ error: "Last document reference not found" }, { status: 404 });
       }
     }
-    
+
+    let querySnapshot;
+
     // Build query based on direction and lastDoc
     if (direction === "prev" && lastDocRef) {
       // Previous page - use endBefore and limitToLast
-      q = query(
-        formLeaveRef,
-        where("email", "==", email),
-        orderBy("createdAt", "desc"),
-        endBefore(lastDocRef),
-        limitToLast(limitParam)
-      );
+      querySnapshot = await formLeaveRef
+        .where("username", "==", session?.user?.username)
+        .orderBy("createdAt", "desc")
+        .endBefore(lastDocRef)
+        .limitToLast(limitParam)
+        .get();
     } else if (lastDocRef) {
       // Next page - use startAfter
-      q = query(
-        formLeaveRef,
-        where("email", "==", email),
-        orderBy("createdAt", "desc"),
-        startAfter(lastDocRef),
-        limit(limitParam)
-      );
+      querySnapshot = await formLeaveRef
+        .where("username", "==", session?.user?.username)
+        .orderBy("createdAt", "desc")
+        .startAfter(lastDocRef)
+        .limit(limitParam)
+        .get();
     } else {
       // First page
-      q = query(
-        formLeaveRef,
-        where("email", "==", email),
-        orderBy("createdAt", "desc"),
-        limit(limitParam)
-      );
+      querySnapshot = await formLeaveRef
+        .where("username", "==", session?.user?.username)
+        .orderBy("createdAt", "desc")
+        .limit(limitParam)
+        .get();
     }
-    
-    const querySnapshot = await getDocs(q);
-    
+
     if (querySnapshot.empty) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         data: [],
         hasMore: false,
-        lastVisible: lastDoc 
+        lastVisible: lastDoc
       }, { status: 200 });
     }
-    
+
     // Get the last visible document for next page cursor
     const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
-    
+
     // Check if there are more documents after this batch
-    const nextBatchQuery = query(
-      formLeaveRef,
-      where("email", "==", email),
-      orderBy("createdAt", "desc"),
-      startAfter(lastVisible),
-      limit(1)
-    );
-    const nextBatchSnapshot = await getDocs(nextBatchQuery);
-    const hasMore = !nextBatchSnapshot.empty;
+    const nextBatchSnapshot = await formLeaveRef
+      .where("username", "==", session?.user?.username)
+      .orderBy("createdAt", "desc")
+      .startAfter(lastVisible)
+      .limit(1)
+      .get();
     
+    const hasMore = !nextBatchSnapshot.empty;
+
     const data = querySnapshot.docs.map((doc) => {
       const docData = doc.data();
+      console.log(docData)
       return {
-        id: doc.id,
-        email: docData.email,
-        leaveFields: docData.leaveFields,
+        username: docData.username,
+        leaveTime: docData.leaveTime,
+        fullname: docData.fullname,
+        leaveDays: docData.leaveDays,
+        selectedLeavetype: docData.selectedLeavetype,
         reason: docData.reason,
-        createdAt: docData.createdAt?.toDate?.() ?? null,
+        status: docData.status,
+        createdAt: docData.createdAt?.toDate(), 
       };
     });
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       data,
       hasMore,
       lastVisible: lastVisible.id,
     }, { status: 200 });
-    
   } catch (err) {
     console.error("Error in API:", err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

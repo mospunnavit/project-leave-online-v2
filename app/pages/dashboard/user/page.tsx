@@ -1,11 +1,11 @@
 'use client';
 import DashboardLayout from "@/app/components/dashboardLayout";
 import { useEffect, useState } from 'react';
-import { QueryDocumentSnapshot, DocumentSnapshot, DocumentData } from "firebase/firestore";
+import {DocumentSnapshot, DocumentData } from "firebase/firestore";
 import { Leave } from '@/app/types/formleave';
 import { useSession } from "next-auth/react";
 const UserDashboard = () => {
-    const [docs, setDocs] = useState<Leave[]>([]);
+    const [docs, setDocs] = useState([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<String>('');
     const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
@@ -13,12 +13,11 @@ const UserDashboard = () => {
     const [hasMore, setHasMore] = useState<boolean>(true);
     const { data: session, status } = useSession();
     const limit = 5;
-    const email = session?.user?.email;
     
     const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData> | null = null, isPrevious = false) => {
       try {
         setLoading(true);
-        let url = `/api/user/getleave?email=${email}&limit=${limit}`;
+        let url = `/api/user/getleave?&limit=${limit}`;
         
         if (lastDocId) {
           url += `&lastDoc=${lastDocId}`;
@@ -33,6 +32,7 @@ const UserDashboard = () => {
         
         if (res.ok) {
           setDocs(result.data || []);
+
           console.log(result.data);
           console.log(result.lastVisible);
           setHasMore(result.data.length === limit && result.hasMore);
@@ -50,19 +50,19 @@ const UserDashboard = () => {
       }
     };
 
-    // useEffect(() => {
-    //   if (status === "loading") return;
-    
+    useEffect(() => {
+      if (status === "loading") return;
+
   
-    //   const loadInitialData = async () => {
-    //     const lastVisible = await fetchData();
-    //     if (lastVisible) {
-    //       setLastDocIds([lastVisible]);
-    //     }
-    //   };
+      const loadInitialData = async () => {
+        const lastVisible = await fetchData();
+        if (lastVisible) {
+          setLastDocIds([lastVisible]);
+        }
+      };
       
-    //   loadInitialData();
-    // },  [status]);
+      loadInitialData();
+    },  [status]);
 
     const handleNext = async () => {
       if (!hasMore) return;
@@ -142,29 +142,33 @@ const UserDashboard = () => {
         <table className="min-w-full border border-collapse border-gray-300">
           <thead className="bg-gray-100">
             <tr>
-              <th className="border px-4 py-2">Email</th>
-              <th className="border px-4 py-2">Leave Fields</th>
-              <th className="border px-4 py-2">Reason</th>
-              <th className="border px-4 py-2">Created At</th>
+                <th className="border px-4 py-2">ชื่อผู้ใช้</th>
+                <th className="border px-4 py-2">ชื่อ-นามสกุล</th>
+                <th className="border px-4 py-2">ประเภทการลา</th>
+                <th className="border px-4 py-2">วันที่ลา</th>
+                <th className="border px-4 py-2">ช่วงเวลาที่ลา</th>
+                <th className="border px-4 py-2">เหตุผล</th>
+                <th className="border px-4 py-2">เวลาที่ส่งฟอร์มาลา</th>
+                <th className="border px-4 py-2">สถานะ</th>
+                
             </tr>
           </thead>
           <tbody>
-            {docs.map((doc) => (
-              <tr key={doc.id}>
-                <td className="border px-4 py-2">{doc.email}</td>
-                <td className="border px-4 py-2">{doc.leaveFields.map((leave, index) => (
-                  <div key={index}>
-                    วันที่ลา: {leave.date}, จำนวนวันลา: {leave.days}
-                  </div>
-                ))}</td>
+            {docs.map((doc, index) => (
+              <tr key={index}>
+                <td className="border px-4 py-2">{doc.username}</td>
+                <td className="border px-4 py-2">{doc.fullname}</td>
+                <td className="border px-4 py-2">{doc.selectedLeavetype}</td>
+                <td className="border px-4 py-2">{doc.leaveDays}</td>
+                <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
                 <td className="border px-4 py-2">{doc.reason}</td>
-                <td className="border px-4 py-2">
-                  {doc.createdAt ? new Date(doc.createdAt).toLocaleString() : 'N/A'}
-                </td>
+                <td className="border px-4 py-2">{doc.createdAt}</td>
+                <td className= "border px-4 py-">{doc.status}</td>
               </tr>
             ))}
           </tbody>
         </table>
+        
         
         <div className="flex justify-between mt-4">
           <button 

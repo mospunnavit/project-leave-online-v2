@@ -30,7 +30,7 @@ function LoginPage() {
                 console.log(role)
                 if(role === "admin"){
                     router.push("/pages/dashboard/admin");
-                }else if(role === "user"){
+                }else if(role === "user" || role === "head" || role === "manager" || role === "hr"){
                     router.push("/pages/dashboard/user");
                 }else{
                      router.push("/");

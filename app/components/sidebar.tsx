@@ -32,7 +32,7 @@ const Sidebar = () => {
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-6 mt-6 font-bold border-b border-gray-700 ">
-          <div className="text-2xl">MyApp {session?.user?.firstname} {session?.user?.lastname} </div>
+          <div className="text-2xl">Leave Online </div>
         </div>
 
         {/* Navigation Links */}
@@ -62,6 +62,61 @@ const Sidebar = () => {
           <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>Form-leave</span>
+          </Link>
+          </nav>
+          
+        )}
+
+        {session?.user?.role === 'head' && (
+          <nav className="mt-6 flex flex-col space-y-2 px-4">
+            <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>Leave</span>
+          </Link>
+          <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>Form-leave</span>
+          </Link>
+          <span>การอนุมัติ</span>
+          <Link href="/pages/dashboard/user/head-approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>head-approve</span>
+          </Link>
+          </nav>
+        )}
+
+        {session?.user?.role === 'manager' && (
+          <nav className="mt-6 flex flex-col space-y-2 px-4">
+            <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>Leave</span>
+          </Link>
+          <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>Form-leave</span>
+          </Link>
+          <span>การอนุมัติ</span>
+          <Link href="/pages/dashboard/user/manager-approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>manager-approve</span>
+          </Link>
+          </nav>
+          
+        )}
+        {session?.user?.role === 'hr' && (
+          <nav className="mt-6 flex flex-col space-y-2 px-4">
+            <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>Leave</span>
+          </Link>
+          <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>Form-leave</span>
+          </Link>
+          <span>การอนุมัติ</span>
+          <Link href="/pages/dashboard/user/hr-approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>hr-approve</span>
           </Link>
           </nav>
           

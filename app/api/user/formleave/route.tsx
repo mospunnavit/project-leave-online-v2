@@ -7,14 +7,15 @@ import { authOptions } from "@/lib/authOptions";
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   console.log(session);
+  
 
   try {
     await initAdmin();
     const db = getFirestore();
 
-    const { selectedLeavetype, leaveTime, reason, leaveDays } = await req.json();
-
-    if (!selectedLeavetype || !leaveTime || !leaveDays || !reason) {
+    const { selectedLeavetype, leaveTime, reason, leaveDays, periodTime } = await req.json();
+    console.log(""+periodTime)
+    if (!selectedLeavetype || !leaveTime || !leaveDays || !reason || !periodTime) {
       return NextResponse.json({ error: "Please complete all inputs" }, { status: 400 });
     }
     if(session?.user?.role == null){
@@ -30,7 +31,8 @@ export async function POST(req: Request) {
       username: session?.user?.username,
       department: session?.user?.department,
       role: session?.user?.role,
-      status: "waiting head approval",
+      status: "waiting for head approval",
+      periodTime,
       createdAt: new Date(),
     });
 

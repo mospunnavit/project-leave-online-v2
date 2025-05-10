@@ -15,13 +15,22 @@ const UserformleaveDashboard = () => {
 
   const [selectedLeavetype, setSelectedLeavetype] = useState<string>('');
   const [leaveTime, setLeaveTime] = useState<LeaveTime>({ startTime: '', endTime: '' });
-  const [leaveDays, setLeaveDays] = useState<string>();
-  const today = new Date().toLocaleDateString(); // ex: 8/5/2025 
+  const [periodTime, setPeriodTime] = useState<string>('');
+  const [leaveDays, setLeaveDays] = useState<string>("");
+  const [today, setToday] = useState('');
+
+  useEffect(() => {
+    const date = new Date().toLocaleDateString(); // หรือ 'th-TH'
+    setToday(date);
+  }, []);
   useEffect(() => {
     if (selectedLeavetype === 'มีใบรับรองแพทย์'){
       console.log("true")
     }
   }, [selectedLeavetype]);
+  useEffect(() => {
+    setPeriodTime(`${leaveTime.startTime} - ${leaveTime.endTime}`);
+  }, [leaveTime]);
   const insertComponent = () => {
     return (
       <div className="flex flex-col mt-4">
@@ -57,7 +66,6 @@ const UserformleaveDashboard = () => {
     
     console.log(`เหลืออีก ${diffInDays} วัน`);
 
-    console.log(`เหลืออีก ${diffInDays} วัน`);
     if(!selectedLeavetype){
       setError('กรุณาระบุประเภทการลา');
       return;
@@ -74,13 +82,13 @@ const UserformleaveDashboard = () => {
       setError('กรุณาระบุเหตุผล');
       return;
     }
-    if(diffInDays < 3 && (selectedLeavetype == "ลากิจ" || selectedLeavetype == "ลากิจพิเศษ")){
+    if(diffInDays < 3 && (selectedLeavetype == "ลากิจ" || selectedLeavetype == "ลากิจพิเศษ" || selectedLeavetype == "พักร้อน")){
       setError('ไม่สามารถลากิจก่อนวันลาน้อยกว่า 3 วันได้');
       return;
     }
     try{
       console.log("env api url"+process.env.NEXT_PUBLIC_API_URL);
-  
+
       const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/user/formleave", {
           method: "POST",
           headers: {
@@ -90,7 +98,8 @@ const UserformleaveDashboard = () => {
               selectedLeavetype,
               leaveTime,
               reason,
-              leaveDays
+              leaveDays,
+              periodTime
 
             
           })
@@ -151,9 +160,10 @@ const UserformleaveDashboard = () => {
                               name="startTime"
                               value={leaveTime.startTime}
                               onChange={(e) => setLeaveTime({ ...leaveTime, startTime: e.target.value })}
+                              
                               className="w-full border p-2 rounded"
                               required
-                              lang="en-GB" // ✅ หรือ lang="th"
+                              lang="th"
                               step="60" // optional: step เป็นวินาที (60 = 1 นาที)
                               />
                         </div>
@@ -162,8 +172,23 @@ const UserformleaveDashboard = () => {
 
                         <div className="flex-1">
                             <label htmlFor="endTime" className="font-medium ">เวลาสิ้นสุด</label>
-                            <input type="time" id="endTime" name="endTime"
-                            value= {leaveTime.endTime} onChange={(e) => setLeaveTime({ ...leaveTime, endTime: e.target.value })} className="w-full border p-2 rounded" required />
+                            <input type="time" 
+                            id="endTime"
+                            name="endTime"
+                            required
+                            lang="th"
+                            step="60" // optional: step เป็นวินาที (60 = 1 นาที)
+                            value= {leaveTime.endTime} 
+                            onChange={(e) => setLeaveTime({ ...leaveTime, endTime: e.target.value })} 
+                            
+                            className="w-full border p-2 rounded" 
+                            />
+                        </div>
+                        <div className="flex-1 mt-4 p-3 bg-gray-100 rounded">
+                            <div>
+                               เวลาที่เลือก 
+                            </div>
+                                                       <p >{leaveTime.startTime} - {leaveTime.endTime}</p>
                         </div>
                         </div>
                     </div>

@@ -1,10 +1,16 @@
 'use client'
 import DashboardLayout from "@/app/components/dashboardLayout";
 import {DocumentSnapshot, DocumentData } from "firebase/firestore";
-
 import { useSession } from 'next-auth/react';
 import { use, useEffect, useState } from "react";
 
+interface roleData {
+  title: string;
+  apiPath?: string;
+  pendingStatus: string;
+  approvedStatus: string;
+  rejectedStatus: string;
+}
 
 const approveDashboard = () => {
     const [docs, setDocs] = useState([]);
@@ -15,15 +21,54 @@ const approveDashboard = () => {
     const [hasMore, setHasMore] = useState<boolean>(true);
     const { data: session, status } = useSession();    
     const [today, setToday] = useState('');
-    const [selectStatus, setSelectStatus] = useState('');
+    const [selectStatus, setSelectStatus] = useState<String>('');
     const limit = 5;
 
-  
+ const getRoleSpecificData = () => {
+        if (!session?.user?.role) return { title: "อนุมัติการลา", statuses: [] };
+
+        switch (session.user.role) {
+            case 'head':
+                return {
+                    title: "หัวหน้าแผนกอนุมัติ",
+                    apiPath: "/api/user/getleavesbydepartment",
+                    pendingStatus: "waiting for head approval",
+                    approvedStatus: "waiting for manager approval",
+                    rejectedStatus: "rejected by head"
+                };
+            case 'manager':
+                return {
+                    title: "ผู้จัดการอนุมัติ",
+                    apiPath: "/api/user/getleavesformanager",
+                    pendingStatus: "waiting for manager approval",
+                    approvedStatus: "waiting for hr approval",
+                    rejectedStatus: "rejected by manager"
+                };
+            case 'hr':
+                return {
+                    title: "HR อนุมัติ",
+                    apiPath: "/api/user/getleavesforhr",
+                    pendingStatus: "waiting for hr approval",
+                    approvedStatus: "approved",
+                    rejectedStatus: "rejected by hr"
+                };
+            default:
+                return {
+                    title: "อนุมัติการลา",
+                    apiPath: "",
+                    pendingStatus: "pending",
+                    approvedStatus: "approved",
+                    rejectedStatus: "rejected"
+                };
+        }
+    };
+    const roleData = getRoleSpecificData();
+    console.log(roleData.pendingStatus, roleData.approvedStatus, roleData.rejectedStatus);
   
 const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData> | null = null, isPrevious = false) => {
        try {
          setLoading(true);
-         let url = `/api/user/getleavesbydepartment?selectStatus=${selectStatus}&limit=${limit}`;
+         let url = `/api/user/getleavesbydepartmentandstatus?selectStatus=${selectStatus}&limit=${limit}`;
          
          if (lastDocId) {
            url += `&lastDoc=${lastDocId}`;
@@ -100,7 +145,37 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
         setCurrentPage(newPage);
         setHasMore(true); // When going back, we know there's more forward
       };
-  
+      const handleChangeStatus = async (docId: string, status: string) => {
+        console.log(docId, status);
+        try {
+          setLoading(true);
+          const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/user/changestatusformleave", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    docId,
+                    status
+                })
+            })
+          if(res.ok){
+            const lastDocId = currentPage > 0 ? lastDocIds[currentPage - 1] : null;
+            await fetchData(lastDocId);
+          }
+        }catch (err) {
+          console.error('Error fetching documents:', err);
+          setError('Failed to connect to server.');
+          return null;
+        }finally {
+          setLoading(false);
+        }
+      }
+
+      const handleReject = async (docId: string, status: string) => {
+        
+      }
+      
       if (loading && docs.length === 0) return <p>Loading...</p>;
   return (
     <DashboardLayout title={`หัวหน้าอนุมัติ ${session?.user?.role} ${session?.user?.department}`}>
@@ -109,15 +184,18 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
        <div className="flex  text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
         
        <div className="flex flex-row flex-wrap gap-4 ">
-            <div className="flex flex-col w-full sm:w-[calc(33.33%-0.67rem)] bg-white p-4 rounded shadow">
+            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
                 <button onClick={() => {setSelectStatus(''); setCurrentPage(0)}}>ทั้งหมด</button>
             </div>
-            <div className="flex flex-col w-full sm:w-[calc(33.33%-0.67rem)] bg-white p-4 rounded shadow">ข้อมูลการประเภทการลา
-                div2
-                <button onClick={() => setSelectStatus('waiting for head approval')}>รอการอนุมัติ</button>
+            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
+     
+                <button onClick={() => {setSelectStatus(roleData?.pendingStatus ?? ''); setCurrentPage(0)}}>รอการอนุมัติ</button>
             </div>
-            <div className="flex flex-col w-full sm:w-[calc(33.33%-0.67rem)] bg-white p-4 rounded shadow">ข้อมูลการประเภทการลา
-            <button onClick={() => setSelectStatus('waiting for manager approve')}>อนุมัติแล้ว</button>
+            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
+            <button onClick={() => {setSelectStatus(roleData?.approvedStatus ?? ''); setCurrentPage(0)}}>อนุมัติแล้ว</button>
+            </div>
+            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
+            <button onClick={() => {setSelectStatus(roleData?.rejectedStatus ?? ''); setCurrentPage(0)}}>ยกเลิก</button>
             </div>
        </div>
        <div className="hidden md:block overflow-x-auto">
@@ -125,6 +203,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
               <thead className="bg-gray-100">
                 <tr>
                 <th className="border px-4 py-2">ชื่อ</th>
+                <th className="border px-4 py-2">แผนก</th>
                   <th className="border px-4 py-2">ประเภทการลา</th>
                   <th className="border px-4 py-2">วันที่ลา</th>
                   <th className="border px-4 py-2">ช่วงเวลาที่ลา</th>
@@ -137,6 +216,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                 {docs.map((doc, index) => (
                   <tr key={index}>
                     <td className="border px-4 py-2">{doc.fullname}</td>
+                    <td className="border px-4 py-2">{doc.department}</td>
                     <td className="border px-4 py-2">{doc.selectedLeavetype}</td>
                     <td className="border px-4 py-2">{doc.leaveDays}</td>
                     <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
@@ -151,17 +231,17 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                       <span className={`px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800`}>
                         {doc.status}
                       </span>
-                      {doc.status === 'waiting for head approval' && (
+                      {doc.status === roleData?.pendingStatus && (
                         <>
                             <button
                             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                            onClick={() => handleApprove(doc._id)}
+                            onClick={() => handleChangeStatus(doc.id, roleData?.approvedStatus ?? '')}
                             >
                             อนุมัติ
                             </button>
                             <button
                             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
-                            onClick={() => handleReject(doc._id)}
+                            onClick={() => handleChangeStatus(doc.id, roleData?.rejectedStatus ?? '')}
                             >
                             ไม่อนุมัติ
                             </button>
@@ -240,14 +320,24 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
             </button>
           </div>
           
-          {loading && (
-            <div className="text-center mt-4">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-              <p className="mt-2">กำลังโหลด...</p>
+         {loading && (
+          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-white bg-opacity-75 z-50">
+            <div className="text-center">
+              <div className="inline-block relative w-16 h-16">
+                {/* Spinning gradient ring */}
+                <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-r-blue-400 border-b-blue-300 border-l-transparent animate-spin"></div>
+                
+                {/* Inner ring */}
+                <div className="absolute inset-2 rounded-full border-4 border-t-transparent border-r-blue-200 border-b-blue-100 border-l-blue-300 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+              </div>
+              
+              <p className="mt-4 text-lg font-medium text-gray-700">กรุณารอสักครู่</p>
+              <p className="text-sm text-blue-500 animate-pulse mt-1">กำลังอัพเดทสถานะ...</p>
             </div>
-          )}
-          
-        </div>
+          </div>
+        )}
+                  
+      </div>
 
 
       

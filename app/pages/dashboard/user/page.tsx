@@ -32,9 +32,6 @@ const UserDashboard = () => {
         
         if (res.ok) {
           setDocs(result.data || []);
-
-          console.log(result.data);
-          console.log(result.lastVisible);
           setHasMore(result.data.length === limit && result.hasMore);
           return result.lastVisible;
         } else {

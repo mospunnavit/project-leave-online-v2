@@ -14,19 +14,27 @@ export async function GET(req: Request) {
     const direction = searchParams.get("direction") || "next"; // "next" or "prev"
     const limitParam = Number(searchParams.get("limit")) || 5;
 
-    if (!session?.user?.username || session?.user?.role !== "head") {
+    if (!session?.user?.username || !(session?.user?.role === "head" || session?.user?.role === "manager" || session?.user?.role === "hr")) {
       return NextResponse.json({ error: "You are not authorized" }, { status: 403 });
     }
-
+    
     await initAdmin();
     const db = getFirestore();
     const formLeaveRef = db.collection("FormLeave");
 
     // Build base query
-    let baseQuery = formLeaveRef
+    let baseQuery;
+    if(session?.user?.role === "hr"){
+      baseQuery = formLeaveRef
+      .orderBy("createdAt", "desc");
+    }else{
+      baseQuery = formLeaveRef
       .where("department", "==", session?.user?.department)
       .orderBy("createdAt", "desc");
+    }
+    
     console.log("selectStatus: " + selectStatus);
+
     if (selectStatus != null && selectStatus !== "") {
         console.log("selectStatus IN: " + selectStatus);
         baseQuery = baseQuery.where("status", "==", selectStatus);
@@ -86,6 +94,7 @@ export async function GET(req: Request) {
       return {
         id: doc.id,
         username: docData.username,
+        department: docData.department,
         leaveTime: docData.leaveTime,
         fullname: docData.fullname,
         leaveDays: docData.leaveDays,

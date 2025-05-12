@@ -78,7 +78,7 @@ const Sidebar = () => {
             <span>Form-leave</span>
           </Link>
           <span>การอนุมัติ</span>
-          <Link href="/pages/dashboard/user/head-approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>head-approve</span>
           </Link>
@@ -96,7 +96,7 @@ const Sidebar = () => {
             <span>Form-leave</span>
           </Link>
           <span>การอนุมัติ</span>
-          <Link href="/pages/dashboard/user/manager-approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>manager-approve</span>
           </Link>
@@ -114,7 +114,7 @@ const Sidebar = () => {
             <span>Form-leave</span>
           </Link>
           <span>การอนุมัติ</span>
-          <Link href="/pages/dashboard/user/hr-approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>hr-approve</span>
           </Link>

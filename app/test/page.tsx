@@ -92,33 +92,8 @@ export default function TestFirebase() {
 
   return (
     <div>
-      <h1>Firebase Data</h1>
-      <table className="min-w-full border border-collapse border-gray-300">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="border px-4 py-2">Email</th>
-            <th className="border px-4 py-2">Leave Fields</th>
-            <th className="border px-4 py-2">Reason</th>
-            <th className="border px-4 py-2">Created At</th>
-          </tr>
-        </thead>
-        <tbody>
-          {docs.map((doc) => (
-            <tr key={doc.id}>
-              <td className="border px-4 py-2">{doc.email}</td>
-              <td className="border px-4 py-2">{doc.leaveFields.map((leave, index) => (
-                <div key={index}>
-                  วันที่ลา: {leave.date}, จำนวนวันลา: {leave.days}
-                </div>
-              ))}</td>
-              <td className="border px-4 py-2">{doc.reason}</td>
-              <td className="border px-4 py-2">
-                {doc.createdAt ? new Date(doc.createdAt).toLocaleString() : 'N/A'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+     
+          
       
       <div className="flex justify-between mt-4">
         <button 

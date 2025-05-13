@@ -6,36 +6,28 @@ import { authOptions } from "@/lib/authOptions";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  console.log(session);
-  
-
+    
   try {
     await initAdmin();
     const db = getFirestore();
-
-    const { selectedLeavetype, leaveTime, reason, leaveDays, periodTime } = await req.json();
-    console.log(""+periodTime)
-    if (!selectedLeavetype || !leaveTime || !leaveDays || !reason || !periodTime) {
+    const { docId, status } = await req.json();
+    console.log(docId, status);
+    if (!docId || !status) {
       return NextResponse.json({ error: "Please complete all inputs" }, { status: 400 });
     }
+
     if(session?.user?.role == null){
       return NextResponse.json({ error: "login" }, { status: 400 });
     }
-
-    await db.collection("FormLeave").add({
-      selectedLeavetype,
-      leaveTime,
-      reason,
-      leaveDays,
-      fullname: session?.user?.firstname + " " + session?.user?.lastname,
-      username: session?.user?.username,
-      department: session?.user?.department,
-      role: session?.user?.role,
-      status: "waiting for head approval",
-      periodTime,
-      createdAt: new Date(),
+    
+     if (!(session?.user?.role === "head" || session?.user?.role === "manager" || session?.user?.role === "hr")) {
+      return NextResponse.json({ error: "You are not authorized" }, { status: 403 });
+    }
+    
+    await db.collection("FormLeave").doc(docId).update({
+      status
     });
-
+    
     return NextResponse.json({ message: "Success!" }, { status: 200 });
   } catch (err) {
     console.error("POST error:", err);

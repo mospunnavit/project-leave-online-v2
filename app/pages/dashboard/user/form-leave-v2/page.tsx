@@ -3,7 +3,7 @@ import DashboardLayout from "@/app/components/dashboardLayout";
 import { Timestamp } from "firebase-admin/firestore";
 import { useSession } from 'next-auth/react';
 import { use, useEffect, useState } from "react";
-
+import { useRouter } from "next/navigation";
 type LeaveTime = {
   startTime: string;
   endTime: string;
@@ -11,17 +11,27 @@ type LeaveTime = {
 const UserformleaveDashboard = () => {
   const { data: session } = useSession();
   const [reason, setReason] = useState('');
-  const [error, setError] = useState('');
-
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
   const [selectedLeavetype, setSelectedLeavetype] = useState<string>('');
   const [leaveTime, setLeaveTime] = useState<LeaveTime>({ startTime: '', endTime: '' });
-  const [leaveDays, setLeaveDays] = useState<string>();
-  const today = new Date().toLocaleDateString(); // ex: 8/5/2025 
+  const [periodTime, setPeriodTime] = useState<string>('');
+  const [leaveDays, setLeaveDays] = useState<string>("");
+  const [today, setToday] = useState('');
+  const router = useRouter();
+  useEffect(() => {
+    const date = new Date().toLocaleDateString(); // หรือ 'th-TH'
+    setToday(date);
+  }, []);
   useEffect(() => {
     if (selectedLeavetype === 'มีใบรับรองแพทย์'){
       console.log("true")
     }
   }, [selectedLeavetype]);
+  useEffect(() => {
+    setPeriodTime(`${leaveTime.startTime} - ${leaveTime.endTime}`);
+  }, [leaveTime]);
   const insertComponent = () => {
     return (
       <div className="flex flex-col mt-4">
@@ -57,7 +67,6 @@ const UserformleaveDashboard = () => {
     
     console.log(`เหลืออีก ${diffInDays} วัน`);
 
-    console.log(`เหลืออีก ${diffInDays} วัน`);
     if(!selectedLeavetype){
       setError('กรุณาระบุประเภทการลา');
       return;
@@ -74,13 +83,14 @@ const UserformleaveDashboard = () => {
       setError('กรุณาระบุเหตุผล');
       return;
     }
-    if(diffInDays < 3 && (selectedLeavetype == "ลากิจ" || selectedLeavetype == "ลากิจพิเศษ")){
+    if(diffInDays < 3 && (selectedLeavetype == "ลากิจ" || selectedLeavetype == "ลากิจพิเศษ" || selectedLeavetype == "พักร้อน")){
       setError('ไม่สามารถลากิจก่อนวันลาน้อยกว่า 3 วันได้');
       return;
     }
     try{
+      setLoading(true);
       console.log("env api url"+process.env.NEXT_PUBLIC_API_URL);
-  
+
       const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/user/formleave", {
           method: "POST",
           headers: {
@@ -90,15 +100,29 @@ const UserformleaveDashboard = () => {
               selectedLeavetype,
               leaveTime,
               reason,
-              leaveDays
+              leaveDays,
+              periodTime
 
             
           })
       })
       const result = await res.json();
-      console.log(result);
+      if(res.ok){
+        setError('');
+        setShowSuccess(true);
+      
+      // รอ 2.5 วินาทีแล้วเปลี่ยนหน้า
+      setTimeout(() => {
+        router.push("/pages/dashboard/user"); // เปลี่ยนเป็น path ที่ต้องการ redirect ไป
+      }, 3000);
+      }
+      else{
+        setError(result.error || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+      }
     }catch(err){
       console.log(err);
+    }finally{
+      setLoading(false);
     }
   }
 
@@ -107,7 +131,38 @@ const UserformleaveDashboard = () => {
       <div className="bg-white p-4 rounded shadow">
 
        <div className="flex  text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
-        {error && <p className="text-red-500">{error}</p>}
+        {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded shadow-sm">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+        {showSuccess && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-white bg-opacity-100">
+            <div className="bg-white rounded-lg shadow-xl p-6 transform transition-all max-w-sm w-full">
+              <div className="flex items-center justify-center mb-4">
+                <div className="rounded-full bg-green-100 p-3">
+                  <svg className="h-8 w-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-lg leading-6 font-medium text-gray-900 text-center">ส่งคำขอลาสำเร็จ!</h3>
+              <p className="text-sm text-gray-500 text-center mt-2">ระบบกำลังนำคุณไปยังหน้าสรุป...</p>
+              <div className="mt-4 w-full bg-gray-200 rounded-full h-1">
+                <div className="bg-green-500 h-1 rounded-full animate-progress"></div>
+              </div>
+            </div>
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="max-w-4xl mx-auto p-4 space-y-4">
                 <div>
@@ -151,9 +206,10 @@ const UserformleaveDashboard = () => {
                               name="startTime"
                               value={leaveTime.startTime}
                               onChange={(e) => setLeaveTime({ ...leaveTime, startTime: e.target.value })}
+                              
                               className="w-full border p-2 rounded"
                               required
-                              lang="en-GB" // ✅ หรือ lang="th"
+                              lang="th"
                               step="60" // optional: step เป็นวินาที (60 = 1 นาที)
                               />
                         </div>
@@ -162,8 +218,23 @@ const UserformleaveDashboard = () => {
 
                         <div className="flex-1">
                             <label htmlFor="endTime" className="font-medium ">เวลาสิ้นสุด</label>
-                            <input type="time" id="endTime" name="endTime"
-                            value= {leaveTime.endTime} onChange={(e) => setLeaveTime({ ...leaveTime, endTime: e.target.value })} className="w-full border p-2 rounded" required />
+                            <input type="time" 
+                            id="endTime"
+                            name="endTime"
+                            required
+                            lang="th"
+                            step="60" // optional: step เป็นวินาที (60 = 1 นาที)
+                            value= {leaveTime.endTime} 
+                            onChange={(e) => setLeaveTime({ ...leaveTime, endTime: e.target.value })} 
+                            
+                            className="w-full border p-2 rounded" 
+                            />
+                        </div>
+                        <div className="flex-1 mt-4 p-3 bg-gray-100 rounded">
+                            <div>
+                               เวลาที่เลือก 
+                            </div>
+                                                       <p >{leaveTime.startTime} - {leaveTime.endTime}</p>
                         </div>
                         </div>
                     </div>
@@ -190,7 +261,25 @@ const UserformleaveDashboard = () => {
               </button>
             </div>
           </div>
-        
+         {loading && (
+          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-white bg-opacity-75 z-50">
+            <div className="text-center">
+              <div className="inline-block relative w-16 h-16">
+                {/* Spinning gradient ring */}
+                <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-r-blue-400 border-b-blue-300 border-l-transparent animate-spin"></div>
+                
+                {/* Inner ring */}
+                <div className="absolute inset-2 rounded-full border-4 border-t-transparent border-r-blue-200 border-b-blue-100 border-l-blue-300 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+              </div>
+              
+              <p className="mt-4 text-lg font-medium text-gray-700">กรุณารอสักครู่</p>
+              <p className="text-sm text-blue-500 animate-pulse mt-1">กำลังอัพเดทสถานะ...</p>
+            </div>
+          </div>
+          )}
+                  
+
+          
         </form>
       </div>
     </DashboardLayout>

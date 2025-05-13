@@ -13,9 +13,10 @@ export async function GET(req: Request) {
     const limitParam = Number(searchParams.get("limit")) || 5;
    
 
-    if (!session?.user?.username)  {
+    if (!(session?.user?.role === "admin" || session?.user?.role === "hr"))  {
       return NextResponse.json({ error: "You are not authorized" }, { status: 403 });
     }
+    
     await initAdmin();
     const db = getFirestore();
     const formLeaveRef = db.collection("FormLeave");
@@ -40,7 +41,6 @@ export async function GET(req: Request) {
     if (direction === "prev" && lastDocRef) {
       // Previous page - use endBefore and limitToLast
       querySnapshot = await formLeaveRef
-        .where("username", "==", session?.user?.username)
         .orderBy("createdAt", "desc")
         .endBefore(lastDocRef)
         .limitToLast(limitParam)
@@ -48,7 +48,6 @@ export async function GET(req: Request) {
     } else if (lastDocRef) {
       // Next page - use startAfter
       querySnapshot = await formLeaveRef
-        .where("username", "==", session?.user?.username)
         .orderBy("createdAt", "desc")
         .startAfter(lastDocRef)
         .limit(limitParam)
@@ -56,7 +55,6 @@ export async function GET(req: Request) {
     } else {
       // First page
       querySnapshot = await formLeaveRef
-        .where("username", "==", session?.user?.username)
         .orderBy("createdAt", "desc")
         .limit(limitParam)
         .get();
@@ -75,7 +73,6 @@ export async function GET(req: Request) {
 
     // Check if there are more documents after this batch
     const nextBatchSnapshot = await formLeaveRef
-      .where("username", "==", session?.user?.username)
       .orderBy("createdAt", "desc")
       .startAfter(lastVisible)
       .limit(1)

@@ -6,22 +6,41 @@ import { initAdmin } from "@/firebase/firebaseAdmin";
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
+
   try {
     const { searchParams } = new URL(req.url);
     const lastDoc = searchParams.get("lastDoc");
+    const selectStatus = searchParams.get("selectStatus");
     const direction = searchParams.get("direction") || "next"; // "next" or "prev"
     const limitParam = Number(searchParams.get("limit")) || 5;
-   
 
-    if (!session?.user?.username)  {
+    if (!session?.user?.username || !(session?.user?.role === "head" || session?.user?.role === "manager" || session?.user?.role === "hr")) {
       return NextResponse.json({ error: "You are not authorized" }, { status: 403 });
     }
+    
     await initAdmin();
     const db = getFirestore();
     const formLeaveRef = db.collection("FormLeave");
-    let q;
 
-    // If we have a lastDoc reference, we need to get the actual document first
+    // Build base query
+    let baseQuery;
+    if(session?.user?.role === "hr"){
+      baseQuery = formLeaveRef
+      .orderBy("createdAt", "desc");
+    }else{
+      baseQuery = formLeaveRef
+      .where("department", "==", session?.user?.department)
+      .orderBy("createdAt", "desc");
+    }
+    
+    console.log("selectStatus: " + selectStatus);
+
+    if (selectStatus != null && selectStatus !== "") {
+        console.log("selectStatus IN: " + selectStatus);
+        baseQuery = baseQuery.where("status", "==", selectStatus);
+    }
+
+    // Get lastDoc reference if needed
     let lastDocRef = null;
     if (lastDoc) {
       const docRef = db.collection("FormLeave").doc(lastDoc);
@@ -34,30 +53,20 @@ export async function GET(req: Request) {
       }
     }
 
+    // Paginate based on direction and cursor
     let querySnapshot;
-
-    // Build query based on direction and lastDoc
     if (direction === "prev" && lastDocRef) {
-      // Previous page - use endBefore and limitToLast
-      querySnapshot = await formLeaveRef
-        .where("username", "==", session?.user?.username)
-        .orderBy("createdAt", "desc")
+      querySnapshot = await baseQuery
         .endBefore(lastDocRef)
         .limitToLast(limitParam)
         .get();
     } else if (lastDocRef) {
-      // Next page - use startAfter
-      querySnapshot = await formLeaveRef
-        .where("username", "==", session?.user?.username)
-        .orderBy("createdAt", "desc")
+      querySnapshot = await baseQuery
         .startAfter(lastDocRef)
         .limit(limitParam)
         .get();
     } else {
-      // First page
-      querySnapshot = await formLeaveRef
-        .where("username", "==", session?.user?.username)
-        .orderBy("createdAt", "desc")
+      querySnapshot = await baseQuery
         .limit(limitParam)
         .get();
     }
@@ -70,25 +79,22 @@ export async function GET(req: Request) {
       }, { status: 200 });
     }
 
-    // Get the last visible document for next page cursor
     const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
 
-    // Check if there are more documents after this batch
-    const nextBatchSnapshot = await formLeaveRef
-      .where("username", "==", session?.user?.username)
-      .orderBy("createdAt", "desc")
+    // Check if there's more data
+    const nextBatchSnapshot = await baseQuery
       .startAfter(lastVisible)
       .limit(1)
       .get();
-    
+
     const hasMore = !nextBatchSnapshot.empty;
 
     const data = querySnapshot.docs.map((doc) => {
       const docData = doc.data();
-      console.log(doc.id)
       return {
         id: doc.id,
         username: docData.username,
+        department: docData.department,
         leaveTime: docData.leaveTime,
         fullname: docData.fullname,
         leaveDays: docData.leaveDays,
@@ -96,7 +102,7 @@ export async function GET(req: Request) {
         reason: docData.reason,
         status: docData.status,
         periodTime: docData.periodTime,
-        createdAt: docData.createdAt?.toDate(), 
+        createdAt: docData.createdAt?.toDate(),
       };
     });
 
@@ -105,6 +111,7 @@ export async function GET(req: Request) {
       hasMore,
       lastVisible: lastVisible.id,
     }, { status: 200 });
+
   } catch (err) {
     console.error("Error in API:", err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

@@ -32,9 +32,6 @@ const UserDashboard = () => {
         
         if (res.ok) {
           setDocs(result.data || []);
-
-          console.log(result.data);
-          console.log(result.lastVisible);
           setHasMore(result.data.length === limit && result.hasMore);
           return result.lastVisible;
         } else {
@@ -96,11 +93,11 @@ const UserDashboard = () => {
     <DashboardLayout title="Want to Leave">
       <div className="flex flex-col flex-wrap bg-white p-4 rounded shadow">
        <div className="flex flex-row flex-wrap gap-4 ">
-          <div className="flex flex-col basis-0 flex-1 min-w-64 bg-white p-4 rounded shadow">
+          <div className="flex flex-col w-full sm:w-[calc(50%-0.5rem)] bg-white p-4 rounded shadow">
               <label htmlFor="">ชื่อ: {session?.user?.firstname}  {session?.user?.lastname}</label>
               <label htmlFor="">แผนก: {session?.user?.department}</label>
           </div>
-          <div className="flex flex-col basis-0 flex-1 min-w-64 bg-white p-4 rounded shadow">ข้อมูลการประเภทการลา
+          <div className="flex flex-col w-full sm:w-[calc(50%-0.5rem)] bg-white p-4 rounded shadow">ข้อมูลการประเภทการลา
               <table className="min-w-full border border-collapse border-gray-300">
                  <thead>
                   <tr>
@@ -136,66 +133,120 @@ const UserDashboard = () => {
           </div>
        </div>
         {/* Content */}
-          <div>
-        <h1>ข้อมูลประวัติการลา</h1>
-        {error && <p>{error}</p>}
-        <table className="min-w-full border border-collapse border-gray-300">
-          <thead className="bg-gray-100">
-            <tr>
-                <th className="border px-4 py-2">ชื่อผู้ใช้</th>
-                <th className="border px-4 py-2">ชื่อ-นามสกุล</th>
-                <th className="border px-4 py-2">ประเภทการลา</th>
-                <th className="border px-4 py-2">วันที่ลา</th>
-                <th className="border px-4 py-2">ช่วงเวลาที่ลา</th>
-                <th className="border px-4 py-2">เหตุผล</th>
-                <th className="border px-4 py-2">เวลาที่ส่งฟอร์มาลา</th>
-                <th className="border px-4 py-2">สถานะ</th>
-                
-            </tr>
-          </thead>
-          <tbody>
+        <div>
+          <h1 className="text-xl font-bold mb-4">ข้อมูลประวัติการลา</h1>
+          {error && <p className="text-red-500 mb-2">{error}</p>}
+          
+          {/* ตารางประวัติการลาสำหรับหน้าจอขนาดกลางและใหญ่ */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-full border border-collapse border-gray-300">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="border px-4 py-2">ประเภทการลา</th>
+                  <th className="border px-4 py-2">วันที่ลา</th>
+                  <th className="border px-4 py-2">ช่วงเวลาที่ลา</th>
+                  <th className="border px-4 py-2">เหตุผล</th>
+                  <th className="border px-4 py-2">เวลาที่ส่งฟอร์ม</th>
+                  <th className="border px-4 py-2">สถานะ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {docs.map((doc, index) => (
+                  <tr key={index}>
+                    <td className="border px-4 py-2">{doc.selectedLeavetype}</td>
+                    <td className="border px-4 py-2">{doc.leaveDays}</td>
+                    <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
+                    <td className="border px-4 py-2">{doc.reason}</td>
+                    <td className="border px-4 py-2">{doc.createdAt}</td>
+                    <td className="border px-4 py-2">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        doc.status === 'อนุมัติ' ? 'bg-green-100 text-green-800' : 
+                        doc.status === 'รออนุมัติ' ? 'bg-yellow-100 text-yellow-800' : 
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {doc.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* การ์ดประวัติการลาสำหรับหน้าจอขนาดเล็ก */}
+          <div className="md:hidden space-y-4">
             {docs.map((doc, index) => (
-              <tr key={index}>
-                <td className="border px-4 py-2">{doc.username}</td>
-                <td className="border px-4 py-2">{doc.fullname}</td>
-                <td className="border px-4 py-2">{doc.selectedLeavetype}</td>
-                <td className="border px-4 py-2">{doc.leaveDays}</td>
-                <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
-                <td className="border px-4 py-2">{doc.reason}</td>
-                <td className="border px-4 py-2">{doc.createdAt}</td>
-                <td className= "border px-4 py-">{doc.status}</td>
-              </tr>
+              <div key={index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium">{doc.selectedLeavetype}</span>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    doc.status === 'อนุมัติ' ? 'bg-green-100 text-green-800' : 
+                    doc.status === 'รออนุมัติ' ? 'bg-yellow-100 text-yellow-800' : 
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {doc.status}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-gray-500">วันที่ลา</p>
+                    <p>{doc.leaveDays}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">ช่วงเวลา</p>
+                    <p>{doc.periodTime}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-gray-500">เหตุผล</p>
+                    <p>{doc.reason}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-gray-500">เวลาที่ส่งฟอร์ม</p>
+                    <p>{doc.createdAt}</p>
+                  </div>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-        
-        
-        <div className="flex justify-between mt-4">
-          <button 
-            onClick={handlePrevious}
-            disabled={currentPage <= 0 || loading}
-            className={`px-4 py-2 bg-blue-500 text-white rounded ${
-              currentPage <= 0 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
-            }`}
-          >
-            Previous
-          </button>
+            
+            {docs.length === 0 && !loading && (
+              <p className="text-center py-4 text-gray-500">ไม่พบข้อมูลประวัติการลา</p>
+            )}
+          </div>
           
-          <span className="self-center">Page {currentPage + 1}</span>
+          {/* ปุ่มเปลี่ยนหน้า */}
+          <div className="flex justify-between mt-6">
+            <button 
+              onClick={handlePrevious}
+              disabled={currentPage <= 0 || loading}
+              className={`px-4 py-2 bg-blue-500 text-white rounded ${
+                currentPage <= 0 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+              }`}
+            >
+              ก่อนหน้า
+            </button>
+            
+            <span className="self-center text-sm">หน้า {currentPage + 1}</span>
+            
+            <button 
+              onClick={handleNext}
+              disabled={!hasMore || loading}
+              className={`px-4 py-2 bg-blue-500 text-white rounded ${
+                !hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+              }`}
+            >
+              ถัดไป
+            </button>
+          </div>
           
-          <button 
-            onClick={handleNext}
-            disabled={!hasMore || loading}
-            className={`px-4 py-2 bg-blue-500 text-white rounded ${
-              !hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
-            }`}
-          >
-            Next
-          </button>
+          {loading && (
+            <div className="text-center mt-4">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+              <p className="mt-2">กำลังโหลด...</p>
+            </div>
+          )}
         </div>
-        
-        {loading && <p className="text-center mt-2">Loading...</p>}
-      </div>
+    
       </div>
     </DashboardLayout>
   );

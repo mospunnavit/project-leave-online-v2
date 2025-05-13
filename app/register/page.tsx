@@ -30,7 +30,7 @@ function RegisterPage() {
         }
 
         try{
-            const resCheck = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/checkuser", {
+            const resCheck = await fetch(process.env.API_URL + "/api/checkuser", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -48,7 +48,7 @@ function RegisterPage() {
                 return;
             }
 
-            const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/register", {
+            const res = await fetch(process.env.API_URL + "/api/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -94,7 +94,7 @@ const UserDashboard = () => {
     if (loading && docs.length === 0) return <p>Loading...</p>;
   return (
     <DashboardLayout title="Want to Leave">
-      <div className="bg-white p-4 rounded shadow">
+      <div className="flex flex-col flex-wrap bg-white p-4 rounded shadow">
        <div className="flex flex-row flex-wrap gap-4 ">
           <div className="flex flex-col basis-0 flex-1 min-w-64 bg-white p-4 rounded shadow">
               <label htmlFor="">ชื่อ: {session?.user?.firstname}  {session?.user?.lastname}</label>

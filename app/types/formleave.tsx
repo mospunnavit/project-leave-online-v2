@@ -1,12 +1,18 @@
 export interface Leave {
     id: string;
-    email: string;
-    leaveFields: LeaveField[];
+    username : string;
+    leaveTime: LeaveTime[];
     reason: string;
-    createdAt: Date;
+    selectedLeavetype: string;
+    leaveDays: string;
+    fullname: string;
+    department: string;
+    periodTime: string;
+    createdAt: string;
+    status: string;
   }
   
-  interface LeaveField {
-    date: string;
-    days: string;
-  }
+  type LeaveTime = {
+    startTime: string;
+    endTime: string;
+  };

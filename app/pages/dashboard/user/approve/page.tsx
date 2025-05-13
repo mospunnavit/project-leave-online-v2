@@ -3,6 +3,7 @@ import DashboardLayout from "@/app/components/dashboardLayout";
 import {DocumentSnapshot, DocumentData } from "firebase/firestore";
 import { useSession } from 'next-auth/react';
 import { use, useEffect, useState } from "react";
+import { Leave } from '@/app/types/formleave';
 
 interface roleData {
   title: string;
@@ -12,8 +13,10 @@ interface roleData {
   rejectedStatus: string;
 }
 
+
+
 const approveDashboard = () => {
-    const [docs, setDocs] = useState([]);
+    const [docs, setDocs] = useState<Leave[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<String>('');
     const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
@@ -219,7 +222,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                     <td className="border px-4 py-2">{doc.department}</td>
                     <td className="border px-4 py-2">{doc.selectedLeavetype}</td>
                     <td className="border px-4 py-2">{doc.leaveDays}</td>
-                    <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
+                    <td className="border px-4 py-2">{doc.leaveTime[0].startTime} - {doc.leaveTime[0].endTime}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
                     <td className="border px-4 py-2">{doc.createdAt}
                         <div>

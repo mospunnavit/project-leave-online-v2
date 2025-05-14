@@ -98,7 +98,13 @@ export async function GET(req: Request) {
         createdAt: docData.createdAt?.toDate(),
       };
     });
-
+    if (data.length === 0) {
+      return NextResponse.json({
+        data: [],
+        hasMore: false,
+        lastVisible: lastDoc
+      }, { status: 200 });
+    }
     return NextResponse.json({
       data,
       hasMore,

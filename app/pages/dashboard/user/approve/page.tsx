@@ -174,17 +174,32 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
           setLoading(false);
         }
       }
-
-      const handleReject = async (docId: string, status: string) => {
-        
+    
+    const renderStatus = (status: string) => {
+      if (status === roleData.pendingStatus) {
+        return <span className={`px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800`}>
+                        {status}
+                      </span>
+      }else if(status === roleData.approvedStatus){
+           return <span className={`px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800`}>
+                        {status}
+                      </span>
+      }else if(status.includes("rejected")){
+            return  <span className={`px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800`}>
+                        {status}
+                      </span>
+      }else{
+        return    <span className={`px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
+                        {status}
+                      </span>
       }
-      
+    }
       if (loading && docs.length === 0) return <p>Loading...</p>;
   return (
     <DashboardLayout title={`หัวหน้าอนุมัติ ${session?.user?.role} ${session?.user?.department}`}>
       <div className="bg-white p-4 rounded shadow">
         {error && <p className="text-red-500">{error}</p>}
-       <div className="flex  text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
+       <div className="flex w-full text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
         
        <div className="flex flex-row flex-wrap gap-4 ">
             <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
@@ -231,9 +246,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                         </div>
                     </td>
                     <td className="border px-4 py-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800`}>
-                        {doc.status}
-                      </span>
+                      {renderStatus(doc.status)}
                       {doc.status === roleData?.pendingStatus && (
                         <>
                             <button
@@ -263,15 +276,12 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
               <div key={index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium">{doc.selectedLeavetype}</span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    doc.status === 'อนุมัติ' ? 'bg-green-100 text-green-800' : 
-                    doc.status === 'รออนุมัติ' ? 'bg-yellow-100 text-yellow-800' : 
-                    'bg-red-100 text-red-800'
-                  }`}>
+                  <span className="px-2 py-1 rounded text-xs font-medium 
+                  bg-green-100 text-green-800">
                     {doc.status}
                   </span>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-gray-500">วันที่ลา</p>
@@ -294,7 +304,9 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
             ))}
             
             {docs.length === 0 && !loading && (
-              <p className="text-center py-4 text-gray-500">ไม่พบข้อมูลประวัติการลา</p>
+              <p className="text-center py-4 text-gray-500">
+                ไม่พบข้อมูลประวัติการลา
+                </p>
             )}
           </div>
           

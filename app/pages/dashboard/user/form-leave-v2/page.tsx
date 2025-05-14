@@ -163,124 +163,147 @@ const UserformleaveDashboard = () => {
             </div>
           </div>
         )}
-        <form onSubmit={handleSubmit}>
-          <div className="max-w-4xl mx-auto p-4 space-y-4">
-                <div>
-
-                <label className="font-medium mb-1 p-4 h-12" htmlFor="leave" >เลือกประเภทการลา</label>
-                    <select className ="h-10 border rounded"name="leave" id="leave" required defaultValue=""
-                    onChange={(e) => setSelectedLeavetype(e.target.value)}>
-                    <option value="" disabled hidden>-- กรุณาเลือกประเภทการลา --</option>
-                    <optgroup label="ลากิจ">
-                        <option value="ลากิจ">ลากิจ</option>
-                        <option value="ลากิจพิเศษ">ลากิจพิเศษ</option>
-                    </optgroup>
-                    <optgroup label="ลาป่วย">
-                        <option value="มีใบรับรองแพทย์">มีใบรับรองแพทย์</option>
-                        <option value="ไม่มีใบรับรองแพทย์">ไม่มีใบรับรองแพทย์</option>
-                    </optgroup>
-                    <optgroup label="พักร้อน">
-                        <option value="พักร้อน">พักร้อน</option>
-                    </optgroup>
-                    </select>
-                <br></br>
-            </div>
-            <div className="flex flex-row shadow p-4">
-                <div className="flex flex-col basis-1/3 grow-0 min-w-64 p-4 mt-2">
-                    <label className="font-medium">วันที่ลา</label>
-                        <input type="date"
-                            className="bg-gray-100 border border-gray-300 py-2 px-3 rounded text-lg"
-                            value={leaveDays}
-                            onChange={(e) => setLeaveDays(e.target.value)}/>
-                    </div>
-                    <div className="flex flex-col basis-2/3 grow-0 min-w-64 p-4 ">
-                    <div className="flex flex-row gap-4 p-2">
-                        <div className="flex-1">
-                            <div>
-                                <label htmlFor="startTime" className="font-medium ">เวลาเริ่ม</label>
-                            </div>
-                            
-                            <input
-                              type="time"
-                              id="startTime"
-                              name="startTime"
-                              value={leaveTime.startTime}
-                              onChange={(e) => setLeaveTime({ ...leaveTime, startTime: e.target.value })}
-                              
-                              className="w-full border p-2 rounded"
-                              required
-                              lang="th"
-                              step="60" // optional: step เป็นวินาที (60 = 1 นาที)
-                              />
-                        </div>
-
-                        <span className="mt-8">ถึง</span>
-
-                        <div className="flex-1">
-                            <label htmlFor="endTime" className="font-medium ">เวลาสิ้นสุด</label>
-                            <input type="time" 
-                            id="endTime"
-                            name="endTime"
-                            required
-                            lang="th"
-                            step="60" // optional: step เป็นวินาที (60 = 1 นาที)
-                            value= {leaveTime.endTime} 
-                            onChange={(e) => setLeaveTime({ ...leaveTime, endTime: e.target.value })} 
-                            
-                            className="w-full border p-2 rounded" 
-                            />
-                        </div>
-                        <div className="flex-1 mt-4 p-3 bg-gray-100 rounded">
-                            <div>
-                               เวลาที่เลือก 
-                            </div>
-                                                       <p >{leaveTime.startTime} - {leaveTime.endTime}</p>
-                        </div>
-                        </div>
-                    </div>
-                </div>
-                {selectedLeavetype === 'มีใบรับรองแพทย์' && insertComponent()}
-            
-
-           
-            <div className="flex flex-col p-4">
-            <label className="font-medium mb-1">เหตุผล</label>
-            <input
-                    type="textarea"
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    className="bg-gray-100 border border-gray-300 py-2 px-3 rounded text-lg"
-                    placeholder="กรุณาระบุเหตุผล"
-                  />
-            </div>
-            <div className="flex justify-end mt-4">
-              <button
-                type="submit"
-                className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
-                ส่งคำขอ
-              </button>
-            </div>
+         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md">
+      <div className="max-w-4xl mx-auto p-2 sm:p-4 space-y-4">
+        {/* ส่วนเลือกประเภทการลา */}
+        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+          <label className="block font-medium mb-2 text-sm sm:text-base" htmlFor="leave">
+            เลือกประเภทการลา
+          </label>
+          <select 
+            className="w-full h-10 border rounded px-2 text-sm"
+            name="leave" 
+            id="leave" 
+            required 
+            defaultValue=""
+            onChange={(e) => setSelectedLeavetype(e.target.value)}>
+            <option value="" disabled hidden>-- กรุณาเลือกประเภทการลา --</option>
+            <optgroup label="ลากิจ">
+              <option value="ลากิจ">ลากิจ</option>
+              <option value="ลากิจพิเศษ">ลากิจพิเศษ</option>
+            </optgroup>
+            <optgroup label="ลาป่วย">
+              <option value="มีใบรับรองแพทย์">มีใบรับรองแพทย์</option>
+              <option value="ไม่มีใบรับรองแพทย์">ไม่มีใบรับรองแพทย์</option>
+            </optgroup>
+            <optgroup label="พักร้อน">
+              <option value="พักร้อน">พักร้อน</option>
+            </optgroup>
+          </select>
+        </div>
+        
+        {/* ส่วนเลือกวันและเวลา */}
+        <div className="flex flex-col sm:flex-row shadow rounded-lg overflow-hidden">
+          {/* วันที่ลา */}
+          <div className="w-full sm:w-1/3 p-3 sm:p-4 bg-gray-50">
+            <label className="block font-medium mb-2 text-sm sm:text-base">วันที่ลา</label>
+            <input 
+              type="date"
+              className="w-full bg-white border border-gray-300 py-2 px-3 rounded text-sm sm:text-base"
+              value={leaveDays}
+              onChange={(e) => setLeaveDays(e.target.value)}
+            />
           </div>
-         {loading && (
-          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-white bg-opacity-75 z-50">
-            <div className="text-center">
-              <div className="inline-block relative w-16 h-16">
-                {/* Spinning gradient ring */}
-                <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-r-blue-400 border-b-blue-300 border-l-transparent animate-spin"></div>
-                
-                {/* Inner ring */}
-                <div className="absolute inset-2 rounded-full border-4 border-t-transparent border-r-blue-200 border-b-blue-100 border-l-blue-300 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          
+          {/* เวลาเริ่มและสิ้นสุด */}
+          <div className="w-full sm:w-2/3 p-3 sm:p-4 bg-white">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+              {/* เวลาเริ่ม */}
+              <div className="flex-1">
+                <label htmlFor="startTime" className="block font-medium mb-1 text-sm sm:text-base">
+                  เวลาเริ่ม
+                </label>
+                <input
+                  type="time"
+                  id="startTime"
+                  name="startTime"
+                  value={leaveTime.startTime}
+                  onChange={(e) => setLeaveTime({ ...leaveTime, startTime: e.target.value })}
+                  className="w-full border p-2 rounded text-sm sm:text-base"
+                  required
+                  lang="th"
+                  step="60"
+                />
               </div>
               
-              <p className="mt-4 text-lg font-medium text-gray-700">กรุณารอสักครู่</p>
-              <p className="text-sm text-blue-500 animate-pulse mt-1">กำลังอัพเดทสถานะ...</p>
+              {/* ถึง */}
+              <div className="hidden sm:flex items-center justify-center mt-6">
+                <span className="text-gray-500">ถึง</span>
+              </div>
+              <div className="flex sm:hidden items-center justify-center my-1">
+                <span className="text-gray-500">ถึง</span>
+              </div>
+              
+              {/* เวลาสิ้นสุด */}
+              <div className="flex-1">
+                <label htmlFor="endTime" className="block font-medium mb-1 text-sm sm:text-base">
+                  เวลาสิ้นสุด
+                </label>
+                <input 
+                  type="time"
+                  id="endTime"
+                  name="endTime"
+                  required
+                  lang="th"
+                  step="60"
+                  value={leaveTime.endTime}
+                  onChange={(e) => setLeaveTime({ ...leaveTime, endTime: e.target.value })}
+                  className="w-full border p-2 rounded text-sm sm:text-base"
+                />
+              </div>
+            </div>
+            
+            {/* แสดงเวลาที่เลือก */}
+            <div className="mt-3 p-2 sm:p-3 bg-gray-100 rounded text-sm">
+              <div className="font-medium mb-1">เวลาที่เลือก</div>
+              <p>{leaveTime.startTime || '--:--'} - {leaveTime.endTime || '--:--'}</p>
             </div>
           </div>
-          )}
-                  
-
-          
-        </form>
+        </div>
+        
+        {/* ส่วนอัพโหลดใบรับรองแพทย์ (ถ้าเลือกมีใบรับรองแพทย์) */}
+        {selectedLeavetype === 'มีใบรับรองแพทย์' && insertComponent()}
+        
+        {/* ส่วนเหตุผล */}
+        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+          <label className="block font-medium mb-2 text-sm sm:text-base">เหตุผล</label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full h-24 bg-white border border-gray-300 py-2 px-3 rounded text-sm sm:text-base"
+            placeholder="กรุณาระบุเหตุผล"
+          />
+        </div>
+        
+        {/* ปุ่มส่งคำขอ */}
+        <div className="flex justify-end mt-4">
+          <button
+            type="submit"
+            className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 text-sm sm:text-base"
+          >
+            ส่งคำขอ
+          </button>
+        </div>
+      </div>
+      
+      {/* Loading overlay */}
+      {loading && (
+        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-white bg-opacity-75 z-50">
+          <div className="text-center">
+            <div className="inline-block relative w-12 h-12 sm:w-16 sm:h-16">
+              {/* Spinning gradient ring */}
+              <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-r-blue-400 border-b-blue-300 border-l-transparent animate-spin"></div>
+              
+              {/* Inner ring */}
+              <div className="absolute inset-2 rounded-full border-4 border-t-transparent border-r-blue-200 border-b-blue-100 border-l-blue-300 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+            </div>
+            
+            <p className="mt-4 text-base sm:text-lg font-medium text-gray-700">กรุณารอสักครู่</p>
+            <p className="text-xs sm:text-sm text-blue-500 animate-pulse mt-1">กำลังอัพเดทสถานะ...</p>
+          </div>
+        </div>
+      )}
+    </form>
       </div>
     </DashboardLayout>
   );

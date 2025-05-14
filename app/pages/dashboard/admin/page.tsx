@@ -34,8 +34,6 @@ const AdminDashboard = () => {
         
         if (res.ok) {
           setDocs(result.data || []);
-          console.log(result.data);
-          console.log(result.lastVisible);
           setHasMore(result.data.length === limit && result.hasMore);
           return result.lastVisible;
         } else {
@@ -56,8 +54,6 @@ const AdminDashboard = () => {
 
     useEffect(() => {
       if (status === "loading") return;
-    
-  
       const loadInitialData = async () => {
         const lastVisible = await fetchData();
         if (lastVisible) {

@@ -32,7 +32,11 @@ const UserDashboard = () => {
         
         if (res.ok) {
           console.log(result.data);
-          console.log(result.data[0].leaveTime.startTime);
+          if(result.data.length === 0){
+            setError('ไม่พบข้อมูลการลา');
+            setHasMore(false);
+            return null;
+          }
           setDocs(result.data || []);
           setHasMore(result.data.length === limit && result.hasMore);
           return result.lastVisible;
@@ -89,7 +93,33 @@ const UserDashboard = () => {
       setCurrentPage(newPage);
       setHasMore(true); // When going back, we know there's more forward
     };
-
+  const renderStatus = (status: string) => {
+  if (status.includes("waiting")) {
+    return (
+      <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+        {status}
+      </span>
+    );
+  } else if (status.includes("rejected")) {
+    return (
+      <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+        {status}
+      </span>
+    );
+  } else if (status.includes("approved")) {
+    return (
+      <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+        {status}
+      </span>
+    );
+  } else {
+    return (
+      <span className="px-2 py-1 rounded text-xs font-medium bg-white text-black">
+        {status}
+      </span>
+    );
+  }
+};
     if (loading && docs.length === 0) return <p>Loading...</p>;
   return (
     <DashboardLayout title="Want to Leave">
@@ -161,13 +191,7 @@ const UserDashboard = () => {
                     <td className="border px-4 py-2">{doc.reason}</td>
                     <td className="border px-4 py-2">{doc.createdAt}</td>
                     <td className="border px-4 py-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        doc.status === 'อนุมัติ' ? 'bg-green-100 text-green-800' : 
-                        doc.status === 'รออนุมัติ' ? 'bg-yellow-100 text-yellow-800' : 
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {doc.status}
-                      </span>
+                      {renderStatus(doc.status)}
                     </td>
                   </tr>
                 ))}

@@ -1,7 +1,7 @@
 export interface Leave {
     id: string;
     username : string;
-    leaveTime: LeaveTime[];
+    leaveTime: LeaveTime;
     reason: string;
     selectedLeavetype: string;
     leaveDays: string;

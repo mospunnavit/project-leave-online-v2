@@ -222,7 +222,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                     <td className="border px-4 py-2">{doc.department}</td>
                     <td className="border px-4 py-2">{doc.selectedLeavetype}</td>
                     <td className="border px-4 py-2">{doc.leaveDays}</td>
-                    <td className="border px-4 py-2">{doc.leaveTime[0].startTime} - {doc.leaveTime[0].endTime}</td>
+                    <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
                     <td className="border px-4 py-2">{doc.createdAt}
                         <div>

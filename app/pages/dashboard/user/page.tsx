@@ -31,6 +31,8 @@ const UserDashboard = () => {
         const result = await res.json();
         
         if (res.ok) {
+          console.log(result.data);
+          console.log(result.data[0].leaveTime.startTime);
           setDocs(result.data || []);
           setHasMore(result.data.length === limit && result.hasMore);
           return result.lastVisible;
@@ -155,7 +157,7 @@ const UserDashboard = () => {
                   <tr key={index}>
                     <td className="border px-4 py-2">{doc.selectedLeavetype}</td>
                     <td className="border px-4 py-2">{doc.leaveDays}</td>
-                    <td className="border px-4 py-2">{doc.leaveTime[0].startTime} - {doc.leaveTime[0].endTime}</td>
+                    <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
                     <td className="border px-4 py-2">{doc.createdAt}</td>
                     <td className="border px-4 py-2">

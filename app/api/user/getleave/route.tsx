@@ -87,7 +87,6 @@ export async function GET(req: Request) {
       const docData = doc.data();
       console.log(doc.id)
       return {
-        id: doc.id,
         username: docData.username,
         leaveTime: docData.leaveTime,
         fullname: docData.fullname,
@@ -96,7 +95,7 @@ export async function GET(req: Request) {
         reason: docData.reason,
         status: docData.status,
         periodTime: docData.periodTime,
-        createdAt: docData.createdAt?.toDate(), 
+        createdAt: docData.createdAt?.toDate(),
       };
     });
 

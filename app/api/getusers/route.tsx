@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, userAgentFromString } from 'next/server';
 import { initAdmin } from '@/firebase/firebaseAdmin'; // ฟังก์ชันที่คุณเขียนไว้
 
 export async function GET(req: Request) {
@@ -12,11 +12,12 @@ export async function GET(req: Request) {
       const data = doc.data();
       return {
         id: doc.id,
-        name: data.name,
-        email: data.email,
+        firstname: data.firstname,
+        lastname: data.lastname,
+        role: data.role,
+        username: data.username,
       };
     });
-
     return NextResponse.json({ users }, { status: 200 });
 
   } catch (err) {

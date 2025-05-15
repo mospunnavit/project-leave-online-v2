@@ -1,133 +1,91 @@
 'use client';
 import DashboardLayout from "@/app/components/dashboardLayout";
 import { useEffect, useState } from 'react';
-import { DocumentSnapshot, DocumentData } from "firebase/firestore";
-import { Leave } from '@/app/types/formleave';
-import { useSession } from "next-auth/react";
-import { useRouter } from 'next/navigation';
+import {  Users, Calendar, ArrowRight, FileText, Settings } from "lucide-react";
+import Link from "next/link";
 const AdminDashboard = () => {
-    const [docs, setDocs] = useState<Leave[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<String>('');
-    const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
-    const [currentPage, setCurrentPage] = useState<number>(0);
-    const [hasMore, setHasMore] = useState<boolean>(true);
-    const { data: session, status } = useSession();
-    const limit = 5;
-    const email = session?.user?.email;
-    const router = useRouter();
-    const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData> | null = null, isPrevious = false) => {
-      try {
-        setLoading(true);
-        let url = `/api/admin/getleave?email=${email}&limit=${limit}`;
-        
-        if (lastDocId) {
-          url += `&lastDoc=${lastDocId}`;
-        }
-        
-        if (isPrevious) {
-          url += '&direction=prev';
-        }
-        
-        const res = await fetch(url);
-        const result = await res.json();
-        
-        if (res.ok) {
-          setDocs(result.data || []);
-          setHasMore(result.data.length === limit && result.hasMore);
-          return result.lastVisible;
-        } else {
-          if(res.status === 403) {
-            router.push('/forbidden');
-          }
-          setError('API error: ' + (result.error || 'Unknown error'));
-          return null;
-        }
-      } catch (err) {
-        console.error('Error fetching documents:', err);
-        setError('Failed to connect to server.');
-        return null;
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<String>('');
+  
 
     useEffect(() => {
-      if (status === "loading") return;
-      const loadInitialData = async () => {
-        const lastVisible = await fetchData();
-        if (lastVisible) {
-          setLastDocIds([lastVisible]);
-        }
-      };
-      
-      loadInitialData();
-    },  [status]);
+     
+    },  );
 
-    const handleNext = async () => {
-      if (!hasMore) return;
-      
-      const lastVisible = await fetchData(lastDocIds[currentPage]);
-      
-      if (lastVisible) {
-        // If we navigated back and then forward, remove the forward history
-        if (currentPage < lastDocIds.length - 1) {
-          setLastDocIds(prev => [...prev.slice(0, currentPage + 1), lastVisible]);
-        } else {
-          setLastDocIds(prev => [...prev, lastVisible]);
-        }
-        setCurrentPage(prev => prev + 1);
-      }
-    };
+  
 
-    const handlePrevious = async () => {
-      if (currentPage <= 0) return;
-      
-      const newPage = currentPage - 1;
-      const previousLastDocId = newPage > 0 ? lastDocIds[newPage - 1] : null;
-      
-      await fetchData(previousLastDocId);
-      setCurrentPage(newPage);
-      setHasMore(true); // When going back, we know there's more forward
-    };
-
-    if (loading && docs.length === 0) return <p>Loading...</p>;
   
   return (
-    <DashboardLayout title="Form leave">
-      <div className="bg-white p-4 rounded shadow">
-        User contents here
-          <div>
-        <h1>Firebase Data</h1>
-        {error ? <p>{error}</p> : null}
-      
-          
+    <DashboardLayout title="admin dashboard">
+      <div className="bg-white flex p-4 rounded shadow">
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+        {/* Card 1 */}
+        <Link href="/admin/users">
+          <div className="h-full bg-white hover:bg-blue-50 p-6 rounded-lg shadow-md transition-all duration-300 border border-gray-100 hover:border-blue-200 group">
+            <div className="flex flex-col items-center text-center">
+              <div className="p-3 rounded-full bg-blue-100 mb-4 group-hover:bg-blue-200 transition-colors duration-300">
+                <Users size={28} className="text-blue-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">จัดการ Users</h3>
+              <p className="text-sm text-gray-500 mb-4">จัดการข้อมูลผู้ใช้งานระบบทั้งหมด</p>
+              <div className="flex items-center text-blue-600 font-medium text-sm">
+                <span>เข้าสู่หน้าจัดการ</span>
+                <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+              </div>
+            </div>
+          </div>
+        </Link>
         
-        <div className="flex justify-between mt-4">
-          <button 
-            onClick={handlePrevious}
-            disabled={currentPage <= 0 || loading}
-            className={`px-4 py-2 bg-blue-500 text-white rounded ${
-              currentPage <= 0 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
-            }`}
-          >
-            Previous
-          </button>
-          
-          <span className="self-center">Page {currentPage + 1}</span>
-          
-          <button 
-            onClick={handleNext}
-            disabled={!hasMore || loading}
-            className={`px-4 py-2 bg-blue-500 text-white rounded ${
-              !hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
-            }`}
-          >
-            Next
-          </button>
-        </div>
+        {/* Card 2 */}
+        <Link href="/admin/leave-forms">
+          <div className="h-full bg-white hover:bg-green-50 p-6 rounded-lg shadow-md transition-all duration-300 border border-gray-100 hover:border-green-200 group">
+            <div className="flex flex-col items-center text-center">
+              <div className="p-3 rounded-full bg-green-100 mb-4 group-hover:bg-green-200 transition-colors duration-300">
+                <Calendar size={28} className="text-green-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">จัดการ ฟอร์มการลา</h3>
+              <p className="text-sm text-gray-500 mb-4">จัดการแบบฟอร์มการลาและคำขอทั้งหมด</p>
+              <div className="flex items-center text-green-600 font-medium text-sm">
+                <span>เข้าสู่หน้าจัดการ</span>
+                <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+              </div>
+            </div>
+          </div>
+        </Link>
         
-        {loading && <p className="text-center mt-2">Loading...</p>}
+        {/* Card 3 */}
+        <Link href="/admin/reports">
+          <div className="h-full bg-white hover:bg-purple-50 p-6 rounded-lg shadow-md transition-all duration-300 border border-gray-100 hover:border-purple-200 group">
+            <div className="flex flex-col items-center text-center">
+              <div className="p-3 rounded-full bg-purple-100 mb-4 group-hover:bg-purple-200 transition-colors duration-300">
+                <FileText size={28} className="text-purple-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">รายงาน</h3>
+              <p className="text-sm text-gray-500 mb-4">ดูรายงานและสถิติการลาทั้งหมด</p>
+              <div className="flex items-center text-purple-600 font-medium text-sm">
+                <span>เข้าสู่หน้าจัดการ</span>
+                <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+              </div>
+            </div>
+          </div>
+        </Link>
+        
+        {/* Card 4 */}
+        <Link href="/admin/settings">
+          <div className="h-full bg-white hover:bg-amber-50 p-6 rounded-lg shadow-md transition-all duration-300 border border-gray-100 hover:border-amber-200 group">
+            <div className="flex flex-col items-center text-center">
+              <div className="p-3 rounded-full bg-amber-100 mb-4 group-hover:bg-amber-200 transition-colors duration-300">
+                <Settings size={28} className="text-amber-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">ตั้งค่าระบบ</h3>
+              <p className="text-sm text-gray-500 mb-4">จัดการการตั้งค่าระบบทั้งหมด</p>
+              <div className="flex items-center text-amber-600 font-medium text-sm">
+                <span>เข้าสู่หน้าจัดการ</span>
+                <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+              </div>
+            </div>
+          </div>
+        </Link>
       </div>
       </div>
     </DashboardLayout>

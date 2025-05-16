@@ -34,16 +34,55 @@ const approveDashboard = () => {
   };
 
   // Function สำหรับบันทึกการแก้ไข
-  const handleSaveEdit = () => {
-    if (!currentLeave) return;
+  const handleSaveEdit = async () => {
+  if (!currentLeave) return;
+  
+  // อัปเดต state ภายในแอพ
+  setDocs(docs.map(doc => 
+    doc.id === currentLeave.id ? currentLeave : doc
+  ));
+  
+  // ลอง-จับข้อผิดพลาด สำหรับการเรียก API
+  try {
+    // ใช้ async/await เพื่อรอการตอบกลับจาก API
+    const response = await fetch('/api/admin/editformbyid', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // ส่งข้อมูลทั้งหมดใน currentLeave ไปใน body
+      body: JSON.stringify({
+        id: currentLeave.id,
+        selectedLeavetype: currentLeave.selectedLeavetype,
+        leaveTime: currentLeave.leaveTime,
+        reason: currentLeave.reason,
+        leaveDays: currentLeave.leaveDays,
+        // สามารถเพิ่ม field อื่นๆ จาก currentLeave ที่นี่ถ้าต้องการ
+      })
+    });
     
-    setDocs(docs.map(doc => 
-      doc.id === currentLeave.id ? currentLeave : doc
-    ));
+    // ตรวจสอบว่า response เป็น OK หรือไม่
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`);
+    }
     
+    // แปลง response เป็น JSON
+    const result = await response.json();
+    console.log('Updated successfully:', result);
+    
+    // อาจแสดง toast หรือการแจ้งเตือนว่าอัปเดตสำเร็จ
+    // toast.success('บันทึกการแก้ไขเรียบร้อย');
+    
+  } catch (error) {
+    console.error('Error updating leave:', error);
+    // อาจแสดง toast หรือการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
+    // toast.error('ไม่สามารถบันทึกการแก้ไขได้');
+  } finally {
+    // ไม่ว่าจะสำเร็จหรือล้มเหลว ให้ปิด modal และล้างค่า currentLeave
     setIsEditModalOpen(false);
     setCurrentLeave(null);
-  };
+  }
+};
 
   // Function สำหรับจัดการการเปลี่ยนแปลงข้อมูลใน form แก้ไข
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -195,7 +234,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
     }
       if (loading && docs.length === 0) return <p>Loading...</p>;
   return (
-    <DashboardLayout title={`หัวหน้าอนุมัติ ${session?.user?.role} ${session?.user?.department}`}>
+    <DashboardLayout title={`admin ${session?.user?.role} ${session?.user?.department}`}>
       <div className="bg-white p-4 rounded shadow">
         {error && <p className="text-red-500">{error}</p>}
        <div className="flex w-full text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
@@ -277,6 +316,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                   type="text"
                   name="fullname"
                   value={currentLeave.fullname}
+                  readOnly
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                 />
@@ -288,6 +328,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                   type="text"
                   name="department"
                   value={currentLeave.department}
+                  readOnly
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                 />
@@ -304,6 +345,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                   <option value="ไม่มีใบรับรองแพทย์">ไม่มีใบรับรองแพทย์</option>
                   <option value="มีใบรับรองแพทย์">มีใบรับรองแพทย์</option>
                   <option value="ลากิจ">ลากิจ</option>
+                  <option value="ลากิจ">ลากิจพิเศษ</option>
                   <option value="ลาพักร้อน">ลาพักร้อน</option>
                 </select>
               </div>

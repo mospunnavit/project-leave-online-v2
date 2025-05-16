@@ -23,12 +23,12 @@ const Sidebar = () => {
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
-
+    <div className="flex">
       {/* Sidebar (transform based on isOpen state) */}
       <aside
-        className={`h-screen w-64 bg-gray-900 text-white fixed top-0 left-0 z-40 transform transition-transform duration-300
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-        md:translate-x-0 md:relative md:block`}
+        className={`fixed h-screen w-64 bg-gray-900 text-white top-0 left-0 z-40 transform transition-transform duration-300
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
+          md:translate-x-0 md:sticky md:top-0`}
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-6 mt-6 font-bold border-b border-gray-700 ">
@@ -36,6 +36,7 @@ const Sidebar = () => {
         </div>
 
         {/* Navigation Links */}
+        <div className="overflow-y-auto flex-grow" style={{ maxHeight: 'calc(100vh - 160px)' }}>
         {session?.user?.role === 'admin' && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
             <Link href="/pages/dashboard/admin" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
@@ -121,13 +122,15 @@ const Sidebar = () => {
           </nav>
           
         )}
-        <div className='ml-4 mr-5 mt-4'>
+        </div>
+        <div className='absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700'>
           <button onClick={() => handleLogout()} className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700 w-full">
             <Phone size={20} />
             <span>Logout</span>
           </button>
         </div>
       </aside>
+      </div>
     </>
   );
 };

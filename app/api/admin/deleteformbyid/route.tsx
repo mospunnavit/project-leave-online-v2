@@ -26,12 +26,7 @@ export async function POST(req: Request) {
 
     // รับข้อมูลจาก request body
     const { 
-      id, 
-      username, 
-      firstname, 
-      lastname, 
-      department,
-      role
+      id
       // รับข้อมูลอื่นๆ ที่ต้องการอัปเดตเพิ่มเติม
     } = await req.json();
     console.log("id คือ"+id)
@@ -43,24 +38,12 @@ export async function POST(req: Request) {
       });
     }
 
-    // สร้างออบเจกต์ข้อมูลที่จะอัปเดต
-    const updateData: Record<string, any> = {
-      username, 
-      firstname, 
-      lastname, 
-      department,
-      role
-    };
-    // ลบฟิลด์ที่เป็น undefined ออกจากออบเจกต์อัปเดต
-    Object.keys(updateData).forEach(key => 
-      updateData[key] === undefined && delete updateData[key]
-    );
+   
     // อัปเดตข้อมูลใน Firestore
-    await db.collection('Users').doc(id).update(updateData);
+    await db.collection('FormLeave').doc(id).delete();
     // ส่งข้อมูลที่อัปเดตกลับไป
     return new Response(JSON.stringify({ 
-      message: 'Leave updated successfully', 
-      data: { id, ...updateData } 
+      message: 'Leave deleted successfully',  
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

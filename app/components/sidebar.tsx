@@ -43,13 +43,13 @@ const Sidebar = () => {
             <Home size={20} />
             <span>Admin</span>
             </Link>
-            <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Home size={20} />
-            <span>User</span>
-            </Link>
-            <Link href="/pages/dashboard/user/form-leave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Link href="/pages/dashboard/admin/formleave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>Form leave</span>
+            </Link>
+            <Link href="/pages/dashboard/admin/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>User</span>
             </Link>
           </nav>
           

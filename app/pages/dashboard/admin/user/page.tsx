@@ -3,13 +3,13 @@ import DashboardLayout from "@/app/components/dashboardLayout";
 import {DocumentSnapshot, DocumentData } from "firebase/firestore";
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from "react";
-import { Leave } from '@/app/types/formleave';
-import { Edit, Trash, X } from "lucide-react";
+import { Users } from "@/app/types/users";
+import { X } from "lucide-react";
 
 
 
 const approveDashboard = () => {
-    const [docs, setDocs] = useState<Leave[]>([]);
+    const [docs, setDocs] = useState<Users[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<String>('');
     const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
@@ -20,9 +20,9 @@ const approveDashboard = () => {
     const [selectStatus, setSelectStatus] = useState<String>('');
     const limit = 10;
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentLeave, setCurrentLeave] = useState<Leave | null>(null);
- const handleEdit = (leave: Leave) => {
-    setCurrentLeave({...leave});
+    const [currentUser, setcurrentUser] = useState<Users | null>(null);
+ const handleEdit = (leave: Users) => {
+    setcurrentUser({...leave});
     setIsEditModalOpen(true);
   };
 
@@ -35,12 +35,10 @@ const approveDashboard = () => {
 
   // Function สำหรับบันทึกการแก้ไข
   const handleSaveEdit = async () => {
-  if (!currentLeave) return;
+  if (!currentUser) return;
   
   // อัปเดต state ภายในแอพ
-  setDocs(docs.map(doc => 
-    doc.id === currentLeave.id ? currentLeave : doc
-  ));
+
   
   // ลอง-จับข้อผิดพลาด สำหรับการเรียก API
   try {
@@ -50,14 +48,15 @@ const approveDashboard = () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      // ส่งข้อมูลทั้งหมดใน currentLeave ไปใน body
+      // ส่งข้อมูลทั้งหมดใน currentUser ไปใน body
       body: JSON.stringify({
-        id: currentLeave.id,
-        selectedLeavetype: currentLeave.selectedLeavetype,
-        leaveTime: currentLeave.leaveTime,
-        reason: currentLeave.reason,
-        leaveDays: currentLeave.leaveDays,
-        // สามารถเพิ่ม field อื่นๆ จาก currentLeave ที่นี่ถ้าต้องการ
+        id: currentUser.id,
+        username: currentUser.username,
+        firstname: currentUser.firstname,
+        lastname: currentUser.lastname,
+        department: currentUser.department,
+        role: currentUser.role
+        // สามารถเพิ่ม field อื่นๆ จาก currentUser ที่นี่ถ้าต้องการ
       })
     });
     
@@ -65,7 +64,9 @@ const approveDashboard = () => {
     if (!response.ok) {
       throw new Error(`API responded with status: ${response.status}`);
     }
-    
+    setDocs(docs.map(doc => 
+    doc.id === currentUser.id ? currentUser : doc
+    ));
     // แปลง response เป็น JSON
     const result = await response.json();
     console.log('Updated successfully:', result);
@@ -74,34 +75,35 @@ const approveDashboard = () => {
     // toast.success('บันทึกการแก้ไขเรียบร้อย');
     
   } catch (error) {
-    console.error('Error updating leave:', error);
+    setError('API error: ' + (error || 'Unknown error'));
+    
     // อาจแสดง toast หรือการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
     // toast.error('ไม่สามารถบันทึกการแก้ไขได้');
   } finally {
-    // ไม่ว่าจะสำเร็จหรือล้มเหลว ให้ปิด modal และล้างค่า currentLeave
+    // ไม่ว่าจะสำเร็จหรือล้มเหลว ให้ปิด modal และล้างค่า currentUser
     setIsEditModalOpen(false);
-    setCurrentLeave(null);
+    setcurrentUser(null);
   }
 };
 
   // Function สำหรับจัดการการเปลี่ยนแปลงข้อมูลใน form แก้ไข
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    if (!currentLeave) return;
+    if (!currentUser) return;
     
     const { name, value } = e.target;
     
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
-      setCurrentLeave({
-        ...currentLeave,
+      setcurrentUser({
+        ...currentUser,
         [parent]: {
-          ...currentLeave[parent as keyof Leave] as object,
+          ...currentUser[parent as keyof Users] as object,
           [child]: value
         }
       });
     } else {
-      setCurrentLeave({
-        ...currentLeave,
+      setcurrentUser({
+        ...currentUser,
         [name]: value
       });
     }
@@ -109,7 +111,7 @@ const approveDashboard = () => {
 const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData> | null = null, isPrevious = false) => {
        try {
          setLoading(true);
-         let url = `/api/admin/getallleave?selectStatus=${selectStatus}&limit=${limit}`;
+         let url = `/api/admin/getalluser?limit=${limit}`;
          
          if (lastDocId) {
            url += `&lastDoc=${lastDocId}`;
@@ -213,30 +215,25 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
         }
       }
     
-    const renderStatus = (status: string) => {
-      if (status.includes("waiting")) {
-        return <span className={`px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800`}>
-                        {status}
-                      </span>
-      }else if(status === "approved"){
-           return <span className={`px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800`}>
-                        {status}
-                      </span>
-      }else if(status.includes("rejected")){
-            return  <span className={`px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800`}>
-                        {status}
-                      </span>
-      }else{
-        return    <span className={`px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
-                        {status}
-                      </span>
-      }
-    }
+   
       if (loading && docs.length === 0) return <p>Loading...</p>;
   return (
     <DashboardLayout title={`admin ${session?.user?.role} ${session?.user?.department}`}>
       <div className="bg-white p-4 rounded shadow">
-        {error && <p className="text-red-500">{error}</p>}
+         {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded shadow-sm">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
        <div className="flex w-full text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
         
        <div className="flex flex-row flex-wrap gap-4 ">
@@ -249,38 +246,25 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
             <table className="min-w-full border border-collapse border-gray-300">
               <thead className="bg-gray-100">
                 <tr>
-                <th className="border px-4 py-2">ชื่อ</th>
-                <th className="border px-4 py-2">แผนก</th>
-                  <th className="border px-4 py-2">ประเภทการลา</th>
-                  <th className="border px-4 py-2">วันที่ลา</th>
-                  <th className="border px-4 py-2">ช่วงเวลาที่ลา</th>
-                  <th className="border px-4 py-2">เหตุผล</th>
-                  <th className="border px-4 py-2">เวลาที่ส่งฟอร์ม</th>
-                  <th className="border px-4 py-2">สถานะ</th>
+                <th className="border px-4 py-2">ชื่อผู้ใช้</th>
+                <th className="border px-4 py-2">ขื่อจริง</th>
+                  <th className="border px-4 py-2">นามสกุล</th>
+                  <th className="border px-4 py-2">แผนก</th>
+                  <th className="border px-4 py-2">สิทธิ์</th>
+                  <th className="border px-4 py-2 w-40"> การจัดการ</th>
                 </tr>
               </thead>
               <tbody>
                 {docs.map((doc, index) => (
                   <tr key={index}>
-                    <td className="border px-4 py-2">{doc.fullname}</td>
+                    <td className="border px-4 py-2">{doc.username}</td>
+                    <td className="border px-4 py-2">{doc.firstname}</td>
+                    <td className="border px-4 py-2">{doc.lastname}</td>
                     <td className="border px-4 py-2">{doc.department}</td>
-                    <td className="border px-4 py-2">{doc.selectedLeavetype}</td>
-                    <td className="border px-4 py-2">{doc.leaveDays}</td>
-                    <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
-                    <td className="border px-4 py-2">{doc.reason}</td>
-                    <td className="border px-4 py-2">{doc.createdAt}
-                        <div>
-                       
-                           
-                        </div>
-                    </td>
-                    <td className="border px-4 py-2">
-                      {renderStatus(doc.status)}
-                     
-                            <button
-                                onClick={() => handleEdit(doc)}
-                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                            >
+                    <td className="border px-4 py-2">{doc.role}</td>
+                    <td> <button onClick={() => handleEdit(doc)}
+                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    >
                                 แก้ไข
                             </button>
                             <button
@@ -288,19 +272,20 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                             
                             >
                             ลบ
-                            </button>
-                       
-                    </td>
+                            </button></td>
+                   
+                  
+                   
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-           {isEditModalOpen && currentLeave && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+           {isEditModalOpen && currentUser && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">แก้ไขข้อมูลการลา</h2>
+              <h2 className="text-xl font-bold">แก้ไขข้อมูลผ้ใช้</h2>
               <button 
                 onClick={() => setIsEditModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -311,12 +296,22 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อ</label>
                 <input
                   type="text"
-                  name="fullname"
-                  value={currentLeave.fullname}
-                  readOnly
+                  name="firstname"
+                  value={currentUser.firstname}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">นามสกุล</label>
+                <input
+                  type="text"
+                  name="lastname"
+                  value={currentUser.lastname}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                 />
@@ -324,89 +319,27 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">แผนก</label>
-                <input
+                 <input
                   type="text"
                   name="department"
-                  value={currentLeave.department}
-                  readOnly
+                  value={currentUser.department}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ประเภทการลา</label>
-                <select
-                  name="selectedLeavetype"
-                  value={currentLeave.selectedLeavetype}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="ไม่มีใบรับรองแพทย์">ไม่มีใบรับรองแพทย์</option>
-                  <option value="มีใบรับรองแพทย์">มีใบรับรองแพทย์</option>
-                  <option value="ลากิจ">ลากิจ</option>
-                  <option value="ลากิจ">ลากิจพิเศษ</option>
-                  <option value="ลาพักร้อน">ลาพักร้อน</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ลา</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">สิทธิ์</label>
                 <input
-                  type="date"
-                  name="leaveDays"
-                  value={currentLeave.leaveDays}
+                  type="text"
+                  name="role"
+                  value={currentUser.role}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">เวลาเริ่มต้น</label>
-                <input
-                  type="time"
-                  name="leaveTime.startTime"
-                  value={currentLeave.leaveTime.startTime}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">เวลาสิ้นสุด</label>
-                <input
-                  type="time"
-                  name="leaveTime.endTime"
-                  value={currentLeave.leaveTime.endTime}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">เหตุผล</label>
-                <textarea
-                  name="reason"
-                  value={currentLeave.reason}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  rows={3}
-                ></textarea>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
-                <select
-                  name="status"
-                  value={currentLeave.status}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="waiting for head approval">รออนุมัติ</option>
-                  <option value="approved">อนุมัติแล้ว</option>
-                  <option value="rejected">ไม่อนุมัติ</option>
-                </select>
-              </div>
+             
             </div>
 
             <div className="flex justify-end gap-2">
@@ -431,29 +364,29 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
             {docs.map((doc, index) => (
               <div key={index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">{doc.selectedLeavetype}</span>
+                  <span className="font-medium">{doc.username}</span>
                   <span className="px-2 py-1 rounded text-xs font-medium 
                   bg-green-100 text-green-800">
-                    {doc.status}
+                    {doc.firstname}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-gray-500">วันที่ลา</p>
-                    <p>{doc.leaveDays}</p>
+                    <p className="text-gray-500">ชื่อ</p>
+                    <p>{doc.firstname}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">ช่วงเวลา</p>
-                    <p>{doc.periodTime}</p>
+                    <p className="text-gray-500">นามสกุล</p>
+                    <p>{doc.lastname}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-gray-500">เหตุผล</p>
-                    <p>{doc.reason}</p>
+                    <p className="text-gray-500">แผนก</p>
+                    <p>{doc.department}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-gray-500">เวลาที่ส่งฟอร์ม</p>
-                    <p>{doc.createdAt}</p>
+                    <p className="text-gray-500">สิทธิ</p>
+                    <p>{doc.role}</p>
                   </div>
                 </div>
               </div>

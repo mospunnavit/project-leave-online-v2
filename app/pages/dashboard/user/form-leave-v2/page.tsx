@@ -132,18 +132,22 @@ const UserformleaveDashboard = () => {
 
        <div className="flex  text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
         {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded shadow-sm">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-white bg-opacity-100">
+            <div className="bg-white rounded-lg shadow-xl p-6 transform transition-all max-w-sm w-full">
+              <div className="flex items-center justify-center mb-4">
+                <div className="rounded-full bg-green-100 p-3">
+                  <svg className="h-8 w-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-lg leading-6 font-medium text-gray-900 text-center">ส่งคำขอลาสำเร็จ!</h3>
+              <p className="text-sm text-gray-500 text-center mt-2">ระบบกำลังนำคุณไปยังหน้าสรุป...</p>
+              <div className="mt-4 w-full bg-gray-200 rounded-full h-1">
+                <div className="bg-green-500 h-1 rounded-full animate-progress"></div>
+              </div>
             </div>
           </div>
-        </div>
       )}
         {showSuccess && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-white bg-opacity-100">

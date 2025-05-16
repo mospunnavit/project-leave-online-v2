@@ -7,7 +7,6 @@ import { Leave } from '@/app/types/formleave';
 import { X } from "lucide-react";
 
 
-
 const approveDashboard = () => {
     const [docs, setDocs] = useState<Leave[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -20,29 +19,61 @@ const approveDashboard = () => {
     const [selectStatus, setSelectStatus] = useState<String>('');
     const limit = 10;
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentLeave, setCurrentLeave] = useState<Leave | null>(null);
- const handleEdit = (leave: Leave) => {
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [currentLeave, setCurrentLeave] = useState<Leave | null>(null);
+  const handleEdit = (leave: Leave) => {
     setCurrentLeave({...leave});
     setIsEditModalOpen(true);
   };
 
   // Function สำหรับลบข้อมูล
-  const handleDelete = (id: string) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ที่จะลบรายการนี้?")) {
-      setDocs(docs.filter(doc => doc.id !== id));
-    }
+  const handleDelete = (leave: Leave) => {
+    setCurrentLeave({...leave});
+    setIsDeleteModalOpen(true);
+    
   };
 
+  const handleDeleteConfirm = async () => {
+    if (!currentLeave) return;
+    console.log(currentLeave.id);
+    try {
+      // ใช้ async/await เพื่อรอการตอบกลับจาก API
+      const response = await fetch('/api/admin/deleteformbyid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // ส่งข้อมูลทั้งหมดใน currentLeave ไปใน body
+        body: JSON.stringify({
+          id: currentLeave.id,
+          // สามารถเพิ่ม field อื่นๆ จาก currentLeave ที่นี่ถ้าต้องการ
+        })
+      });
+  
+      // ตรวจสอบว่า response เป็น OK หรือไม่
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
+  
+      // แปลง response เป็น JSON
+      const result = await response.json();
+      console.log('Deleted successfully:', result);
+  
+      // เมื่อลบสำเร็จ ดึงข้อมูลใหม่จาก database
+      const lastDocId = currentPage > 0 ? lastDocIds[currentPage - 1] : null;
+      await fetchData(lastDocId);
+      // แสดงการแจ้งเตือนว่าลบสำเร็จ
+      // toast.success('ลบข้อมูลเรียบร้อย');
+    } catch (error) {
+      console.error('Error deleting leave:', error);
+    }finally {
+      setIsDeleteModalOpen(false);
+    }
+  }
   // Function สำหรับบันทึกการแก้ไข
   const handleSaveEdit = async () => {
+    
   if (!currentLeave) return;
-  
-  // อัปเดต state ภายในแอพ
-  setDocs(docs.map(doc => 
-    doc.id === currentLeave.id ? currentLeave : doc
-  ));
-  
-  // ลอง-จับข้อผิดพลาด สำหรับการเรียก API
   try {
     // ใช้ async/await เพื่อรอการตอบกลับจาก API
     const response = await fetch('/api/admin/editformbyid', {
@@ -60,23 +91,27 @@ const approveDashboard = () => {
         // สามารถเพิ่ม field อื่นๆ จาก currentLeave ที่นี่ถ้าต้องการ
       })
     });
-    
+
     // ตรวจสอบว่า response เป็น OK หรือไม่
     if (!response.ok) {
       throw new Error(`API responded with status: ${response.status}`);
     }
-    
+
     // แปลง response เป็น JSON
     const result = await response.json();
     console.log('Updated successfully:', result);
+
+    // เมื่ออัปเดตสำเร็จ ดึงข้อมูลใหม่จาก database
+    const lastDocId = currentPage > 0 ? lastDocIds[currentPage - 1] : null;
+    await fetchData(lastDocId);
     
-    // อาจแสดง toast หรือการแจ้งเตือนว่าอัปเดตสำเร็จ
+    // แสดงการแจ้งเตือนว่าอัปเดตสำเร็จ
     // toast.success('บันทึกการแก้ไขเรียบร้อย');
-    
   } catch (error) {
     console.error('Error updating leave:', error);
-    // อาจแสดง toast หรือการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
+    // แสดงการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
     // toast.error('ไม่สามารถบันทึกการแก้ไขได้');
+    
   } finally {
     // ไม่ว่าจะสำเร็จหรือล้มเหลว ให้ปิด modal และล้างค่า currentLeave
     setIsEditModalOpen(false);
@@ -124,7 +159,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
          
          if (res.ok) {
            setDocs(result.data || []);
- 
+          
            console.log(result.data);
            console.log(result.lastVisible);
            setHasMore(result.data.length === limit && result.hasMore);
@@ -233,13 +268,27 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
       }
     }
       if (loading && docs.length === 0) return <p>Loading...</p>;
+      
   return (
     <DashboardLayout title={`admin ${session?.user?.role} ${session?.user?.department}`}>
       <div className="bg-white p-4 rounded shadow">
-        {error && <p className="text-red-500">{error}</p>}
+         {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded shadow-sm">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
        <div className="flex w-full text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
         
-       <div className="flex flex-row flex-wrap gap-4 ">
+       <div className="flex flex-row flex-wrap gap-4">
             <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
                 <button onClick={() => {setSelectStatus(''); setCurrentPage(0)}}>ทั้งหมด</button>
             </div>
@@ -270,13 +319,12 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                     <td className="border px-4 py-2">{doc.reason}</td>
                     <td className="border px-4 py-2">{doc.createdAt}
                         <div>
-                       
                            
                         </div>
                     </td>
                     <td className="border px-4 py-2">
                       {renderStatus(doc.status)}
-                     
+
                             <button
                                 onClick={() => handleEdit(doc)}
                                 className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
@@ -285,9 +333,9 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                             </button>
                             <button
                             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
-                            
+                             onClick={() => handleDelete(doc)}
                             >
-                            ลบ
+                             ลบ
                             </button>
                        
                     </td>
@@ -510,7 +558,27 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                   
       </div>
 
-
+        {isDeleteModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm p-4">
+    <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full">
+      <h2 className="text-lg font-semibold mb-4">ยืนยันการลบข้อมูล</h2>
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={handleDeleteConfirm}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+        >
+          ยืนยัน
+        </button>
+        <button
+          onClick={() => setIsDeleteModalOpen(false)}
+          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+        >
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       
     </DashboardLayout>
   );

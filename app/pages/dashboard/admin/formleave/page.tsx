@@ -4,7 +4,7 @@ import {DocumentSnapshot, DocumentData } from "firebase/firestore";
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from "react";
 import { Leave } from '@/app/types/formleave';
-import { Edit, Trash, X } from "lucide-react";
+import { X } from "lucide-react";
 
 
 

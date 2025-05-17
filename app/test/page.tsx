@@ -1,125 +1,109 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { QueryDocumentSnapshot, DocumentSnapshot, DocumentData } from "firebase/firestore";
-import { Leave } from '@/app/types/formleave';
 
+import { useState } from 'react';
 
+export default function SimpleUploadPage() {
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<{ success: boolean; message: string; path?: string } | null>(null);
 
-export default function TestFirebase() {
-  const [docs, setDocs] = useState<Leave[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<String>('');
-  const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
-  const [currentPage, setCurrentPage] = useState<number>(0);
-  const [hasMore, setHasMore] = useState<boolean>(true);
-  const limit = 5;
+  // จัดการเมื่อเลือกไฟล์
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFile(e.target.files[0]);
+      setUploadResult(null);
+    }
+  };
 
-  const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData> | null = null, isPrevious = false) => {
+  // จัดการเมื่อกดปุ่มอัปโหลด
+  const handleUpload = async () => {
+    if (!file) return;
+
     try {
-      setLoading(true);
-      let url = `/api/user/getleave?email=Test1&limit=${limit}`;
+      setUploading(true);
       
-      if (lastDocId) {
-        url += `&lastDoc=${lastDocId}`;
-      }
+      const formData = new FormData();
+      formData.append('file', file);
       
-      if (isPrevious) {
-        url += '&direction=prev';
-      }
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL +'/api/user/uploads', {
+        method: 'POST',
+        body: formData,
+      });
       
-      const res = await fetch(url);
-      const result = await res.json();
+      const result = await response.json();
       
-      if (res.ok) {
-        setDocs(result.data || []);
-        console.log(result.data);
-        console.log(result.lastVisible);
-        setHasMore(result.data.length === limit && result.hasMore);
-        return result.lastVisible;
+      if (response.ok) {
+        setUploadResult({
+          success: true,
+          message: 'อัปโหลดไฟล์สำเร็จ',
+          path: result.path
+        });
       } else {
-        setError('API error: ' + (result.error || 'Unknown error'));
-        return null;
+        setUploadResult({
+          success: false,
+          message: `เกิดข้อผิดพลาด: ${result.error || 'ไม่สามารถอัปโหลดไฟล์ได้'}`
+        });
       }
-    } catch (err) {
-      console.error('Error fetching documents:', err);
-      setError('Failed to connect to server.');
-      return null;
+    } catch (error) {
+      setUploadResult({
+        success: false,
+        message: `เกิดข้อผิดพลาด: ${error instanceof Error ? error.message : 'ไม่สามารถอัปโหลดไฟล์ได้'}`
+      });
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
-
-  useEffect(() => {
-    const loadInitialData = async () => {
-      const lastVisible = await fetchData();
-      if (lastVisible) {
-        setLastDocIds([lastVisible]);
-      }
-    };
-    
-    loadInitialData();
-  }, []);
-
-  const handleNext = async () => {
-    if (!hasMore) return;
-    
-    const lastVisible = await fetchData(lastDocIds[currentPage]);
-    
-    if (lastVisible) {
-      // If we navigated back and then forward, remove the forward history
-      if (currentPage < lastDocIds.length - 1) {
-        setLastDocIds(prev => [...prev.slice(0, currentPage + 1), lastVisible]);
-      } else {
-        setLastDocIds(prev => [...prev, lastVisible]);
-      }
-      setCurrentPage(prev => prev + 1);
-    }
-  };
-
-  const handlePrevious = async () => {
-    if (currentPage <= 0) return;
-    
-    const newPage = currentPage - 1;
-    const previousLastDocId = newPage > 0 ? lastDocIds[newPage - 1] : null;
-    
-    await fetchData(previousLastDocId);
-    setCurrentPage(newPage);
-    setHasMore(true); // When going back, we know there's more forward
-  };
-
-  if (loading && docs.length === 0) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
 
   return (
-    <div>
-     
-          
+    <div className="max-w-md mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">อัปโหลดไฟล์</h1>
       
-      <div className="flex justify-between mt-4">
-        <button 
-          onClick={handlePrevious}
-          disabled={currentPage <= 0 || loading}
-          className={`px-4 py-2 bg-blue-500 text-white rounded ${
-            currentPage <= 0 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
-          }`}
-        >
-          Previous
-        </button>
-        
-        <span className="self-center">Page {currentPage + 1}</span>
-        
-        <button 
-          onClick={handleNext}
-          disabled={!hasMore || loading}
-          className={`px-4 py-2 bg-blue-500 text-white rounded ${
-            !hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
-          }`}
-        >
-          Next
-        </button>
+      <div className="mb-4">
+        <input
+          type="file"
+          onChange={handleFileChange}
+          className="block w-full text-sm text-gray-500
+            file:mr-4 file:py-2 file:px-4
+            file:rounded-md file:border-0
+            file:text-sm file:font-semibold
+            file:bg-blue-50 file:text-blue-700
+            hover:file:bg-blue-100"
+        />
       </div>
       
-      {loading && <p className="text-center mt-2">Loading...</p>}
+      {file && (
+        <div className="mb-4 text-sm text-gray-600">
+          <p>ชื่อไฟล์: {file.name}</p>
+          <p>ขนาด: {(file.size / 1024).toFixed(2)} KB</p>
+        </div>
+      )}
+      
+      <button
+        onClick={handleUpload}
+        disabled={!file || uploading}
+        className="w-full py-2 px-4 bg-blue-600 text-white rounded-md
+          hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+      >
+        {uploading ? 'กำลังอัปโหลด...' : 'อัปโหลด'}
+      </button>
+      
+      {uploadResult && (
+        <div className={`mt-4 p-3 rounded-md ${uploadResult.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          <p>{uploadResult.message}</p>
+          {uploadResult.path && (
+            <p className="mt-2">
+              <a 
+                href={uploadResult.path} 
+                target="_blank" 
+                rel="noreferrer"
+                className="underline"
+              >
+                ดูไฟล์ที่อัปโหลด
+              </a>
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

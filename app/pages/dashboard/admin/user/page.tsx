@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState } from "react";
 import { Users } from "@/app/types/users";
 import { X } from "lucide-react";
+import { Loading } from "@/app/components/loading";
 
 
 
@@ -21,6 +22,7 @@ const approveDashboard = () => {
     const limit = 10;
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [currentUser, setcurrentUser] = useState<Users | null>(null);
+    
  const handleEdit = (leave: Users) => {
     setcurrentUser({...leave});
     setIsEditModalOpen(true);
@@ -43,7 +45,7 @@ const approveDashboard = () => {
   // ลอง-จับข้อผิดพลาด สำหรับการเรียก API
   try {
     // ใช้ async/await เพื่อรอการตอบกลับจาก API
-    const response = await fetch('/api/admin/editformbyid', {
+    const response = await fetch('/api/admin/edituserbyid', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -62,12 +64,14 @@ const approveDashboard = () => {
     
     // ตรวจสอบว่า response เป็น OK หรือไม่
     if (!response.ok) {
+      setError(error);
       throw new Error(`API responded with status: ${response.status}`);
     }
     setDocs(docs.map(doc => 
     doc.id === currentUser.id ? currentUser : doc
     ));
     // แปลง response เป็น JSON
+    setLoading(true);
     const result = await response.json();
     console.log('Updated successfully:', result);
     
@@ -82,6 +86,7 @@ const approveDashboard = () => {
   } finally {
     // ไม่ว่าจะสำเร็จหรือล้มเหลว ให้ปิด modal และล้างค่า currentUser
     setIsEditModalOpen(false);
+    setLoading(false);
     setcurrentUser(null);
   }
 };
@@ -188,35 +193,10 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
         setCurrentPage(newPage);
         setHasMore(true); // When going back, we know there's more forward
       };
-      const handleChangeStatus = async (docId: string, status: string) => {
-        console.log(docId, status);
-        try {
-          setLoading(true);
-          const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/user/changestatusformleave", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    docId,
-                    status
-                })
-            })
-          if(res.ok){
-            const lastDocId = currentPage > 0 ? lastDocIds[currentPage - 1] : null;
-            await fetchData(lastDocId);
-          }
-        }catch (err) {
-          console.error('Error fetching documents:', err);
-          setError('Failed to connect to server.');
-          return null;
-        }finally {
-          setLoading(false);
-        }
-      }
+     
     
    
-      if (loading && docs.length === 0) return <p>Loading...</p>;
+      if (loading && docs.length === 0) return <Loading/>;
   return (
     <DashboardLayout title={`admin ${session?.user?.role} ${session?.user?.department}`}>
       <div className="bg-white p-4 rounded shadow">
@@ -425,20 +405,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
           </div>
           
          {loading && (
-          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-white bg-opacity-75 z-50">
-            <div className="text-center">
-              <div className="inline-block relative w-16 h-16">
-                {/* Spinning gradient ring */}
-                <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-r-blue-400 border-b-blue-300 border-l-transparent animate-spin"></div>
-                
-                {/* Inner ring */}
-                <div className="absolute inset-2 rounded-full border-4 border-t-transparent border-r-blue-200 border-b-blue-100 border-l-blue-300 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-              </div>
-              
-              <p className="mt-4 text-lg font-medium text-gray-700">กรุณารอสักครู่</p>
-              <p className="text-sm text-blue-500 animate-pulse mt-1">กำลังอัพเดทสถานะ...</p>
-            </div>
-          </div>
+          <Loading/>
         )}
                   
       </div>

@@ -91,6 +91,7 @@ export async function GET(req: Request) {
         status: docData.status,
         periodTime: docData.periodTime,
         createdAt: docData.createdAt?.toDate(),
+        uploadedPath: docData.uploadedPath
       };
     });
 

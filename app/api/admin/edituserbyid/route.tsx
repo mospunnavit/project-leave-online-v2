@@ -27,10 +27,11 @@ export async function POST(req: Request) {
     // รับข้อมูลจาก request body
     const { 
       id, 
-      selectedLeavetype, 
-      leaveTime, 
-      reason, 
-      leaveDays,
+      username, 
+      firstname, 
+      lastname, 
+      department,
+      role
       // รับข้อมูลอื่นๆ ที่ต้องการอัปเดตเพิ่มเติม
     } = await req.json();
     console.log("id คือ"+id)
@@ -44,21 +45,18 @@ export async function POST(req: Request) {
 
     // สร้างออบเจกต์ข้อมูลที่จะอัปเดต
     const updateData: Record<string, any> = {
-      selectedLeavetype,
-      leaveTime,
-      reason,
-      leaveDays,
-      updatedAt: new Date().toISOString()
+      username, 
+      firstname, 
+      lastname, 
+      department,
+      role
     };
-
     // ลบฟิลด์ที่เป็น undefined ออกจากออบเจกต์อัปเดต
     Object.keys(updateData).forEach(key => 
       updateData[key] === undefined && delete updateData[key]
     );
-
     // อัปเดตข้อมูลใน Firestore
-    await db.collection('FormLeave').doc(id).update(updateData);
-
+    await db.collection('Users').doc(id).update(updateData);
     // ส่งข้อมูลที่อัปเดตกลับไป
     return new Response(JSON.stringify({ 
       message: 'Leave updated successfully', 

@@ -2,9 +2,12 @@
 import DashboardLayout from "@/app/components/dashboardLayout";
 import { useEffect, useState } from 'react';
 import {  Users, Calendar, ArrowRight, FileText, Settings } from "lucide-react";
+import { Leave } from "@/app/types/formleave";
 import Link from "next/link";
+
 const AdminDashboard = () => {
   const [loading, setLoading] = useState<boolean>(false);
+  
   const [error, setError] = useState<String>('');
   
 
@@ -13,14 +16,12 @@ const AdminDashboard = () => {
     },  );
 
   
-
-  
   return (
     <DashboardLayout title="admin dashboard">
       <div className="bg-white flex p-4 rounded shadow">
          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
         {/* Card 1 */}
-        <Link href="/admin/users">
+        <Link href="/pages/dashboard/admin/user">
           <div className="h-full bg-white hover:bg-blue-50 p-6 rounded-lg shadow-md transition-all duration-300 border border-gray-100 hover:border-blue-200 group">
             <div className="flex flex-col items-center text-center">
               <div className="p-3 rounded-full bg-blue-100 mb-4 group-hover:bg-blue-200 transition-colors duration-300">
@@ -37,7 +38,7 @@ const AdminDashboard = () => {
         </Link>
         
         {/* Card 2 */}
-        <Link href="/admin/leave-forms">
+        <Link href="/pages/dashboard/admin/formleave">
           <div className="h-full bg-white hover:bg-green-50 p-6 rounded-lg shadow-md transition-all duration-300 border border-gray-100 hover:border-green-200 group">
             <div className="flex flex-col items-center text-center">
               <div className="p-3 rounded-full bg-green-100 mb-4 group-hover:bg-green-200 transition-colors duration-300">

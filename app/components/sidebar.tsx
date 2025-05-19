@@ -1,6 +1,6 @@
 'use client'; // Only if you're using the app directory
 import Link from 'next/link';
-import { Home, Phone, X, Menu } from 'lucide-react';
+import { Home, Phone, X, Menu, BookText, SquareCheckBig } from 'lucide-react';
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { useSession } from 'next-auth/react';
@@ -44,7 +44,7 @@ const Sidebar = () => {
             <span>Admin</span>
             </Link>
             <Link href="/pages/dashboard/admin/formleave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Home size={20} />
+            <BookText size={20} />
             <span>Form leave</span>
             </Link>
             <Link href="/pages/dashboard/admin/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
@@ -61,7 +61,7 @@ const Sidebar = () => {
             <span>Leave</span>
           </Link>
           <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Home size={20} />
+            <BookText size={20} />
             <span>Form-leave</span>
           </Link>
           </nav>
@@ -75,12 +75,12 @@ const Sidebar = () => {
             <span>Leave</span>
           </Link>
           <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Home size={20} />
+            <BookText size={20} />
             <span>Form-leave</span>
           </Link>
           <span>การอนุมัติ</span>
           <Link href="/pages/dashboard/user/approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Home size={20} />
+            <SquareCheckBig size={20} />
             <span>head-approve</span>
           </Link>
           </nav>
@@ -93,12 +93,12 @@ const Sidebar = () => {
             <span>Leave</span>
           </Link>
           <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Home size={20} />
+            <BookText size={20} />
             <span>Form-leave</span>
           </Link>
           <span>การอนุมัติ</span>
           <Link href="/pages/dashboard/user/approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Home size={20} />
+            <SquareCheckBig size={20} />
             <span>manager-approve</span>
           </Link>
           </nav>
@@ -111,7 +111,7 @@ const Sidebar = () => {
             <span>Leave</span>
           </Link>
           <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <Home size={20} />
+            <BookText size={20} />
             <span>Form-leave</span>
           </Link>
           <span>การอนุมัติ</span>

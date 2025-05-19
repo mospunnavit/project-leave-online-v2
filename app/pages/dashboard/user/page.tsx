@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {DocumentSnapshot, DocumentData } from "firebase/firestore";
 import { Leave } from '@/app/types/formleave';
 import { useSession } from "next-auth/react";
+import { Loading } from "@/app/components/loading";
 const UserDashboard = () => {
     const [docs, setDocs] = useState<Leave[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -11,6 +12,8 @@ const UserDashboard = () => {
     const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
     const [currentPage, setCurrentPage] = useState<number>(0);
     const [hasMore, setHasMore] = useState<boolean>(true);
+    const [showImg, setShowImg] = useState(false);
+    const [selectedImg, setSelectedImg] = useState("");
     const { data: session, status } = useSession();
     const limit = 5;
     
@@ -120,7 +123,23 @@ const UserDashboard = () => {
     );
   }
 };
-    if (loading && docs.length === 0) return <p>Loading...</p>;
+
+// ในส่วนของ component
+
+const openImageModal = (imagePath : string) => {
+  setSelectedImg(imagePath);
+  setShowImg(true);
+};
+
+// ฟังก์ชันสำหรับการปิด modal
+const closeImageModal = () => {
+  setShowImg(false);
+};
+// ฟังก์ชันสำหรับการเปิด modal
+
+    if (loading && docs.length === 0) 
+      return <>
+        <Loading /></>;
   return (
     <DashboardLayout title="Want to Leave">
       <div className="flex flex-col flex-wrap bg-white p-4 rounded shadow">
@@ -185,7 +204,12 @@ const UserDashboard = () => {
               <tbody>
                 {docs.map((doc, index) => (
                   <tr key={index}>
-                    <td className="border px-4 py-2">{doc.selectedLeavetype}</td>
+                    <td className="border px-4 py-2">{doc.selectedLeavetype}
+                      {doc.uploadedPath !== "" && <img src= {`/uploads/${doc.uploadedPath}`} 
+                      onClick={() => openImageModal(doc.uploadedPath)
+                      }
+                      alt="Uploaded File" className="w-10 h-10" />}
+                    </td>
                     <td className="border px-4 py-2">{doc.leaveDays}</td>
                     <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
@@ -274,6 +298,26 @@ const UserDashboard = () => {
         </div>
     
       </div>
+      {showImg && (
+      <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50"
+           onClick={closeImageModal}>
+        <div className="relative max-w-4xl max-h-[90vh] p-2 bg-white rounded-lg">
+          <button 
+            className="absolute top-2 right-2 p-1 text-gray-700 bg-gray-200 rounded-full hover:bg-gray-300"
+            onClick={closeImageModal}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img 
+            src={`/uploads/${selectedImg}`} 
+            alt="Enlarged view" 
+            className="max-h-[85vh] max-w-full object-contain" 
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      </div>
+    )}
     </DashboardLayout>
   );
 };

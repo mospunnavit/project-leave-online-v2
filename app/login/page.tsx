@@ -1,21 +1,23 @@
 "use client"
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { useRouter, redirect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
-import { SessionProvider } from 'next-auth/react'
-import { useSession } from 'next-auth/react';
 import { getSession } from 'next-auth/react'
+import {Loading } from '@/app/components/loading'
+
 function LoginPage() {
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     const handleSubmit = async (e : React.FormEvent) => {
         e.preventDefault();
-
+        
+        
         try{
             const res = await signIn("credentials", {
                 username,
@@ -23,11 +25,13 @@ function LoginPage() {
                 redirect: false,
             })
             if(res?.error){
+                setLoading(false);
                 setError(res.error);
             }else{
                 const updatedSession = await getSession(); 
                 const role = updatedSession?.user?.role;
                 console.log(role)
+                setLoading(true);
                 if(role === "admin"){
                     router.push("/pages/dashboard/admin");
                 }else if(role === "user" || role === "head" || role === "manager" || role === "hr"){
@@ -37,6 +41,7 @@ function LoginPage() {
                 }
             }
         }catch(err){
+            setLoading(false);
             console.log(err);
         }
     }
@@ -66,8 +71,11 @@ function LoginPage() {
                         <p>Go to <Link href="/register" className='text-blue-500 hover:underline'>Register</Link> Page</p>
                     </div>
                 </div>
+                 {loading && (
+                    <Loading/>
+                )}
             </div>
+            
   )
 }
-
 export default LoginPage

@@ -26,6 +26,9 @@ const approveDashboard = () => {
     const [today, setToday] = useState('');
     const [selectStatus, setSelectStatus] = useState<String>('');
     const limit = 5;
+    const [showImg, setShowImg] = useState(false);
+    const [selectedImg, setSelectedImg] = useState("");
+
 
  const getRoleSpecificData = () => {
         if (!session?.user?.role) return { title: "อนุมัติการลา", statuses: [] };
@@ -194,6 +197,15 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                       </span>
       }
     }
+    const openImageModal = (imagePath : string) => {
+  setSelectedImg(imagePath);
+  setShowImg(true);
+};
+
+// ฟังก์ชันสำหรับการปิด modal
+const closeImageModal = () => {
+  setShowImg(false);
+};
       if (loading && docs.length === 0) return <p>Loading...</p>;
   return (
     <DashboardLayout title={`หัวหน้าอนุมัติ ${session?.user?.role} ${session?.user?.department}`}>
@@ -235,7 +247,17 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                   <tr key={index}>
                     <td className="border px-4 py-2">{doc.fullname}</td>
                     <td className="border px-4 py-2">{doc.department}</td>
-                    <td className="border px-4 py-2">{doc.selectedLeavetype}</td>
+                    <td className="border px-4 py-2">{doc.selectedLeavetype}
+                       {doc.uploadedPath !== "" &&  <img
+                          src={`/uploads/${doc.uploadedPath}`}
+                          onClick={() => openImageModal(doc.uploadedPath)}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/images/fallback.png"; // ตั้ง path รูป default ที่ต้องการ
+                          }}
+                          alt="Uploaded File"
+                          className="w-10 h-10 object-cover"
+                        />}
+                    </td>
                     <td className="border px-4 py-2">{doc.leaveDays}</td>
                     <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
@@ -353,7 +375,26 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
         )}
                   
       </div>
-
+      {showImg && (
+      <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50"
+           onClick={closeImageModal}>
+        <div className="relative max-w-4xl max-h-[90vh] p-2 bg-white rounded-lg">
+          <button 
+            className="absolute top-2 right-2 p-1 text-gray-700 bg-gray-200 rounded-full hover:bg-gray-300"
+            onClick={closeImageModal}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img 
+            src={`/uploads/${selectedImg}`} 
+            alt="Enlarged view" 
+            className="max-h-[85vh] max-w-full object-contain" 
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      </div>
+    )}    
 
       
     </DashboardLayout>

@@ -93,6 +93,7 @@ export async function GET(req: Request) {
       const docData = doc.data();
       return {
         id: doc.id,
+        uploadedPath: docData.uploadedPath,
         username: docData.username,
         department: docData.department,
         leaveTime: docData.leaveTime,

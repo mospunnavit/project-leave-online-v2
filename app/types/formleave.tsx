@@ -10,6 +10,7 @@ export interface Leave {
     periodTime: string;
     createdAt: string;
     status: string;
+    uploadedPath: string;
   }
   
   type LeaveTime = {

@@ -3,6 +3,7 @@ import DashboardLayout from "@/app/components/dashboardLayout";
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loading } from "@/app/components/loading";
 type LeaveTime = {
   startTime: string;
   endTime: string;
@@ -18,6 +19,7 @@ const UserformleaveDashboard = () => {
   const [periodTime, setPeriodTime] = useState<string>('');
   const [leaveDays, setLeaveDays] = useState<string>("");
   const [leavefile, setleavefile] = useState<File>();
+  const [leavefileName, setleavefileName] = useState<string>('');
   const [today, setToday] = useState<string>('');
   const router = useRouter();
   useEffect(() => {
@@ -58,15 +60,13 @@ const UserformleaveDashboard = () => {
     }
     const leaveDate = new Date(leaveDays);  // leaveDays คือ string จาก input
     const today = new Date();
-    
+   
     // เคลียร์เวลาให้เป็นเที่ยงคืนทั้งสอง
     leaveDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
     
     // คำนวณต่างแบบวัน
     const diffInDays = Math.ceil((leaveDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
-    console.log(`เหลืออีก ${diffInDays} วัน`);
 
     if(!selectedLeavetype){
       setError('กรุณาระบุประเภทการลา');
@@ -94,10 +94,48 @@ const UserformleaveDashboard = () => {
       return;
     }
 
+    //handle if upload file 
+    let uploadedPath = '';
+    if(selectedLeavetype == "มีใบรับรองแพทย์" && leavefile != undefined){
+      
+      if (leavefile.size > 0) {
+       if (
+          leavefile.type !== 'application/pdf' &&
+          leavefile.type !== 'image/jpeg' &&
+          leavefile.type !== 'image/png'
+        ) {
+          setError('กรุณาอัพโหลดไฟล์ PDF, JPEG หรือ PNG เท่านั้น');
+          return;
+        } 
+        setLoading(true);
+        const formData = new FormData();
+        formData.append('file', leavefile);
+      
+        const response = await fetch(process.env.NEXT_PUBLIC_API_URL +'/api/user/uploads', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        const result = await response.json();
+          
+        if (response.ok) {
+          uploadedPath  = result.path;
+          console.log(result.path);
+          setleavefileName(result.path)
+          await setleavefile(result.path);
+    
+          
+        } else {
+          setError(`เกิดข้อผิดพลาด: ${result.error || 'ไม่สามารถอัปโหลดไฟล์ได้'}`);
+          return;
+        }
+      }
+      }
+    //api form
     try{
       setLoading(true);
       console.log("env api url"+process.env.NEXT_PUBLIC_API_URL);
-
+      console.log("ส้งไหม" + uploadedPath);
       const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/user/formleave", {
           method: "POST",
           headers: {
@@ -108,9 +146,10 @@ const UserformleaveDashboard = () => {
               leaveTime,
               reason,
               leaveDays,
-              periodTime
-
-            
+              periodTime,
+              leavefile,
+              uploadedPath
+                       
           })
       })
       const result = await res.json();
@@ -293,23 +332,12 @@ const UserformleaveDashboard = () => {
         </div>
       </div>
       
-      {/* Loading overlay */}
       {loading && (
-        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-white bg-opacity-75 z-50">
-          <div className="text-center">
-            <div className="inline-block relative w-12 h-12 sm:w-16 sm:h-16">
-              {/* Spinning gradient ring */}
-              <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-r-blue-400 border-b-blue-300 border-l-transparent animate-spin"></div>
-              
-              {/* Inner ring */}
-              <div className="absolute inset-2 rounded-full border-4 border-t-transparent border-r-blue-200 border-b-blue-100 border-l-blue-300 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-            </div>
-            
-            <p className="mt-4 text-base sm:text-lg font-medium text-gray-700">กรุณารอสักครู่</p>
+          <>
+            <Loading/>
             <p className="text-xs sm:text-sm text-blue-500 animate-pulse mt-1">กำลังอัพเดทสถานะ...</p>
-          </div>
-        </div>
-      )}
+          </>
+        )}
     </form>
       </div>
     </DashboardLayout>

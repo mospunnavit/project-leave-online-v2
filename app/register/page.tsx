@@ -83,15 +83,15 @@ function RegisterPage() {
                             <label htmlFor="">ชื่อผู้ใช้</label>
                             <input type="text" onChange={(e) => setUsername(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your username' />
                             <label htmlFor="">ชื่อจริง</label>
-                            <input type="text" onChange={(e) => setFirstname(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your username' />
+                            <input type="text" onChange={(e) => setFirstname(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your firstname' />
                             <label htmlFor="">นามสกุล</label>
-                            <input type="text" onChange={(e) => setLastname(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your username' />
+                            <input type="text" onChange={(e) => setLastname(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your lastname' />
                             <label htmlFor="">แผนก</label>
-                            <input type="text" onChange={(e) => setdepartment(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your username' />
+                            <input type="text" onChange={(e) => setdepartment(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your department' />
                             <label htmlFor="">รหัสผ่าน</label>
                             <input type="password" onChange={(e) => setPassword(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your password' />
                             <label htmlFor="">ใส่รหัสผ่านอีกครั้ง</label>
-                            <input type="password" onChange={(e) => setcPassword(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your password' />
+                            <input type="password" onChange={(e) => setcPassword(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your retype-password' />
                             <div className='flex justify-end'>
                                 
                             

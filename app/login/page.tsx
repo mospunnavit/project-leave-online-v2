@@ -37,7 +37,7 @@ function LoginPage() {
                 }else if(role === "user" || role === "head" || role === "manager" || role === "hr"){
                     router.push("/pages/dashboard/user");
                 }else{
-                     router.push("/");
+                    router.push("/");
                 }
             }
         }catch(err){

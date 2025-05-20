@@ -2,16 +2,10 @@
 import DashboardLayout from "@/app/components/dashboardLayout";
 import {DocumentSnapshot, DocumentData } from "firebase/firestore";
 import { useSession } from 'next-auth/react';
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Leave } from '@/app/types/formleave';
-
-interface roleData {
-  title: string;
-  apiPath?: string;
-  pendingStatus: string;
-  approvedStatus: string;
-  rejectedStatus: string;
-}
+import { Loading } from "@/app/components/loading";
+import ModalLayout from "@/app/components/modallayout";
 
 
 
@@ -27,8 +21,23 @@ const approveDashboard = () => {
     const [selectStatus, setSelectStatus] = useState<String>('');
     const limit = 5;
     const [showImg, setShowImg] = useState(false);
+    const [currentLeave, setCurrentLeave] = useState<Leave | null>(null);
     const [selectedImg, setSelectedImg] = useState("");
+    const [rejectedModal, setRejectedModal] = useState(false);
+    const [confrimModal, setConfrimModal] = useState(false);
 
+
+
+ const handleReject = (leave: Leave) => {
+     setCurrentLeave({...leave});
+     setRejectedModal(true);
+     
+   };
+   const handleConfrim = (leave: Leave) => {
+     setCurrentLeave({...leave});
+     setConfrimModal(true);
+     
+   };
 
  const getRoleSpecificData = () => {
         if (!session?.user?.role) return { title: "อนุมัติการลา", statuses: [] };
@@ -183,12 +192,12 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
         return <span className={`px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800`}>
                         {status}
                       </span>
-      }else if(status === roleData.approvedStatus){
+      }else if(status === roleData.approvedStatus || status === "approved"){
            return <span className={`px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800`}>
                         {status}
                       </span>
       }else if(status.includes("rejected")){
-            return  <span className={`px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800`}>
+            return  <span className={`px-2 py-1 rounded text-xs font-medium bg-red-200 text-red-800`}>
                         {status}
                       </span>
       }else{
@@ -206,7 +215,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
 const closeImageModal = () => {
   setShowImg(false);
 };
-      if (loading && docs.length === 0) return <p>Loading...</p>;
+      if (loading && docs.length === 0) return <Loading />;
   return (
     <DashboardLayout title={`หัวหน้าอนุมัติ ${session?.user?.role} ${session?.user?.department}`}>
       <div className="bg-white p-4 rounded shadow">
@@ -232,7 +241,9 @@ const closeImageModal = () => {
             <table className="min-w-full border border-collapse border-gray-300">
               <thead className="bg-gray-100">
                 <tr>
+                  <th className="border px-4 py-2">ผู้ใช่</th>
                 <th className="border px-4 py-2">ชื่อ</th>
+           
                 <th className="border px-4 py-2">แผนก</th>
                   <th className="border px-4 py-2">ประเภทการลา</th>
                   <th className="border px-4 py-2">วันที่ลา</th>
@@ -245,6 +256,7 @@ const closeImageModal = () => {
               <tbody>
                 {docs.map((doc, index) => (
                   <tr key={index}>
+                    <td className="border px-4 py-2">{doc.username}</td>
                     <td className="border px-4 py-2">{doc.fullname}</td>
                     <td className="border px-4 py-2">{doc.department}</td>
                     <td className="border px-4 py-2">{doc.selectedLeavetype}
@@ -268,23 +280,29 @@ const closeImageModal = () => {
                         </div>
                     </td>
                     <td className="border px-4 py-2">
-                      {renderStatus(doc.status)}
-                      {doc.status === roleData?.pendingStatus && (
+                      <div className="flex flex-col flex-wrap gap-3">
+                      <div className="">
+                        {renderStatus(doc.status)}
+                      </div>
+                      <div >
+                         {doc.status === roleData?.pendingStatus && (
                         <>
                             <button
                             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                            onClick={() => handleChangeStatus(doc.id, roleData?.approvedStatus ?? '')}
+                            onClick={() => handleConfrim(doc)}
                             >
                             อนุมัติ
                             </button>
                             <button
                             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
-                            onClick={() => handleChangeStatus(doc.id, roleData?.rejectedStatus ?? '')}
+                            onClick={() => handleReject(doc)}
                             >
                             ไม่อนุมัติ
                             </button>
                         </>
                         )}
+                      </div>
+                     </div>
                     </td>
                   </tr>
                 ))}
@@ -373,7 +391,51 @@ const closeImageModal = () => {
             </div>
           </div>
         )}
-                  
+          {rejectedModal && currentLeave && (
+  <ModalLayout onClose={() => setRejectedModal(false)}>
+    <h2 className="text-lg font-semibold mb-4">ไม่อนุมัติการลาของ {currentLeave.username}</h2>
+    <div className="flex justify-end gap-2">
+      <button
+        onClick={() => {
+          handleChangeStatus(currentLeave.id, roleData?.rejectedStatus ?? '');
+          setRejectedModal(false);
+        }}
+        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+      >
+        ยืนยัน
+      </button>
+      <button
+        onClick={() => setRejectedModal(false)}
+        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+      >
+        ยกเลิก
+      </button>
+    </div>
+  </ModalLayout>
+)}
+{confrimModal && currentLeave && (
+<ModalLayout onClose={() => setConfrimModal(false)}>
+    <h2 className="text-lg font-semibold mb-4">ยืนยันการลาของ {currentLeave.username}</h2>
+    <div className="flex justify-end gap-2">
+      <button
+        onClick={() => {
+          handleChangeStatus(currentLeave.id, roleData?.rejectedStatus ?? '');
+          setConfrimModal(false);
+        }}
+        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        ยืนยัน
+      </button>
+      <button
+        onClick={() => setConfrimModal(false)}
+        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+      >
+        ยกเลิก
+      </button>
+    </div>
+  </ModalLayout>
+)}
+
       </div>
       {showImg && (
       <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50"

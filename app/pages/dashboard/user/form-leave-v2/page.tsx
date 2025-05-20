@@ -152,6 +152,7 @@ const UserformleaveDashboard = () => {
                        
           })
       })
+      console.log(res);
       const result = await res.json();
       if(res.ok){
         setError('');

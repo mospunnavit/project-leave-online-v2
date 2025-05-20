@@ -26,9 +26,9 @@ const Sidebar = () => {
     <div className="flex">
       {/* Sidebar (transform based on isOpen state) */}
       <aside
-        className={`fixed h-screen w-64 bg-gray-900 text-white top-0 left-0 z-40 transform transition-transform duration-300
+        className={`fixed h-full w-64 bg-gray-900 text-white top-0 left-0 z-40 transform transition-transform duration-300
           ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-          md:translate-x-0 md:sticky md:top-0`}
+          md:translate-x-0 md:sticky md:top-0 md:h-screen`}
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-6 mt-6 font-bold border-b border-gray-700 ">

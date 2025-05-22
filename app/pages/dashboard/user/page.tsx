@@ -14,6 +14,7 @@ const UserDashboard = () => {
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [showImg, setShowImg] = useState(false);
     const [selectedImg, setSelectedImg] = useState("");
+    const [searchUsername, setSearchUsername] = useState('');
     const { data: session, status } = useSession();
     const limit = 5;
     

@@ -23,6 +23,7 @@ const approveDashboard = () => {
     const [showImg, setShowImg] = useState(false);
     const [currentLeave, setCurrentLeave] = useState<Leave | null>(null);
     const [selectedImg, setSelectedImg] = useState("");
+    const [searchUsername, setSearchUsername] = useState('');
     const [rejectedModal, setRejectedModal] = useState(false);
     const [confrimModal, setConfrimModal] = useState(false);
 
@@ -220,8 +221,10 @@ const closeImageModal = () => {
     <DashboardLayout title={`หัวหน้าอนุมัติ ${session?.user?.role} ${session?.user?.department}`}>
       <div className="bg-white p-4 rounded shadow">
         {error && <p className="text-red-500">{error}</p>}
-       <div className="flex w-full text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
-        
+        <div className="flex">
+            <div className="flex w-full text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
+            <div> <input type="text" placeholder=""/></div>
+        </div>
        <div className="flex flex-row flex-wrap gap-4 ">
             <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
                 <button onClick={() => {setSelectStatus(''); setCurrentPage(0)}}>ทั้งหมด</button>

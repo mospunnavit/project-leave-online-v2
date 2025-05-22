@@ -3,11 +3,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { initAdmin } from "@/firebase/firebaseAdmin";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-export const config = {
-  api: {
-    bodyParser: false, // ❌ ถ้าปิดแล้วไม่ได้จัดการ stream เอง → จะได้ ReadableStream
-  },
-};
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   console.log(session);
@@ -18,8 +14,6 @@ export async function POST(req: Request) {
   try {
     await initAdmin();
     const db = getFirestore();
-    const body = req.body;
-    console.log("Body ที่รับจาก client:", body);
     const { selectedLeavetype, leaveTime, reason, leaveDays, periodTime, uploadedPath } = await req.json();
     
     if (!selectedLeavetype || !leaveTime || !leaveDays || !reason || !periodTime) {

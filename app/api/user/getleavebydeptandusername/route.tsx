@@ -12,6 +12,8 @@ export async function GET(req: Request) {
     const lastDoc = searchParams.get("lastDoc");
     const selectStatus = searchParams.get("selectStatus");
     const direction = searchParams.get("direction") || "next"; // "next" or "prev"
+    const getFiledSearch = searchParams.get("filed") || "";
+    const getValueSearch = searchParams.get("value") || "";
     const limitParam = Number(searchParams.get("limit")) || 5;
 
     if (!session?.user?.username || !(session?.user?.role === "head" || session?.user?.role === "manager" || session?.user?.role === "hr")) {
@@ -24,6 +26,7 @@ export async function GET(req: Request) {
 
     // Build base query ดูได้เฉพราะ แผนก ยกเว้นคนที่มี สิทธ์ HR
     let baseQuery;
+    
     if(session?.user?.role === "hr"){
       baseQuery = formLeaveRef
       .orderBy("createdAt", "desc");
@@ -36,10 +39,13 @@ export async function GET(req: Request) {
     console.log("selectStatus: " + selectStatus);
 
     if (selectStatus != null && selectStatus !== "") {
-        console.log("selectStatus IN: " + selectStatus);
         baseQuery = baseQuery.where("status", "==", selectStatus);
     }
 
+    if(getFiledSearch != null && getFiledSearch !== "" && getValueSearch != null && getValueSearch !== "") {
+         baseQuery = baseQuery.where(getFiledSearch, ">=", getValueSearch).where(getFiledSearch, "<", getValueSearch + "\uf8ff")
+    }
+    
     // Get lastDoc reference if needed
     let lastDocRef = null;
     if (lastDoc) {

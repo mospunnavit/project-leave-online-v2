@@ -1,6 +1,5 @@
 // lib/authOptions.ts
-import { getFirestore } from "firebase-admin/firestore";
-import { initAdmin } from "@/firebase/firebaseAdmin";
+import db from "@/lib/db";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from 'bcryptjs';
 import type { SessionStrategy, Session, User } from 'next-auth';
@@ -17,24 +16,24 @@ export const authOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials, req) {
-        await initAdmin();
-        const db = getFirestore();
         const { username, password } = credentials!;
 
-        const querySnapshot = await db
-          .collection('Users')
-          .where('username', '==', username)
-          .get();
+        const [rows] = await db.query<Users[]>(
+          'SELECT * FROM users WHERE username = ?',
+          [username]
+        );
 
-        if (querySnapshot.empty) throw new Error('No user found');
+        if (rows.length === 0) {
+          throw new Error('No user found');
+        }
 
-        const userDoc = querySnapshot.docs[0];
-        const userData = userDoc.data();
+        const userData = rows[0];
+
         const match = await bcrypt.compare(password, userData.password);
         if (!match) throw new Error('Wrong password');
 
         return {
-          id: userDoc.id,
+          id: String(userData.id),
           username: userData.username,
           firstname: userData.firstname,
           lastname: userData.lastname,
@@ -44,14 +43,17 @@ export const authOptions = {
       }
     })
   ],
+
   session: {
     strategy: "jwt" as SessionStrategy,
   },
   secret: process.env.NEXTAUTH_SECRET,
+
   pages: {
     signIn: '/login',
     logout: '/login',
   },
+
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: User | AdapterUser | Users }) {
       if (user && 'role' in user) {
@@ -63,6 +65,7 @@ export const authOptions = {
       }
       return token;
     },
+
     async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
         session.user.role = token.role as string | undefined;

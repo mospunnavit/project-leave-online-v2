@@ -1,16 +1,19 @@
 export interface Leave {
     id: string;
-    username : string;
-    leaveTime: LeaveTime;
+    u_id: string;
+    leave_date: string;
+    start_time: string;
+    end_time: string;
     reason: string;
-    selectedLeavetype: string;
-    leaveDays: string;
-    fullname: string;
-    department: string;
-    periodTime: string;
-    createdAt: string;
+    leave_type: string;
     status: string;
-    uploadedPath: string;
+    image_filename: string;
+    submitted_at: string;
+    username: string;
+    department: string;
+    firstname: string;
+    lastname: string;
+    
   }
   
   type LeaveTime = {

@@ -31,7 +31,7 @@ export const authOptions = {
 
         const match = await bcrypt.compare(password, userData.password);
         if (!match) throw new Error('Wrong password');
-
+        console.log(userData);
         return {
           id: String(userData.id),
           username: userData.username,
@@ -57,6 +57,7 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: User | AdapterUser | Users }) {
       if (user && 'role' in user) {
+        token.id = user.id as string;
         token.role = user.role;
         token.username = user.username;
         token.firstname = user.firstname;
@@ -68,6 +69,7 @@ export const authOptions = {
 
     async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
+        session.user.id = token.id as string | undefined;
         session.user.role = token.role as string | undefined;
         session.user.username = token.username as string | undefined;
         session.user.firstname = token.firstname as string | undefined;

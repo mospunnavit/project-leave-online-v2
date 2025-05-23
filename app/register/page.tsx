@@ -30,25 +30,9 @@ function RegisterPage() {
         }
 
         try{
-            const resCheck = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/checkuser", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    username
-                })
-            })
+            
 
-            const {user} = await resCheck.json();
-
-            if(user){
-                setError("User already exist!");
-                console.log(user);
-                return;
-            }
-
-            const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/register", {
+            const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v2/user/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

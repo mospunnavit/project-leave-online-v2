@@ -10,20 +10,22 @@ import ModalLayout from "@/app/components/modallayout";
 
 
 const approveDashboard = () => {
+    const { data: session, status } = useSession();    
     const [docs, setDocs] = useState<Leave[]>([]);
+    
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<String>('');
     const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
-    const [currentPage, setCurrentPage] = useState<number>(0);
+    const [currentPage, setCurrentPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
-    const { data: session, status } = useSession();    
     const [today, setToday] = useState('');
     const [selectStatus, setSelectStatus] = useState<String>('');
-    const limit = 5;
     const [showImg, setShowImg] = useState(false);
     const [currentLeave, setCurrentLeave] = useState<Leave | null>(null);
     const [selectedImg, setSelectedImg] = useState("");
     const [searchUsername, setSearchUsername] = useState('');
+
+
     const [rejectedModal, setRejectedModal] = useState(false);
     const [confrimModal, setConfrimModal] = useState(false);
 
@@ -81,112 +83,28 @@ const approveDashboard = () => {
     const roleData = getRoleSpecificData();
     console.log(roleData.pendingStatus, roleData.approvedStatus, roleData.rejectedStatus);
   
-const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData> | null = null, isPrevious = false) => {
-       try {
-         setLoading(true);
-         let url = `/api/user/getleavesbydepartmentandstatus?selectStatus=${selectStatus}&limit=${limit}`;
-         
-         if (lastDocId) {
-           url += `&lastDoc=${lastDocId}`;
-         }
-         
-         if (isPrevious) {
-           url += '&direction=prev';
-         }
-         
-         const res = await fetch(url);
-         const result = await res.json();
-         
-         if (res.ok) {
-           setDocs(result.data || []);
- 
-           console.log(result.data);
-           console.log(result.lastVisible);
-           setHasMore(result.data.length === limit && result.hasMore);
-           return result.lastVisible;
-         } else {
-           setError('API error: ' + (result.error || 'Unknown error'));
-           return null;
-         }
-       } catch (err) {
-         console.error('Error fetching documents:', err);
-         setError('Failed to connect to server.');
-         return null;
-       } finally {
-         setLoading(false);
-       }
-     };
-  useEffect(() => {
-     const date = new Date().toLocaleDateString(); // หรือ 'th-TH'
-     setToday(date);
-   }, []);
-   
-   useEffect(() => {
-         if (status === "loading") 
-            return;
-     
-         const loadInitialData = async () => {
-           const lastVisible = await fetchData();
-           if (lastVisible) {
-             setLastDocIds([lastVisible]);
-           }
-         };
-         
-         loadInitialData();
-         console.log("status" + selectStatus);
-    },  [status, selectStatus]);
-    const handleNext = async () => {
-        if (!hasMore) return;
-        
-        const lastVisible = await fetchData(lastDocIds[currentPage]);
-        
-        if (lastVisible) {
-          // If we navigated back and then forward, remove the forward history
-          if (currentPage < lastDocIds.length - 1) {
-            setLastDocIds(prev => [...prev.slice(0, currentPage + 1), lastVisible]);
-          } else {
-            setLastDocIds(prev => [...prev, lastVisible]);
-          }
-          setCurrentPage(prev => prev + 1);
-        }
-      };
-  
-      const handlePrevious = async () => {
-        if (currentPage <= 0) return;
-        
-        const newPage = currentPage - 1;
-        const previousLastDocId = newPage > 0 ? lastDocIds[newPage - 1] : null;
-        
-        await fetchData(previousLastDocId);
-        setCurrentPage(newPage);
-        setHasMore(true); // When going back, we know there's more forward
-      };
-      const handleChangeStatus = async (docId: string, status: string) => {
-        console.log(docId, status);
-        try {
-          setLoading(true);
-          const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/user/changestatusformleave", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    docId,
-                    status
-                })
-            })
-          if(res.ok){
-            const lastDocId = currentPage > 0 ? lastDocIds[currentPage - 1] : null;
-            await fetchData(lastDocId);
-          }
-        }catch (err) {
-          console.error('Error fetching documents:', err);
-          setError('Failed to connect to server.');
-          return null;
-        }finally {
-          setLoading(false);
-        }
+ useEffect(() => {
+    const fetchLeaveData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebydepartmentandstatus?page=${currentPage}`);
+        const data = await res.json();
+        setDocs(data);
+        setHasMore(data.length < 5);
+        console.log(data);
+      } catch (err) {
+        console.error('Error fetching leave data', err);
+      } finally {
+        setLoading(false);
       }
+    };
+
+    fetchLeaveData();
+  }, [currentPage]);
+
+  const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNext = () => setCurrentPage((prev) => prev + 1);
+
     
     const renderStatus = (status: string) => {
       if (status === roleData.pendingStatus) {
@@ -260,12 +178,12 @@ const closeImageModal = () => {
                 {docs.map((doc, index) => (
                   <tr key={index}>
                     <td className="border px-4 py-2">{doc.username}</td>
-                    <td className="border px-4 py-2">{doc.fullname}</td>
+                    <td className="border px-4 py-2">{doc.firstname} + {doc.lastname}</td>
                     <td className="border px-4 py-2">{doc.department}</td>
-                    <td className="border px-4 py-2">{doc.selectedLeavetype}
-                       {doc.uploadedPath !== "" &&  <img
-                          src={`/uploads/${doc.uploadedPath}`}
-                          onClick={() => openImageModal(doc.uploadedPath)}
+                    <td className="border px-4 py-2">{doc.leave_type}
+                       {doc.image_filename !== "" &&  <img
+                          src={`/uploads/${doc.image_filename}`}
+                          onClick={() => openImageModal(doc.image_filename)}
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = "/images/fallback.png"; // ตั้ง path รูป default ที่ต้องการ
                           }}
@@ -273,10 +191,10 @@ const closeImageModal = () => {
                           className="w-10 h-10 object-cover"
                         />}
                     </td>
-                    <td className="border px-4 py-2">{doc.leaveDays}</td>
-                    <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
+                    <td className="border px-4 py-2">{doc.leave_date}</td>
+                    <td className="border px-4 py-2">{doc.start_time} - {doc.end_time}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
-                    <td className="border px-4 py-2">{doc.createdAt}
+                    <td className="border px-4 py-2">{doc.submitted_at}
                         <div>
                        
                            
@@ -356,7 +274,7 @@ const closeImageModal = () => {
           {/* ปุ่มเปลี่ยนหน้า */}
           <div className="flex justify-between mt-6">
             <button 
-              onClick={handlePrevious}
+              onClick={handlePrev}
               disabled={currentPage <= 0 || loading}
               className={`px-4 py-2 bg-blue-500 text-white rounded ${
                 currentPage <= 0 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
@@ -365,7 +283,7 @@ const closeImageModal = () => {
               ก่อนหน้า
             </button>
             
-            <span className="self-center text-sm">หน้า {currentPage + 1}</span>
+            <span className="self-center text-sm">หน้า {currentPage}</span>
             
             <button 
               onClick={handleNext}

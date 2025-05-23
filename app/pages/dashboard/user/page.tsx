@@ -10,93 +10,34 @@ const UserDashboard = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<String>('');
     const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
-    const [currentPage, setCurrentPage] = useState<number>(0);
+    const [currentPage, setCurrentPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [showImg, setShowImg] = useState(false);
     const [selectedImg, setSelectedImg] = useState("");
     const [searchUsername, setSearchUsername] = useState('');
     const { data: session, status } = useSession();
-    const limit = 5;
     
-    const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData> | null = null, isPrevious = false) => {
+    useEffect(() => {
+    const fetchLeaveData = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        let url = `/api/user/getleave?&limit=${limit}`;
-        
-        if (lastDocId) {
-          url += `&lastDoc=${lastDocId}`;
-        }
-        
-        if (isPrevious) {
-          url += '&direction=prev';
-        }
-        
-        const res = await fetch(url);
-        const result = await res.json();
-        
-        if (res.ok) {
-          console.log(result.data);
-          if(result.data.length === 0){
-            setError('ไม่พบข้อมูลการลา');
-            setHasMore(false);
-            return null;
-          }
-          setDocs(result.data || []);
-          setHasMore(result.data.length === limit && result.hasMore);
-          return result.lastVisible;
-        } else {
-          setError('API error: ' + (result.error || 'Unknown error'));
-          return null;
-        }
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebyuser?page=${currentPage}`);
+        const data = await res.json();
+        setDocs(data);
+        setHasMore(data.length < 5);
+        console.log(data);
       } catch (err) {
-        console.error('Error fetching documents:', err);
-        setError('Failed to connect to server.');
-        return null;
+        console.error('Error fetching leave data', err);
       } finally {
         setLoading(false);
       }
     };
 
-    useEffect(() => {
-      if (status === "loading") return;
+    fetchLeaveData();
+  }, [currentPage]);
 
-  
-      const loadInitialData = async () => {
-        const lastVisible = await fetchData();
-        if (lastVisible) {
-          setLastDocIds([lastVisible]);
-        }
-      };
-      
-      loadInitialData();
-    },  [status]);
-
-    const handleNext = async () => {
-      if (!hasMore) return;
-      
-      const lastVisible = await fetchData(lastDocIds[currentPage]);
-      
-      if (lastVisible) {
-        // If we navigated back and then forward, remove the forward history
-        if (currentPage < lastDocIds.length - 1) {
-          setLastDocIds(prev => [...prev.slice(0, currentPage + 1), lastVisible]);
-        } else {
-          setLastDocIds(prev => [...prev, lastVisible]);
-        }
-        setCurrentPage(prev => prev + 1);
-      }
-    };
-
-    const handlePrevious = async () => {
-      if (currentPage <= 0) return;
-      
-      const newPage = currentPage - 1;
-      const previousLastDocId = newPage > 0 ? lastDocIds[newPage - 1] : null;
-      
-      await fetchData(previousLastDocId);
-      setCurrentPage(newPage);
-      setHasMore(true); // When going back, we know there's more forward
-    };
+  const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNext = () => setCurrentPage((prev) => prev + 1);
   const renderStatus = (status: string) => {
   if (status.includes("waiting")) {
     return (
@@ -205,16 +146,16 @@ const closeImageModal = () => {
               <tbody>
                 {docs.map((doc, index) => (
                   <tr key={index}>
-                    <td className="border px-4 py-2">{doc.selectedLeavetype}
-                      {doc.uploadedPath !== "" && <img src= {`/uploads/${doc.uploadedPath}`} 
-                      onClick={() => openImageModal(doc.uploadedPath)
+                    <td className="border px-4 py-2">{doc.leave_type}
+                      {doc.leave_type === "มีใบรับรองแพทย์" && <img src= {`/uploads/${doc.image_filename}`} 
+                      onClick={() => openImageModal(doc.image_filename)
                       }
                       alt="Uploaded File" className="w-10 h-10" />}
                     </td>
-                    <td className="border px-4 py-2">{doc.leaveDays}</td>
-                    <td className="border px-4 py-2">{doc.leaveTime.startTime} - {doc.leaveTime.endTime}</td>
+                    <td className="border px-4 py-2">{doc.leave_date}</td>
+                    <td className="border px-4 py-2">{doc.start_time.slice(0, 5)} - {doc.end_time.slice(0, 5)}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
-                    <td className="border px-4 py-2">{doc.createdAt}</td>
+                    <td className="border px-4 py-2">{doc.submitted_at}</td>
                     <td className="border px-4 py-2">
                       {renderStatus(doc.status)}
                     </td>
@@ -229,7 +170,7 @@ const closeImageModal = () => {
             {docs.map((doc, index) => (
               <div key={index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">{doc.selectedLeavetype}</span>
+                  <span className="font-medium">{doc.leave_type}</span>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
                     doc.status === 'อนุมัติ' ? 'bg-green-100 text-green-800' : 
                     doc.status === 'รออนุมัติ' ? 'bg-yellow-100 text-yellow-800' : 
@@ -242,11 +183,11 @@ const closeImageModal = () => {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-gray-500">วันที่ลา</p>
-                    <p>{doc.leaveDays}</p>
+                    <p>{doc.leave_date}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">ช่วงเวลา</p>
-                    <p>{doc.periodTime}</p>
+                    <p>{doc.start_time.slice(0, 5)} - {doc.end_time.slice(0, 5)}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-500">เหตุผล</p>
@@ -254,7 +195,7 @@ const closeImageModal = () => {
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-500">เวลาที่ส่งฟอร์ม</p>
-                    <p>{doc.createdAt}</p>
+                    <p>{doc.submitted_at}</p>
                   </div>
                 </div>
               </div>
@@ -268,7 +209,7 @@ const closeImageModal = () => {
           {/* ปุ่มเปลี่ยนหน้า */}
           <div className="flex justify-between mt-6">
             <button 
-              onClick={handlePrevious}
+              onClick={handlePrev}
               disabled={currentPage <= 0 || loading}
               className={`px-4 py-2 bg-blue-500 text-white rounded ${
                 currentPage <= 0 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
@@ -277,13 +218,13 @@ const closeImageModal = () => {
               ก่อนหน้า
             </button>
             
-            <span className="self-center text-sm">หน้า {currentPage + 1}</span>
+            <span className="self-center text-sm">หน้า {currentPage }</span>
             
             <button 
               onClick={handleNext}
-              disabled={!hasMore || loading}
+              disabled={hasMore}
               className={`px-4 py-2 bg-blue-500 text-white rounded ${
-                !hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+                hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
               }`}
             >
               ถัดไป

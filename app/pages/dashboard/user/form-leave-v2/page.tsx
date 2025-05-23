@@ -14,10 +14,12 @@ const UserformleaveDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
-  const [selectedLeavetype, setSelectedLeavetype] = useState<string>('');
-  const [leaveTime, setLeaveTime] = useState<LeaveTime>({ startTime: '', endTime: '' });
-  const [periodTime, setPeriodTime] = useState<string>('');
-  const [leaveDays, setLeaveDays] = useState<string>("");
+  const [leave_type, setLeave_type,] = useState<string>('');
+  const [leave_date, setLeave_date] = useState<string>("");
+  const [start_time, setStart_time] = useState<string>("");
+  const [end_time, setEnd_time] = useState<string>("");
+ 
+  
   const [leavefile, setleavefile] = useState<File>();
   const [leavefileName, setleavefileName] = useState<string>('');
   const [today, setToday] = useState<string>('');
@@ -27,13 +29,11 @@ const UserformleaveDashboard = () => {
     setToday(date);
   }, []);
   useEffect(() => {
-    if (selectedLeavetype === 'มีใบรับรองแพทย์'){
+    if (leave_type === 'มีใบรับรองแพทย์'){
       console.log("true")
     }
-  }, [selectedLeavetype]);
-  useEffect(() => {
-    setPeriodTime(`${leaveTime.startTime} - ${leaveTime.endTime}`);
-  }, [leaveTime]);
+  }, [setLeave_type]);
+  
   const insertComponent = () => {
     return (
       <div className="flex flex-col mt-4">
@@ -54,11 +54,10 @@ const UserformleaveDashboard = () => {
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log(selectedLeavetype, leaveTime, reason, leaveDays);
-    if (leaveDays === undefined || leaveDays === '') {
+    if (leave_date === undefined || leave_date === '') {
       return;
     }
-    const leaveDate = new Date(leaveDays);  // leaveDays คือ string จาก input
+    const leaveDate = new Date(leave_date);  // leave_date คือ string จาก input
     const today = new Date();
    
     // เคลียร์เวลาให้เป็นเที่ยงคืนทั้งสอง
@@ -68,15 +67,15 @@ const UserformleaveDashboard = () => {
     // คำนวณต่างแบบวัน
     const diffInDays = Math.ceil((leaveDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    if(!selectedLeavetype){
+    if(!leave_type){
       setError('กรุณาระบุประเภทการลา');
       return;
     }
-    if(!leaveTime.startTime){
+    if(!start_time){
       setError('กรุณาระบุเวลาเริ่มต้น');
       return;
     }
-    if(!leaveTime.endTime){
+    if(!end_time){
       setError('กรุณาระบุเวลาสิ้นสุด');
       return;
     }
@@ -84,20 +83,21 @@ const UserformleaveDashboard = () => {
       setError('กรุณาระบุเหตุผล');
       return;
     }
-    if(diffInDays < 3 && (selectedLeavetype == "ลากิจ" || selectedLeavetype == "ลากิจพิเศษ" || selectedLeavetype == "พักร้อน")){
+    if(diffInDays < 3 && (leave_type == "ลากิจ" || leave_type == "ลากิจพิเศษ" || leave_type == "พักร้อน")){
       setError('ไม่สามารถลากิจก่อนวันลาน้อยกว่า 3 วันได้');
       return;
     }
 
-    if(selectedLeavetype == "มีใบรับรองแพทย์" && leavefile == undefined){
+    if(leave_type == "มีใบรับรองแพทย์" && leavefile == undefined){
       setError('กรุณาอัพโหลดใบรับรองแพทย์');
       return;
     }
 
     //handle if upload file 
-    let uploadedPath = '';
-    if(selectedLeavetype == "มีใบรับรองแพทย์" && leavefile != undefined){
-      
+    let image_filename	 = '';
+    console.log("leave_type"+leave_type, leavefile);
+    if(leave_type == "มีใบรับรองแพทย์" && leavefile != undefined){
+      console.log("in");
       if (leavefile.size > 0) {
        if (
           leavefile.type !== 'application/pdf' &&
@@ -110,8 +110,9 @@ const UserformleaveDashboard = () => {
         setLoading(true);
         const formData = new FormData();
         formData.append('file', leavefile);
-      
-        const response = await fetch(process.env.NEXT_PUBLIC_API_URL +'/api/user/uploads', {
+     
+        try {
+           const response = await fetch(process.env.NEXT_PUBLIC_API_URL +'/api/v2/user/uploads', {
           method: 'POST',
           body: formData,
         });
@@ -119,8 +120,8 @@ const UserformleaveDashboard = () => {
         const result = await response.json();
           
         if (response.ok) {
-          uploadedPath  = result.path;
-          console.log(result.path);
+          image_filename	  = result.path;
+          console.log("path"+result.path);
           setleavefileName(result.path)
           await setleavefile(result.path);
     
@@ -128,27 +129,32 @@ const UserformleaveDashboard = () => {
         } else {
           setError(`เกิดข้อผิดพลาด: ${result.error || 'ไม่สามารถอัปโหลดไฟล์ได้'}`);
           return;
+        } 
+        }catch{
+          setError('เกิดข้อผิดพลาดในการอัปโหลดไฟล์');
+
         }
+      
       }
       }
     //api form
     try{
       setLoading(true);
       console.log("env api url"+process.env.NEXT_PUBLIC_API_URL);
-      console.log("ส้งไหม" + uploadedPath);
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/user/formleave", {
+      console.log("ส้งไหม" + image_filename	);
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v2/user/leaveform", {
           method: "POST",
           headers: {
               "Content-Type": "application/json",
           },
           body: JSON.stringify({
-              selectedLeavetype,
-              leaveTime,
+              leave_type,
+              start_time,
+              end_time,
               reason,
-              leaveDays,
-              periodTime,
+              leave_date,
               leavefile,
-              uploadedPath
+              image_filename
                        
           })
       })
@@ -223,7 +229,7 @@ const UserformleaveDashboard = () => {
             id="leave" 
             required 
             defaultValue=""
-            onChange={(e) => setSelectedLeavetype(e.target.value)}>
+            onChange={(e) => setLeave_type(e.target.value)}>
             <option value="" disabled hidden>-- กรุณาเลือกประเภทการลา --</option>
             <optgroup label="ลากิจ">
               <option value="ลากิจ">ลากิจ</option>
@@ -247,8 +253,8 @@ const UserformleaveDashboard = () => {
             <input 
               type="date"
               className="w-full bg-white border border-gray-300 py-2 px-3 rounded text-sm sm:text-base"
-              value={leaveDays}
-              onChange={(e) => setLeaveDays(e.target.value)}
+              value={leave_date}
+              onChange={(e) => setLeave_date(e.target.value)}
             />
           </div>
           
@@ -264,8 +270,8 @@ const UserformleaveDashboard = () => {
                   type="time"
                   id="startTime"
                   name="startTime"
-                  value={leaveTime.startTime}
-                  onChange={(e) => setLeaveTime({ ...leaveTime, startTime: e.target.value })}
+                  value={start_time}
+                  onChange={(e) => setStart_time(e.target.value)}
                   className="w-full border p-2 rounded text-sm sm:text-base"
                   required
                   lang="th"
@@ -293,8 +299,8 @@ const UserformleaveDashboard = () => {
                   required
                   lang="th"
                   step="60"
-                  value={leaveTime.endTime}
-                  onChange={(e) => setLeaveTime({ ...leaveTime, endTime: e.target.value })}
+                  value={end_time}
+                  onChange={(e) => setEnd_time(e.target.value)}
                   className="w-full border p-2 rounded text-sm sm:text-base"
                 />
               </div>
@@ -303,13 +309,13 @@ const UserformleaveDashboard = () => {
             {/* แสดงเวลาที่เลือก */}
             <div className="mt-3 p-2 sm:p-3 bg-gray-100 rounded text-sm">
               <div className="font-medium mb-1">เวลาที่เลือก</div>
-              <p>{leaveTime.startTime || '--:--'} - {leaveTime.endTime || '--:--'}</p>
+              <p>{start_time|| '--:--'} - {end_time || '--:--'}</p>
             </div>
           </div>
         </div>
         
         {/* ส่วนอัพโหลดใบรับรองแพทย์ (ถ้าเลือกมีใบรับรองแพทย์) */}
-        {selectedLeavetype === 'มีใบรับรองแพทย์' && insertComponent()}
+        {leave_type === 'มีใบรับรองแพทย์' && insertComponent()}
         
         {/* ส่วนเหตุผล */}
         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">

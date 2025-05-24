@@ -13,6 +13,7 @@ export async function GET(req: Request)  {
     const offset = (page - 1) * pageSize;
     try {
         const [rows] = await db.query('SELECT * FROM leaveform where u_id = ? ORDER BY id LIMIT ? OFFSET ?', [user_id ,pageSize, offset]);
+        console.log(rows);
       return NextResponse.json(rows);
     } catch (err) {
         console.log(err)

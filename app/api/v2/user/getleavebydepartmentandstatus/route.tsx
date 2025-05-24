@@ -5,6 +5,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 export async function GET(req: Request)  {
     const session = await getServerSession(authOptions);
+    if(!session){
+        return NextResponse.json({ error: 'login' }, { status: 400 });
+    }
+    if(session?.user?.role == "user"){
+        return NextResponse.json({ error: "You are not authorized" }, { status: 403 });
+    }
     const user_id = session?.user?.id;
     const { searchParams } = new URL(req.url);
     const getPage = searchParams.get("page" as string) || '1';
@@ -16,7 +22,7 @@ export async function GET(req: Request)  {
         if (getStatus == '') {
 const [data] = await db.query(
                         `SELECT 
-                            u.username, u.firstname, u.lastname, u.department, 
+                            l.id,u.username, u.firstname, u.lastname, u.department, 
                             l.leave_date, l.start_time, l.end_time, 
                             l.reason, l.leave_type, l.status, 
                             l.image_filename FROM leaveform l 
@@ -28,7 +34,7 @@ const [data] = await db.query(
 );            return NextResponse.json({data}, { status: 200 });
         }else{
             const [data] = await db.query( `SELECT 
-                            u.username, u.firstname, u.lastname, u.department, 
+                            l.id, u.username, u.firstname, u.lastname, u.department, 
                             l.leave_date, l.start_time, l.end_time, 
                             l.reason, l.leave_type, l.status, 
                             l.image_filename FROM leaveform l 

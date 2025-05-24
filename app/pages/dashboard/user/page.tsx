@@ -9,7 +9,6 @@ const UserDashboard = () => {
     const [docs, setDocs] = useState<Leave[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<String>('');
-    const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [showImg, setShowImg] = useState(false);
@@ -152,7 +151,7 @@ const closeImageModal = () => {
                       }
                       alt="Uploaded File" className="w-10 h-10" />}
                     </td>
-                    <td className="border px-4 py-2">{doc.leave_date}</td>
+                    <td className="border px-4 py-2">{doc.leave_date.slice(0, 10)}</td>
                     <td className="border px-4 py-2">{doc.start_time.slice(0, 5)} - {doc.end_time.slice(0, 5)}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
                     <td className="border px-4 py-2">{doc.submitted_at}</td>
@@ -183,7 +182,7 @@ const closeImageModal = () => {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-gray-500">วันที่ลา</p>
-                    <p>{doc.leave_date}</p>
+                    <p>{doc.leave_date.substring(0, 10)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">ช่วงเวลา</p>
@@ -212,7 +211,7 @@ const closeImageModal = () => {
               onClick={handlePrev}
               disabled={currentPage <= 0 || loading}
               className={`px-4 py-2 bg-blue-500 text-white rounded ${
-                currentPage <= 0 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+                currentPage == 1 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
               }`}
             >
               ก่อนหน้า

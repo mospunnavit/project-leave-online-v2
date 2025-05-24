@@ -22,7 +22,8 @@ export async function POST(req: Request) {
     if (!leave_date || !start_time || !end_time || !reason || !leave_type) {
       return NextResponse.json({ error: 'Please fill in all required fields.' }, { status: 400 });
     }
-     if (leave_type === "มีใบรับรองแพทย์" && image_filename === '') {
+    console.log(leave_type, image_filename);
+     if (leave_type === "มีใบรับรองแพทย์" && (image_filename === '' || image_filename === null || image_filename === undefined)) {
       return NextResponse.json({ error: "Please upload  picture" }, { status: 400 });
     }
 

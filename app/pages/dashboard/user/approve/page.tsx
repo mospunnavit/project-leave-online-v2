@@ -12,10 +12,8 @@ import ModalLayout from "@/app/components/modallayout";
 const approveDashboard = () => {
     const { data: session, status } = useSession();    
     const [docs, setDocs] = useState<Leave[]>([]);
-    
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<String>('');
-    const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [today, setToday] = useState('');
@@ -24,8 +22,6 @@ const approveDashboard = () => {
     const [currentLeave, setCurrentLeave] = useState<Leave | null>(null);
     const [selectedImg, setSelectedImg] = useState("");
     const [searchUsername, setSearchUsername] = useState('');
-
-
     const [rejectedModal, setRejectedModal] = useState(false);
     const [confrimModal, setConfrimModal] = useState(false);
 
@@ -87,11 +83,14 @@ const approveDashboard = () => {
     const fetchLeaveData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebydepartmentandstatus?page=${currentPage}`);
+
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebydepartmentandstatus?page=${currentPage}&status=${selectStatus}`);
         const data = await res.json();
-        setDocs(data);
-        setHasMore(data.length < 5);
-        console.log(data);
+
+        //data {data: Leave[], length: number}
+        setDocs(Array.isArray(data.data) ? data.data : []);
+        setHasMore(data.data.length < 5);
+        
       } catch (err) {
         console.error('Error fetching leave data', err);
       } finally {
@@ -100,7 +99,7 @@ const approveDashboard = () => {
     };
 
     fetchLeaveData();
-  }, [currentPage]);
+  }, [currentPage, selectStatus]);
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);
@@ -134,6 +133,31 @@ const approveDashboard = () => {
 const closeImageModal = () => {
   setShowImg(false);
 };
+
+const handleChangeStatus = async (id: number, newStatus: string) => {
+  try {
+    const response = await fetch('/api/v2/user/editstatusbyuser', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id, status: newStatus }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Error:', data.error);
+      
+      return;
+    }
+  
+    // คุณอาจเรียก fetch ใหม่ หรือรีเฟรชข้อมูลที่แสดง
+  } catch (err) {
+    console.error(err);
+   
+  }
+};
       if (loading && docs.length === 0) return <Loading />;
   return (
     <DashboardLayout title={`หัวหน้าอนุมัติ ${session?.user?.role} ${session?.user?.department}`}>
@@ -145,17 +169,17 @@ const closeImageModal = () => {
         </div>
        <div className="flex flex-row flex-wrap gap-4 ">
             <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-                <button onClick={() => {setSelectStatus(''); setCurrentPage(0)}}>ทั้งหมด</button>
+                <button onClick={() => {setSelectStatus(''); setCurrentPage(1)}}>ทั้งหมด</button>
             </div>
             <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
      
-                <button onClick={() => {setSelectStatus(roleData?.pendingStatus ?? ''); setCurrentPage(0)}}>รอการอนุมัติ</button>
+                <button onClick={() => {setSelectStatus(roleData?.pendingStatus ?? ''); setCurrentPage(1)}}>รอการอนุมัติ</button>
             </div>
             <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-            <button onClick={() => {setSelectStatus(roleData?.approvedStatus ?? ''); setCurrentPage(0)}}>อนุมัติแล้ว</button>
+            <button onClick={() => {setSelectStatus(roleData?.approvedStatus ?? ''); setCurrentPage(1)}}>อนุมัติแล้ว</button>
             </div>
             <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-            <button onClick={() => {setSelectStatus(roleData?.rejectedStatus ?? ''); setCurrentPage(0)}}>ยกเลิก</button>
+            <button onClick={() => {setSelectStatus(roleData?.rejectedStatus ?? ''); setCurrentPage(1)}}>ยกเลิก</button>
             </div>
        </div>
        <div className="hidden md:block overflow-x-auto">
@@ -277,7 +301,7 @@ const closeImageModal = () => {
               onClick={handlePrev}
               disabled={currentPage <= 0 || loading}
               className={`px-4 py-2 bg-blue-500 text-white rounded ${
-                currentPage <= 0 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+                currentPage == 1 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
               }`}
             >
               ก่อนหน้า
@@ -285,11 +309,11 @@ const closeImageModal = () => {
             
             <span className="self-center text-sm">หน้า {currentPage}</span>
             
-            <button 
+           <button 
               onClick={handleNext}
-              disabled={!hasMore || loading}
+              disabled={hasMore}
               className={`px-4 py-2 bg-blue-500 text-white rounded ${
-                !hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+                hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
               }`}
             >
               ถัดไป
@@ -340,7 +364,7 @@ const closeImageModal = () => {
     <div className="flex justify-end gap-2">
       <button
         onClick={() => {
-          handleChangeStatus(currentLeave.id, roleData?.rejectedStatus ?? '');
+          handleChangeStatus(currentLeave.id, roleData?.approvedStatus ?? '');
           setConfrimModal(false);
         }}
         className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"

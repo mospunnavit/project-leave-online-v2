@@ -1,5 +1,5 @@
 export interface Leave {
-    id: string;
+    id: number;
     u_id: string;
     leave_date: string;
     start_time: string;

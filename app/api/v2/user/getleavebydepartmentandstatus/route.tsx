@@ -19,12 +19,40 @@ export async function GET(req: Request)  {
     const pageSize = 5;
     const offset = (page - 1) * pageSize;
     try {
-        if (getStatus == '') {
-const [data] = await db.query(
+    if (session?.user?.role == "hr"){
+         if (getStatus == '') {
+    const [data] = await db.query(
                         `SELECT 
                             l.id,u.username, u.firstname, u.lastname, u.department, 
                             l.leave_date, l.start_time, l.end_time, 
-                            l.reason, l.leave_type, l.status, 
+                            l.reason, l.leave_type, l.status, l.submitted_at, 
+                            l.image_filename FROM leaveform l 
+                        LEFT JOIN users u ON l.u_id = u.id 
+                        ORDER BY l.id 
+                        LIMIT ? OFFSET ?`,
+                        [ pageSize, offset]
+);            return NextResponse.json({data}, { status: 200 });
+        }else{
+            const [data] = await db.query( `SELECT 
+                            l.id, u.username, u.firstname, u.lastname, u.department, 
+                            l.leave_date, l.start_time, l.end_time, 
+                            l.reason, l.leave_type, l.status, l.submitted_at, 
+                            l.image_filename FROM leaveform l 
+                        LEFT JOIN users u ON l.u_id = u.id 
+                        WHERE l.status = ?
+                        ORDER BY l.id 
+                        LIMIT ? OFFSET ?`,
+                        [getStatus, pageSize, offset]);
+            return NextResponse.json({data}, { status: 200 });
+        }
+
+    }else{
+        if (getStatus == '') {
+    const [data] = await db.query(
+                        `SELECT 
+                            l.id,u.username, u.firstname, u.lastname, u.department, 
+                            l.leave_date, l.start_time, l.end_time, 
+                            l.reason, l.leave_type, l.status, l.submitted_at, 
                             l.image_filename FROM leaveform l 
                         LEFT JOIN users u ON l.u_id = u.id 
                         WHERE u.department = ? 
@@ -36,7 +64,7 @@ const [data] = await db.query(
             const [data] = await db.query( `SELECT 
                             l.id, u.username, u.firstname, u.lastname, u.department, 
                             l.leave_date, l.start_time, l.end_time, 
-                            l.reason, l.leave_type, l.status, 
+                            l.reason, l.leave_type, l.status, l.submitted_at, 
                             l.image_filename FROM leaveform l 
                         LEFT JOIN users u ON l.u_id = u.id 
                         WHERE u.department = ? and l.status = ?
@@ -45,6 +73,9 @@ const [data] = await db.query(
                         [session?.user?.department, getStatus, pageSize, offset]);
             return NextResponse.json({data}, { status: 200 });
         }
+
+    }
+        
     
     } catch (err) {
         console.log(err)

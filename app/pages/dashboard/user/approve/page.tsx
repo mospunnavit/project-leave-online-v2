@@ -78,9 +78,7 @@ const approveDashboard = () => {
     };
     const roleData = getRoleSpecificData();
     console.log(roleData.pendingStatus, roleData.approvedStatus, roleData.rejectedStatus);
-  
- useEffect(() => {
-    const fetchLeaveData = async () => {
+  const fetchLeaveData = async () => {
       setLoading(true);
       try {
 
@@ -97,6 +95,7 @@ const approveDashboard = () => {
         setLoading(false);
       }
     };
+ useEffect(() => {
 
     fetchLeaveData();
   }, [currentPage, selectStatus]);
@@ -151,13 +150,36 @@ const handleChangeStatus = async (id: number, newStatus: string) => {
       
       return;
     }
-  
+    
+    if(response.ok){
+      console.log('Status updated successfully');
+      fetchLeaveData();
+    }
     // คุณอาจเรียก fetch ใหม่ หรือรีเฟรชข้อมูลที่แสดง
   } catch (err) {
     console.error(err);
    
   }
 };
+
+
+const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
+  timeZone: 'Asia/Bangkok',
+  day: 'numeric',
+  month: 'numeric',
+  year: 'numeric', 
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+});
+
+const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  const adjustedDate = new Date(date.getTime() + (hoursOffset * 60 * 60 * 1000));
+  return dateTimeFormatter.format(adjustedDate);
+};
+
       if (loading && docs.length === 0) return <Loading />;
   return (
     <DashboardLayout title={`หัวหน้าอนุมัติ ${session?.user?.role} ${session?.user?.department}`}>
@@ -218,11 +240,9 @@ const handleChangeStatus = async (id: number, newStatus: string) => {
                     <td className="border px-4 py-2">{doc.leave_date}</td>
                     <td className="border px-4 py-2">{doc.start_time} - {doc.end_time}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
-                    <td className="border px-4 py-2">{doc.submitted_at}
-                        <div>
-                       
-                           
-                        </div>
+                     <td className="border px-4 py-2">
+                        {formatDateWithOffset(doc.submitted_at, 7)}
+                      
                     </td>
                     <td className="border px-4 py-2">
                       <div className="flex flex-col flex-wrap gap-3">
@@ -338,7 +358,7 @@ const handleChangeStatus = async (id: number, newStatus: string) => {
         )}
           {rejectedModal && currentLeave && (
   <ModalLayout onClose={() => setRejectedModal(false)}>
-    <h2 className="text-lg font-semibold mb-4">ไม่อนุมัติการลาของ {currentLeave.username}</h2>
+    <h2 className="text-lg font-semibold mb-4">ไม่อนุมัติการลาของ {currentLeave.username}  {currentLeave.firstname} {currentLeave.lastname}</h2>
     <div className="flex justify-end gap-2">
       <button
         onClick={() => {
@@ -360,7 +380,7 @@ const handleChangeStatus = async (id: number, newStatus: string) => {
 )}
 {confrimModal && currentLeave && (
 <ModalLayout onClose={() => setConfrimModal(false)}>
-    <h2 className="text-lg font-semibold mb-4">ยืนยันการลาของ {currentLeave.username}</h2>
+    <h2 className="text-lg font-semibold mb-4">ยืนยันการลาของ {currentLeave.username} {currentLeave.firstname} {currentLeave.lastname}</h2>
     <div className="flex justify-end gap-2">
       <button
         onClick={() => {

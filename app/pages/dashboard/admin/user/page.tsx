@@ -13,39 +13,49 @@ const approveDashboard = () => {
     const [docs, setDocs] = useState<Users[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<String>('');
-    const [lastDocIds, setLastDocIds] = useState<DocumentSnapshot[]>([]); // Store IDs of last docs for each page
-    const [currentPage, setCurrentPage] = useState<number>(0);
+    const [currentPage, setCurrentPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const { data: session, status } = useSession();    
     const [today, setToday] = useState('');
-    const [selectStatus, setSelectStatus] = useState<String>('');
-    const limit = 10;
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isEditPasswordModalOpen, setIsEditPasswordModalOpen] = useState(false);
     const [currentUser, setcurrentUser] = useState<Users | null>(null);
+    const [password, setPassword] = useState<string>('');
+    const [retypepassword, setRetypePassword] = useState<string>('');
     
- const handleEdit = (leave: Users) => {
-    setcurrentUser({...leave});
+ const handleEdit = (user: Users) => {
+    setcurrentUser({...user});
     setIsEditModalOpen(true);
   };
 
+  const handleEditPassword = (user: Users) => {
+    setPassword('');
+    setRetypePassword('');
+    setcurrentUser({...user});
+    setIsEditPasswordModalOpen(true);
+  }
   // Function สำหรับลบข้อมูล
   const handleDelete = (id: string) => {
     if (window.confirm("คุณแน่ใจหรือไม่ที่จะลบรายการนี้?")) {
       setDocs(docs.filter(doc => doc.id !== id));
     }
   };
-
-  // Function สำหรับบันทึกการแก้ไข
-  const handleSaveEdit = async () => {
+   const handleSaveEditPassword = async () => {
+    
   if (!currentUser) return;
-  
+  console.log(currentUser)
   // อัปเดต state ภายในแอพ
-
+  if (password !== retypepassword) {
+    setError('รหัสผ่านไม่ตรงกัน');
+    setIsEditPasswordModalOpen(false);
+    return;
+  }
   
   // ลอง-จับข้อผิดพลาด สำหรับการเรียก API
   try {
     // ใช้ async/await เพื่อรอการตอบกลับจาก API
-    const response = await fetch('/api/admin/edituserbyid', {
+    const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/admin/edituserbyID', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -53,11 +63,8 @@ const approveDashboard = () => {
       // ส่งข้อมูลทั้งหมดใน currentUser ไปใน body
       body: JSON.stringify({
         id: currentUser.id,
-        username: currentUser.username,
-        firstname: currentUser.firstname,
-        lastname: currentUser.lastname,
-        department: currentUser.department,
-        role: currentUser.role
+        password: password,
+        cpassword: retypepassword
         // สามารถเพิ่ม field อื่นๆ จาก currentUser ที่นี่ถ้าต้องการ
       })
     });
@@ -74,6 +81,59 @@ const approveDashboard = () => {
     setLoading(true);
     const result = await response.json();
     console.log('Updated successfully:', result);
+    
+    // อาจแสดง toast หรือการแจ้งเตือนว่าอัปเดตสำเร็จ
+    // toast.success('บันทึกการแก้ไขเรียบร้อย');
+    
+  } catch (error) {
+    setError('API error: ' + (error || 'Unknown error'));
+    
+    // อาจแสดง toast หรือการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
+    // toast.error('ไม่สามารถบันทึกการแก้ไขได้');
+  } finally {
+    // ไม่ว่าจะสำเร็จหรือล้มเหลว ให้ปิด modal และล้างค่า currentUser
+    setIsEditModalOpen(false);
+    setLoading(false);
+    setcurrentUser(null);
+  }
+};
+  // Function สำหรับบันทึกการแก้ไข
+  const handleSaveEdit = async () => {
+
+  if (!currentUser) return;
+  console.log(currentUser)
+  // อัปเดต state ภายในแอพ
+
+  
+  // ลอง-จับข้อผิดพลาด สำหรับการเรียก API
+  try {
+    // ใช้ async/await เพื่อรอการตอบกลับจาก API
+    const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/admin/edituserbyID', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // ส่งข้อมูลทั้งหมดใน currentUser ไปใน body
+      body: JSON.stringify({
+        id: currentUser.id,
+        firstname: currentUser.firstname,
+        lastname: currentUser.lastname,
+        department: currentUser.department,
+        role: currentUser.role
+        // สามารถเพิ่ม field อื่นๆ จาก currentUser ที่นี่ถ้าต้องการ
+      })
+    });
+    
+    // ตรวจสอบว่า response เป็น OK หรือไม่
+    if (!response.ok) {
+      setError(error);
+      throw new Error(`API responded with status: ${response.status}`);
+    }
+
+    // แปลง response เป็น JSON
+    setLoading(true);
+    const result = await response.json();
+    fetchUserData();
     
     // อาจแสดง toast หรือการแจ้งเตือนว่าอัปเดตสำเร็จ
     // toast.success('บันทึกการแก้ไขเรียบร้อย');
@@ -113,87 +173,30 @@ const approveDashboard = () => {
       });
     }
   };
-const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData> | null = null, isPrevious = false) => {
-       try {
-         setLoading(true);
-         let url = `/api/admin/getalluser?limit=${limit}`;
-         
-         if (lastDocId) {
-           url += `&lastDoc=${lastDocId}`;
-         }
-         
-         if (isPrevious) {
-           url += '&direction=prev';
-         }
-         
-         const res = await fetch(url);
-         const result = await res.json();
-         
-         if (res.ok) {
-           setDocs(result.data || []);
- 
-           console.log(result.data);
-           console.log(result.lastVisible);
-           setHasMore(result.data.length === limit && result.hasMore);
-           return result.lastVisible;
-         } else {
-           setError('API error: ' + (result.error || 'Unknown error'));
-           return null;
-         }
-       } catch (err) {
-         console.error('Error fetching documents:', err);
-         setError('Failed to connect to server.');
-         return null;
-       } finally {
-         setLoading(false);
-       }
-     };
-  useEffect(() => {
-     const date = new Date().toLocaleDateString(); // หรือ 'th-TH'
-     setToday(date);
-   }, []);
-   
-   useEffect(() => {
-         if (status === "loading") 
-            return;
-     
-         const loadInitialData = async () => {
-           const lastVisible = await fetchData();
-           if (lastVisible) {
-             setLastDocIds([lastVisible]);
-           }
-         };
-         
-         loadInitialData();
-         console.log("status" + selectStatus);
-    },  [status, selectStatus]);
-    const handleNext = async () => {
-        if (!hasMore) return;
-        
-        const lastVisible = await fetchData(lastDocIds[currentPage]);
-        
-        if (lastVisible) {
-          // If we navigated back and then forward, remove the forward history
-          if (currentPage < lastDocIds.length - 1) {
-            setLastDocIds(prev => [...prev.slice(0, currentPage + 1), lastVisible]);
-          } else {
-            setLastDocIds(prev => [...prev, lastVisible]);
-          }
-          setCurrentPage(prev => prev + 1);
-        }
-      };
-  
-      const handlePrevious = async () => {
-        if (currentPage <= 0) return;
-        
-        const newPage = currentPage - 1;
-        const previousLastDocId = newPage > 0 ? lastDocIds[newPage - 1] : null;
-        
-        await fetchData(previousLastDocId);
-        setCurrentPage(newPage);
-        setHasMore(true); // When going back, we know there's more forward
-      };
-     
+
+   const fetchUserData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/admin/getalluser?page=${currentPage}`);
+        const data = await res.json();
+        setDocs(data.datauser);
+        setHasMore(data.length < 5);
+        console.log(data);
+      } catch (err) {
+        console.error('Error fetching leave data', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+
+ useEffect(() => {
+    fetchUserData();
+  }, [currentPage]);
+
+  const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNext = () => setCurrentPage((prev) => prev + 1);
+    
     
    
       if (loading && docs.length === 0) return <Loading/>;
@@ -217,9 +220,7 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
        <div className="flex w-full text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
         
        <div className="flex flex-row flex-wrap gap-4 ">
-            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-                <button onClick={() => {setSelectStatus(''); setCurrentPage(0)}}>ทั้งหมด</button>
-            </div>
+            
             
        </div>
        <div className="hidden md:block overflow-x-auto">
@@ -242,17 +243,27 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
                     <td className="border px-4 py-2">{doc.lastname}</td>
                     <td className="border px-4 py-2">{doc.department}</td>
                     <td className="border px-4 py-2">{doc.role}</td>
-                    <td> <button onClick={() => handleEdit(doc)}
-                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                                แก้ไข
-                            </button>
-                            <button
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
-                            
-                            >
+                    <td> 
+                    <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleEdit(doc)}
+                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                          >
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => handleEditPassword(doc)}
+                            className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
+                          >
+                            รหัส
+                          </button>
+                          <button
+                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                          >
                             ลบ
-                            </button></td>
+                          </button>
+                    </div>
+                    </td>
                    
                   
                    
@@ -339,6 +350,62 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
           </div>
         </div>
       )}
+      {isEditPasswordModalOpen && currentUser && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">แก้ไขรหัสผ่านผู้ใช้ {currentUser.username}</h2>
+              <button 
+                onClick={() => setIsEditPasswordModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">รหัสผ่านใหม่</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ใส่รหัสผ่านใหม่อีกครั้ง</label>
+                <input
+                  type="password"
+                  value={retypepassword}
+                  onChange={(e) => setRetypePassword(e.target.value)}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              
+              
+             
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+              >
+                ยกเลิก
+              </button>
+              <button
+               onClick={handleSaveEditPassword}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                บันทึก
+               
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
           {/* การ์ดประวัติการลาสำหรับหน้าจอขนาดเล็ก */}
           <div className="md:hidden space-y-4">
             {docs.map((doc, index) => (
@@ -382,22 +449,22 @@ const fetchData = async (lastDocId: DocumentSnapshot<DocumentData, DocumentData>
           {/* ปุ่มเปลี่ยนหน้า */}
           <div className="flex justify-between mt-6">
             <button 
-              onClick={handlePrevious}
+              onClick={handlePrev}
               disabled={currentPage <= 0 || loading}
               className={`px-4 py-2 bg-blue-500 text-white rounded ${
-                currentPage <= 0 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+                currentPage == 1 || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
               }`}
             >
               ก่อนหน้า
             </button>
             
-            <span className="self-center text-sm">หน้า {currentPage + 1}</span>
+            <span className="self-center text-sm">หน้า {currentPage }</span>
             
-            <button 
+           <button 
               onClick={handleNext}
-              disabled={!hasMore || loading}
+              disabled={hasMore}
               className={`px-4 py-2 bg-blue-500 text-white rounded ${
-                !hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+                hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
               }`}
             >
               ถัดไป

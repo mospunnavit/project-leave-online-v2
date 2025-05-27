@@ -1,7 +1,6 @@
 'use client';
 import DashboardLayout from "@/app/components/dashboardLayout";
 import { useEffect, useState } from 'react';
-import {DocumentSnapshot, DocumentData } from "firebase/firestore";
 import { Leave } from '@/app/types/formleave';
 import { useSession } from "next-auth/react";
 import { Loading } from "@/app/components/loading";
@@ -76,8 +75,23 @@ const openImageModal = (imagePath : string) => {
 const closeImageModal = () => {
   setShowImg(false);
 };
-// ฟังก์ชันสำหรับการเปิด modal
+// ฟังก์ชันสำหรับเวลาเป็น ไทย
+const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
+  timeZone: 'Asia/Bangkok',
+  day: 'numeric',
+  month: 'numeric',
+  year: 'numeric', 
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+});
 
+const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  const adjustedDate = new Date(date.getTime() + (hoursOffset * 60 * 60 * 1000));
+  return dateTimeFormatter.format(adjustedDate);
+};
     if (loading && docs.length === 0) 
       return <>
         <Loading /></>;
@@ -154,7 +168,11 @@ const closeImageModal = () => {
                     <td className="border px-4 py-2">{doc.leave_date.slice(0, 10)}</td>
                     <td className="border px-4 py-2">{doc.start_time.slice(0, 5)} - {doc.end_time.slice(0, 5)}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
-                    <td className="border px-4 py-2">{doc.submitted_at}</td>
+                
+                    <td className="border px-4 py-2">
+                        {formatDateWithOffset(doc.submitted_at, 7)}
+                      
+                    </td>
                     <td className="border px-4 py-2">
                       {renderStatus(doc.status)}
                     </td>

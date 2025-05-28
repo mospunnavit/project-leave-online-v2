@@ -4,7 +4,7 @@ import db from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-export async function PUT(req: Request) {
+export async function DELETE(req: Request) {
   try {
 
     // const session = await getServerSession(authOptions);
@@ -12,22 +12,22 @@ export async function PUT(req: Request) {
     //     return NextResponse.json({ error: 'login' }, { status: 400 });
     // }
     
-    const { id, firstname, lastname, role, department } = await req.json();
+    const { id } = await req.json();
     
     // ตรวจสอบว่า id และ status ถูกส่งมาหรือไม่
-    if (!id || !firstname || !lastname || !role || !department) {
+    if (!id ) {
       return NextResponse.json({ error: 'Missing inputs' }, { status: 400 });
     }
 
     // อัปเดต status ในฐานข้อมูล
-    const [result] = await db.query('UPDATE users SET firstname = ?, lastname = ?, role = ?, department = ? WHERE id = ?', [firstname, lastname, role, department, id]);
+    const [result] = await db.query('DELETE FROM users WHERE id = ?', [id]);
 
     // ตรวจสอบว่ามีการอัปเดตจริงหรือไม่
     if ((result as any).affectedRows === 0) {
-      return NextResponse.json({ error: 'Form not found or not updated' }, { status: 404 });
+      return NextResponse.json({ error: 'ไม่พบ user หรือไม่สามารถลบได้' }, { status: 404 });
     }
 
-    return NextResponse.json({ message: 'Status updated successfully' });
+    return NextResponse.json({ message: 'Delete user successfully' });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

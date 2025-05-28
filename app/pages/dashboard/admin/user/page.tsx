@@ -12,7 +12,9 @@ import { Loading } from "@/app/components/loading";
 const approveDashboard = () => {
     const [docs, setDocs] = useState<Users[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<String>('');
+    const [error, setError] = useState<string>('');
+    const [success, setSuccess] = useState<string>('');
+
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const { data: session, status } = useSession();    
@@ -20,6 +22,7 @@ const approveDashboard = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isEditPasswordModalOpen, setIsEditPasswordModalOpen] = useState(false);
+    
     const [currentUser, setcurrentUser] = useState<Users | null>(null);
     const [password, setPassword] = useState<string>('');
     const [retypepassword, setRetypePassword] = useState<string>('');
@@ -36,12 +39,52 @@ const approveDashboard = () => {
     setIsEditPasswordModalOpen(true);
   }
   // Function สำหรับลบข้อมูล
-  const handleDelete = (id: string) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ที่จะลบรายการนี้?")) {
-      setDocs(docs.filter(doc => doc.id !== id));
-    }
+  const handleDelete = (user: Users) => {
+    setcurrentUser({...user});
+    setIsDeleteModalOpen(true);
   };
-   const handleSaveEditPassword = async () => {
+
+  const hadleConfirmDelete = async () => {
+    if (!currentUser) return;
+
+    // ลอง-จับข้อผิดพลาด สำหรับการเรียก API
+    try {
+      // ใช้ async/await เพื่อรอการตอบกลับจาก API
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/admin/deleteuserbyID', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // ส่งข้อมูลทั้งหมดใน currentUser ไปใน body
+        body: JSON.stringify({
+          id: currentUser.id,
+          // สามารถเพิ่ม field อื่นๆ จาก currentUser ที่นี่ถ้าต้องการ
+        })
+      });
+       if (!response.ok) {
+          setError(error);
+          throw new Error(`API responded with status: ${response.status}`);
+          }
+          // แปลง response เป็น JSON
+          setLoading(true);
+          const result = await response.json();
+          setSuccess('ลบข้อมูลสําเร็จ' + currentUser.username);
+          fetchUserData();
+          
+        } catch (error) {
+          setError('API error: ' + (error || 'Unknown error'));
+          
+          // อาจแสดง toast หรือการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
+          // toast.error('ไม่สามารถบันทึกการแก้ไขได้');
+        } finally {
+          // ไม่ว่าจะสำเร็จหรือล้มเหลว ให้ปิด modal และล้างค่า currentUser
+          setIsDeleteModalOpen(false);
+          setLoading(false);
+          setcurrentUser(null);
+        }
+      };
+      
+  const handleSaveEditPassword = async () => {
     
   if (!currentUser) return;
   console.log(currentUser)
@@ -55,8 +98,8 @@ const approveDashboard = () => {
   // ลอง-จับข้อผิดพลาด สำหรับการเรียก API
   try {
     // ใช้ async/await เพื่อรอการตอบกลับจาก API
-    const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/admin/edituserbyID', {
-      method: 'POST',
+    const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/admin/editpassworduserbyID', {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -74,14 +117,13 @@ const approveDashboard = () => {
       setError(error);
       throw new Error(`API responded with status: ${response.status}`);
     }
-    setDocs(docs.map(doc => 
-    doc.id === currentUser.id ? currentUser : doc
-    ));
     // แปลง response เป็น JSON
     setLoading(true);
     const result = await response.json();
     console.log('Updated successfully:', result);
-    
+    setSuccess('แก้ไขรหัสผ่านสําเร็จ ' + currentUser.username);
+
+    fetchUserData();
     // อาจแสดง toast หรือการแจ้งเตือนว่าอัปเดตสำเร็จ
     // toast.success('บันทึกการแก้ไขเรียบร้อย');
     
@@ -95,6 +137,7 @@ const approveDashboard = () => {
     setIsEditModalOpen(false);
     setLoading(false);
     setcurrentUser(null);
+      
   }
 };
   // Function สำหรับบันทึกการแก้ไข
@@ -109,7 +152,7 @@ const approveDashboard = () => {
   try {
     // ใช้ async/await เพื่อรอการตอบกลับจาก API
     const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/admin/edituserbyID', {
-      method: 'POST',
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -133,6 +176,7 @@ const approveDashboard = () => {
     // แปลง response เป็น JSON
     setLoading(true);
     const result = await response.json();
+    setSuccess('แก้ไขข้อมูลสําเร็จ ' + currentUser.username);
     fetchUserData();
     
     // อาจแสดง toast หรือการแจ้งเตือนว่าอัปเดตสำเร็จ
@@ -179,11 +223,20 @@ const approveDashboard = () => {
       try {
         const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/admin/getalluser?page=${currentPage}`);
         const data = await res.json();
-        setDocs(data.datauser);
-        setHasMore(data.length < 5);
-        console.log(data);
+
+        if (res.ok){ 
+          setDocs(data.datauser);
+
+          setHasMore(data.datauser.length < 5);
+          console.log(data);
+        }else{
+          setError('API error: ' + (data.error || 'Unknown error'));
+        }
+        
+        
       } catch (err) {
-        console.error('Error fetching leave data', err);
+        setError('API error: ' + (err || 'Unknown error'));
+        return;
       } finally {
         setLoading(false);
       }
@@ -213,6 +266,16 @@ const approveDashboard = () => {
             </div>
             <div className="ml-3">
               <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+        {success && (
+        <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4 rounded shadow-sm">
+          <div className="flex">
+          
+            <div className="ml-3">
+              <p className="text-sm text-green-700">{success}</p>
             </div>
           </div>
         </div>
@@ -257,7 +320,9 @@ const approveDashboard = () => {
                           >
                             รหัส
                           </button>
+                          
                           <button
+                           onClick={() => handleDelete(doc)}
                             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                           >
                             ลบ
@@ -276,7 +341,7 @@ const approveDashboard = () => {
         <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">แก้ไขข้อมูลผ้ใช้</h2>
+              <h2 className="text-xl font-bold">แก้ไขข้อมูลผ้ใช้ {currentUser.username}</h2>
               <button 
                 onClick={() => setIsEditModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -406,6 +471,39 @@ const approveDashboard = () => {
           </div>
         </div>
       )}
+       {isDeleteModalOpen && currentUser && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">ยันยันการลบผู้ใช้ {currentUser.username}</h2>
+              <button 
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+          
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+              >
+                ยกเลิก
+              </button>
+              <button
+               onClick={hadleConfirmDelete}
+                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+              >
+                ยืนยัน
+               
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
           {/* การ์ดประวัติการลาสำหรับหน้าจอขนาดเล็ก */}
           <div className="md:hidden space-y-4">
             {docs.map((doc, index) => (
@@ -460,7 +558,7 @@ const approveDashboard = () => {
             
             <span className="self-center text-sm">หน้า {currentPage }</span>
             
-           <button 
+          <button 
               onClick={handleNext}
               disabled={hasMore}
               className={`px-4 py-2 bg-blue-500 text-white rounded ${

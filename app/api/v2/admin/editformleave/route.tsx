@@ -1,5 +1,4 @@
 // pages/api/editStatus.ts
-
 import db from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth";
@@ -12,15 +11,15 @@ export async function PUT(req: Request) {
     //     return NextResponse.json({ error: 'login' }, { status: 400 });
     // }
     
-    const { id, firstname, lastname, role, department } = await req.json();
+    const { id, leave_date, start_time, end_time, reason , leave_type, status } = await req.json();
     
     // ตรวจสอบว่า id และ status ถูกส่งมาหรือไม่
-    if (!id || !firstname || !lastname || !role || !department) {
+    if (!id || !leave_date || !start_time || !end_time || !reason || !leave_type || !status) {
       return NextResponse.json({ error: 'Missing inputs' }, { status: 400 });
     }
 
     // อัปเดต status ในฐานข้อมูล
-    const [result] = await db.query('UPDATE users SET firstname = ?, lastname = ?, role = ?, department = ? WHERE id = ?', [firstname, lastname, role, department, id]);
+    const [result] = await db.query('UPDATE leaveform SET leave_date = ?, start_time = ?, end_time = ?, reason = ?, leave_type = ?, status = ? WHERE id = ?', [leave_date, start_time, end_time, reason, leave_type, status, id]);
 
     // ตรวจสอบว่ามีการอัปเดตจริงหรือไม่
     if ((result as any).affectedRows === 0) {

@@ -1,6 +1,5 @@
 'use client'
 import DashboardLayout from "@/app/components/dashboardLayout";
-import {DocumentSnapshot, DocumentData } from "firebase/firestore";
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
@@ -13,7 +12,6 @@ const approveDashboard = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
-
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const { data: session, status } = useSession();    
@@ -22,16 +20,43 @@ const approveDashboard = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isEditPasswordModalOpen, setIsEditPasswordModalOpen] = useState(false);
     const [showImg, setShowImg] = useState(false);
-     const [selectedImg, setSelectedImg] = useState("");
+    const [selectedImg, setSelectedImg] = useState("");
     const [currentLeave, setcurrentLeave] = useState<Leave | null>(null);
     const [password, setPassword] = useState<string>('');
     const [retypepassword, setRetypePassword] = useState<string>('');
-  
+    const [leaveFile, setLeaveFile] = useState<File>();
+
 const openImageModal = (imagePath : string) => {
   setSelectedImg(imagePath);
   setShowImg(true);
 };
+const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
+  timeZone: 'Asia/Bangkok',
+  day: 'numeric',
+  month: 'numeric',
+  year: 'numeric', 
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+});
+const formatDateWithOffset = (dateString : string, hoursOffset = 7) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  const adjustedDate = new Date(date.getTime() + (hoursOffset * 60 * 60 * 1000));
+  return dateTimeFormatter.format(adjustedDate);
+};
 
+// วิธีที่ 2: ใช้ Date object (แนะนำ)
+const convertISOToDateInputSafe = (isoString : any) => {
+  if (!isoString) return '';
+  try {
+    const date = new Date(isoString);
+    return date.toISOString().split('T')[0];
+  } catch (error) {
+    console.error('Invalid date:', error);
+    return '';
+  }
+};
 // ฟังก์ชันสำหรับการปิด modal
 const closeImageModal = () => {
   setShowImg(false);
@@ -47,14 +72,13 @@ const closeImageModal = () => {
     setcurrentLeave({...leave});
     setIsDeleteModalOpen(true);
   };
-
-  const hadleConfirmDelete = async () => {
+   const hadleConfirmDelete = async () => {
     if (!currentLeave) return;
 
     // ลอง-จับข้อผิดพลาด สำหรับการเรียก API
     try {
       // ใช้ async/await เพื่อรอการตอบกลับจาก API
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/admin/deleteuserbyID', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/admin/deleteformleave', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -72,8 +96,8 @@ const closeImageModal = () => {
           // แปลง response เป็น JSON
           setLoading(true);
           const result = await response.json();
-          setSuccess('ลบข้อมูลสําเร็จ' + currentLeave.username);
-          fetchUserData();
+          setSuccess('ลบข้อมูลสําเร็จ ' + currentLeave.id + ' ของผู้ใช้ ' + currentLeave.username);
+          fecthLeavedata();
           
         } catch (error) {
           setError('API error: ' + (error || 'Unknown error'));
@@ -84,34 +108,37 @@ const closeImageModal = () => {
           // ไม่ว่าจะสำเร็จหรือล้มเหลว ให้ปิด modal และล้างค่า currentUser
           setIsDeleteModalOpen(false);
           setLoading(false);
-          setcurrentUser(null);
+          setcurrentLeave(null);
         }
       };
+  
       
   
   // Function สำหรับบันทึกการแก้ไข
   const handleSaveEdit = async () => {
 
   if (!currentLeave) return;
-  console.log(currentLeave)
   // อัปเดต state ภายในแอพ
-
+    console.log(currentLeave);
   
   // ลอง-จับข้อผิดพลาด สำหรับการเรียก API
   try {
     // ใช้ async/await เพื่อรอการตอบกลับจาก API
-    const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/admin/edituserbyID', {
+    const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/admin/editformleave', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       // ส่งข้อมูลทั้งหมดใน currentUser ไปใน body
       body: JSON.stringify({
-        id: currentUser.id,
-        firstname: currentUser.firstname,
-        lastname: currentUser.lastname,
-        department: currentUser.department,
-        role: currentUser.role
+        id: currentLeave.id,
+        leave_date: currentLeave.leave_date.slice(0, 10),
+        start_time: currentLeave.start_time,
+        end_time: currentLeave.end_time,
+        reason: currentLeave.reason,
+        leave_type: currentLeave.leave_type,
+        status: currentLeave.status,
+        image_filename: currentLeave.image_filename
         // สามารถเพิ่ม field อื่นๆ จาก currentUser ที่นี่ถ้าต้องการ
       })
     });
@@ -126,7 +153,7 @@ const closeImageModal = () => {
     setLoading(true);
     const result = await response.json();
     setSuccess('แก้ไขข้อมูลสําเร็จ ' + currentLeave.username);
-    fetchUserData();
+    fecthLeavedata();
     
     // อาจแสดง toast หรือการแจ้งเตือนว่าอัปเดตสำเร็จ
     // toast.success('บันทึกการแก้ไขเรียบร้อย');
@@ -143,7 +170,72 @@ const closeImageModal = () => {
     setcurrentLeave(null);
   }
 };
+const handleUploadFile = async (leave: Leave, leaveFile: File) => {
+  if (leave.leave_type === "มีใบรับรองแพทย์" && leaveFile !== null) {
+    console.log("in");
+    
+    if (leaveFile.size > 0) {
+      // ตรวจสอบประเภทไฟล์
+      if (
+        leaveFile.type !== 'application/pdf' &&
+        leaveFile.type !== 'image/jpeg' &&
+        leaveFile.type !== 'image/png'
+      ) {
+        setError('กรุณาอัพโหลดไฟล์ PDF, JPEG หรือ PNG เท่านั้น');
+        return;
+      }
 
+      setLoading(true);
+      setError(''); // ล้าง error เก่า
+      
+      const formData = new FormData();
+      formData.append('file', leaveFile);
+
+      try {
+        const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/user/uploads', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          const newFilename = result.filename || result.path;
+          
+          // log ค่าใหม่ก่อน set state
+          console.log('New filename:', newFilename);
+          
+          setcurrentLeave(prevLeave => ({
+            ...prevLeave,
+            image_filename: newFilename
+          } as Leave));
+          
+          // ล้างไฟล์ที่เลือกออก
+          setLeaveFile(undefined);
+          
+          // แสดงข้อความสำเร็จ
+          alert('อัปโหลดไฟล์สำเร็จ!');
+          
+        } else {
+          setError(`เกิดข้อผิดพลาด: ${result.error || 'ไม่สามารถอัปโหลดไฟล์ได้'}`);
+        }
+
+      } catch (error) {
+        setError('เกิดข้อผิดพลาดในการอัปโหลดไฟล์');
+        console.error('Upload error:', error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setError('กรุณาเลือกไฟล์ก่อนทำการอัปโหลด');
+    }
+  }
+};
+
+// เพิ่ม useEffect เพื่อดู state changes
+useEffect(() => {
+  console.log('Updated image_filename:', currentLeave?.image_filename);
+}, [currentLeave?.image_filename]);
   // Function สำหรับจัดการการเปลี่ยนแปลงข้อมูลใน form แก้ไข
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     if (!currentLeave) return;
@@ -155,7 +247,7 @@ const closeImageModal = () => {
       setcurrentLeave({
         ...currentLeave,
         [parent]: {
-          ...currentLeave[parent as keyof Leave] as object,
+          ...currentLeave[parent as keyof Leave] as any,
           [child]: value
         }
       });
@@ -167,7 +259,7 @@ const closeImageModal = () => {
     }
   };
 
-   const fetchUserData = async () => {
+   const fecthLeavedata = async () => {
       setLoading(true);
       try {
         const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/admin/getallLeave?page=${currentPage}`);
@@ -176,7 +268,8 @@ const closeImageModal = () => {
         if (res.ok){ 
           setDocs(data.dataleave);
 
-          setHasMore(data.dataleave.length < 5);
+          setHasMore(data.dataleave.length <10);
+          console.log(hasMore)
           console.log(data);
         }else{
           setError('API error: ' + (data.error || 'Unknown error'));
@@ -193,7 +286,7 @@ const closeImageModal = () => {
 
 
  useEffect(() => {
-    fetchUserData();
+    fecthLeavedata();
   }, [currentPage]);
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -239,6 +332,7 @@ const closeImageModal = () => {
             <table className="min-w-full border border-collapse border-gray-300">
               <thead className="bg-gray-100">
                 <tr>
+                <th className="border px-4 py-2">ลำดับ</th>
                 <th className="border px-4 py-2">ชื่อผู้ใช้</th>
                 <th className="border px-4 py-2">ขื่อจริง-นามสกุล</th>
                 <th className="border px-4 py-2">แผนก</th>
@@ -253,10 +347,11 @@ const closeImageModal = () => {
               <tbody>
                 {docs.map((doc, index) => (
                   <tr key={index}>
+                     <td className="border px-4 py-2">{doc.id}</td>
                     <td className="border px-4 py-2">{doc.username}</td>
                     <td className="border px-4 py-2">{doc.firstname} {doc.lastname}</td>
                     <td className="border px-4 py-2">{doc.department}</td>
-                    <td className="border px-4 py-2">{doc.leave_date.slice(0, 10)}</td>
+                    <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).slice(0, 10)}</td>
                     <td className="border px-4 py-2">{doc.start_time.slice(0, 5)} - {doc.end_time.slice(0, 5)}</td>
                     
 
@@ -298,11 +393,11 @@ const closeImageModal = () => {
               </tbody>
             </table>
           </div>
-        {isEditModalOpen && currentLeave && (
+ {isEditModalOpen && currentLeave && (
   <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50">
     <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">แก้ไขฟอมร์การลาของ {currentLeave.username} {currentLeave.firstname}</h2>
+        <h2 className="text-xl font-bold">แก้ไขฟอร์มการลาที่ {currentLeave.id} ของ {currentLeave.username} {currentLeave.firstname}</h2>
         <button 
           onClick={() => setIsEditModalOpen(false)}
           className="text-gray-500 hover:text-gray-700"
@@ -364,7 +459,13 @@ const closeImageModal = () => {
             <input
               type="date"
               name="leave_date"
-              value={currentLeave.leave_date ? new Date(currentLeave.leave_date).toISOString().split('T')[0] : ''}
+               value={
+    currentLeave.leave_date
+      ? new Date(new Date(currentLeave.leave_date).getTime() + 7 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0]
+      : ''
+  }       
               onChange={handleInputChange}
               className="w-full p-2 border rounded"
             />
@@ -420,10 +521,68 @@ const closeImageModal = () => {
               <option value="rejected by hr">rejected by hr</option>
               <option value="rejected by manager">rejected by manager</option>
               <option value="approved">approved</option>
-             
-
             </select>
           </div>
+          
+          {/* แสดงส่วนอัปโหลดไฟล์เฉพาะเมื่อเลือก "มีใบรับรองแพทย์" */}
+         {currentLeave.leave_type === "มีใบรับรองแพทย์" && (
+    <>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">เลือกไฟล์</label>
+        <input
+          type="file"
+          accept=".pdf,.jpeg,.jpg,.png"
+          onChange={(e) => setLeaveFile(e.target?.files?.[0])}
+          className="w-full p-2 border rounded"
+        />
+        
+        {/* แสดงชื่อไฟล์ที่เลือก */}
+        {leaveFile && (
+          <p className="text-sm text-gray-600 mt-1">
+            ไฟล์ที่เลือก: {leaveFile.name}
+          </p>
+        )}
+        
+        <button 
+     onClick={async () => {
+            await handleUploadFile(currentLeave as Leave, leaveFile as File);
+      }}          disabled={!leaveFile || loading}
+          className={`mt-2 font-bold py-1 px-3 rounded text-sm ${
+            !leaveFile || loading 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-green-500 hover:bg-green-600 text-white'
+          }`}
+        >
+          {loading ? 'กำลังอัปโหลด...' : 'Upload new picture'}
+        </button>
+        
+        {/* แสดง Error */}
+        {error && (
+          <p className="text-red-500 text-sm mt-1">{error}</p>
+        )}
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">ตัวอย่างรูป</label>
+        {currentLeave.image_filename && (
+          <>
+            <p className="text-sm text-gray-600 mb-2">
+              ไฟล์ปัจจุบัน: {currentLeave.image_filename}
+            </p>
+            <img
+              src={`/uploads/${currentLeave.image_filename}`}
+              onClick={() => openImageModal(currentLeave.image_filename)}
+              alt="ใบรับรองแพทย์"
+              className="w-20 h-20 object-cover border rounded cursor-pointer hover:opacity-80"
+            />
+          </>
+        )}
+        {!currentLeave.image_filename && (
+          <p className="text-gray-400 text-sm">ยังไม่มีไฟล์</p>
+        )}
+      </div>
+    </>
+  )}
         </div>
 
         <div className="flex justify-end gap-2">
@@ -481,7 +640,7 @@ const closeImageModal = () => {
               
              
             </div>
-
+            
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setIsEditModalOpen(false)}
@@ -500,11 +659,11 @@ const closeImageModal = () => {
           </div>
         </div>
       )}
-       {isDeleteModalOpen && currentUser && (
+       {isDeleteModalOpen && currentLeave && (
         <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">ยันยันการลบผู้ใช้ {currentUser.username}</h2>
+              <h2 className="text-xl font-bold">ยันยันการลบฟอร์มลาที่ {currentLeave.id} ของ {currentLeave.username}</h2>
               <button 
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -587,7 +746,7 @@ const closeImageModal = () => {
             
             <span className="self-center text-sm">หน้า {currentPage }</span>
             
-          <button 
+            <button 
               onClick={handleNext}
               disabled={hasMore}
               className={`px-4 py-2 bg-blue-500 text-white rounded ${

@@ -224,20 +224,15 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                 {docs.map((doc, index) => (
                   <tr key={index}>
                     <td className="border px-4 py-2">{doc.username}</td>
-                    <td className="border px-4 py-2">{doc.firstname} + {doc.lastname}</td>
+                    <td className="border px-4 py-2">{doc.firstname}  {doc.lastname}</td>
                     <td className="border px-4 py-2">{doc.department}</td>
                     <td className="border px-4 py-2">{doc.leave_type}
-                       {doc.image_filename !== "" &&  <img
-                          src={`/uploads/${doc.image_filename}`}
-                          onClick={() => openImageModal(doc.image_filename)}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/images/fallback.png"; // ตั้ง path รูป default ที่ต้องการ
-                          }}
-                          alt="Uploaded File"
-                          className="w-10 h-10 object-cover"
-                        />}
+                      {doc.leave_type === "มีใบรับรองแพทย์" && <img src= {`/uploads/${doc.image_filename}`} 
+                      onClick={() => openImageModal(doc.image_filename)
+                      }
+                      alt="Uploaded File" className="w-10 h-10" />}
                     </td>
-                    <td className="border px-4 py-2">{doc.leave_date}</td>
+                    <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).split(' ')[0]}</td>
                     <td className="border px-4 py-2">{doc.start_time} - {doc.end_time}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
                      <td className="border px-4 py-2">

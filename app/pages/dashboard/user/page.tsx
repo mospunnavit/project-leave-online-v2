@@ -165,7 +165,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                       }
                       alt="Uploaded File" className="w-10 h-10" />}
                     </td>
-                    <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).slice(0, 10)}</td>
+                    <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).split(' ')[0]}</td>
                     <td className="border px-4 py-2">{doc.start_time.slice(0, 5)} - {doc.end_time.slice(0, 5)}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
                 

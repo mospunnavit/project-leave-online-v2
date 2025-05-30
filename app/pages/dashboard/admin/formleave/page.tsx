@@ -46,30 +46,34 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 7) => {
   return dateTimeFormatter.format(adjustedDate);
 };
 
-// วิธีที่ 2: ใช้ Date object (แนะนำ)
-const convertISOToDateInputSafe = (isoString : any) => {
-  if (!isoString) return '';
-  try {
-    const date = new Date(isoString);
-    return date.toISOString().split('T')[0];
-  } catch (error) {
-    console.error('Invalid date:', error);
-    return '';
-  }
-};
 // ฟังก์ชันสำหรับการปิด modal
 const closeImageModal = () => {
   setShowImg(false);
 };
  const handleEdit = (leave: Leave) => {
-    setcurrentLeave({...leave});
-    setIsEditModalOpen(true);
-  };
-
+  const adjustedLeaveDate = leave.leave_date
+  ? new Date(new Date(leave.leave_date).getTime() + 7 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0]
+  : '';
+  setcurrentLeave({
+  ...leave,
+  leave_date: adjustedLeaveDate,
+});
+  setIsEditModalOpen(true);
+ }
 
   // Function สำหรับลบข้อมูล
   const handleDelete = (leave: Leave) => {
-    setcurrentLeave({...leave});
+    const adjustedLeaveDate = leave.leave_date
+  ? new Date(new Date(leave.leave_date).getTime() + 7 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0]
+  : '';
+  setcurrentLeave({
+  ...leave,
+  leave_date: adjustedLeaveDate,
+});
     setIsDeleteModalOpen(true);
   };
    const hadleConfirmDelete = async () => {
@@ -96,7 +100,7 @@ const closeImageModal = () => {
           // แปลง response เป็น JSON
           setLoading(true);
           const result = await response.json();
-          setSuccess('ลบข้อมูลสําเร็จ ' + currentLeave.id + ' ของผู้ใช้ ' + currentLeave.username);
+          setSuccess('ลบฟอร์มการลา ' + currentLeave.id + ' ของผู้ใช้ ' + currentLeave.username + ' สำเร็จ');
           fecthLeavedata();
           
         } catch (error) {
@@ -370,12 +374,7 @@ useEffect(() => {
                           >
                             แก้ไข
                           </button>
-                          <button
-                            onClick={() => handleEditPassword(doc)}
-                            className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
-                          >
-                            รหัส
-                          </button>
+                         
                           
                           <button
                            onClick={() => handleDelete(doc)}
@@ -461,10 +460,6 @@ useEffect(() => {
               name="leave_date"
                value={
     currentLeave.leave_date
-      ? new Date(new Date(currentLeave.leave_date).getTime() + 7 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0]
-      : ''
   }       
               onChange={handleInputChange}
               className="w-full p-2 border rounded"
@@ -603,67 +598,11 @@ useEffect(() => {
     </div>
   </div>
 )}
-      {isEditPasswordModalOpen && currentUser && (
+   {isDeleteModalOpen && currentLeave && (
         <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">แก้ไขรหัสผ่านผู้ใช้ {currentUser.username}</h2>
-              <button 
-                onClick={() => setIsEditPasswordModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">รหัสผ่านใหม่</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ใส่รหัสผ่านใหม่อีกครั้ง</label>
-                <input
-                  type="password"
-                  value={retypepassword}
-                  onChange={(e) => setRetypePassword(e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              
-              
-             
-            </div>
-            
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
-              >
-                ยกเลิก
-              </button>
-              <button
-               onClick={handleSaveEditPassword}
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              >
-                บันทึก
-               
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-       {isDeleteModalOpen && currentLeave && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">ยันยันการลบฟอร์มลาที่ {currentLeave.id} ของ {currentLeave.username}</h2>
+              <h2 className="text-xl font-bold">ยันยันฟอร์มลาของ {currentLeave.username} วันที่ลา {currentLeave.leave_date}</h2>
               <button 
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -691,7 +630,8 @@ useEffect(() => {
             </div>
           </div>
         </div>
-      )}
+      )}    
+      
           {/* การ์ดประวัติการลาสำหรับหน้าจอขนาดเล็ก */}
           <div className="md:hidden space-y-4">
             {docs.map((doc, index) => (

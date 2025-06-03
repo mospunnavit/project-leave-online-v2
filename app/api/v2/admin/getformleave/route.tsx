@@ -11,13 +11,13 @@ export async function GET(req: Request)  {
     const pageSize = 5;
     const offset = (page - 1) * pageSize;
     try {
-        const [rows] = await db.query(
+        const [leaveform] = await db.query(
             'SELECT * FROM leaveform ORDER BY submitted_at DESC LIMIT ? OFFSET ?',
             [pageSize, offset]
           );
           
-        console.log(rows);
-      return NextResponse.json(rows);
+        console.log(leaveform);
+      return NextResponse.json({leaveform} , {status : 200});
     } catch (err) {
         console.log(err)
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -26,10 +26,6 @@ export async function GET(req: Request)  {
   
 
 
-function convertToThaiTime(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
-}
 
 
 

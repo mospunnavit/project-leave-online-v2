@@ -18,8 +18,6 @@ const UserformleaveDashboard = () => {
   const [leave_date, setLeave_date] = useState<string>("");
   const [start_time, setStart_time] = useState<string>("");
   const [end_time, setEnd_time] = useState<string>("");
- 
-  
   const [leavefile, setleavefile] = useState<File>();
   const [leavefileName, setleavefileName] = useState<string>('');
   const [today, setToday] = useState<string>('');
@@ -238,6 +236,7 @@ const UserformleaveDashboard = () => {
             <optgroup label="ลาป่วย">
               <option value="มีใบรับรองแพทย์">มีใบรับรองแพทย์</option>
               <option value="ไม่มีใบรับรองแพทย์">ไม่มีใบรับรองแพทย์</option>
+              <option value="ลาป่วย - เกินสวัสดิการ">ลาป่วย - เกินสวัสดิการ</option>
             </optgroup>
             <optgroup label="พักร้อน">
               <option value="พักร้อน">พักร้อน</option>

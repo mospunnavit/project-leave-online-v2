@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+mysql_data/
+mysql_data/*.sock
+mysql_data/*.index
+mysql_data/*.cnf

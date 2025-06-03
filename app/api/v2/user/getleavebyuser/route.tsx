@@ -16,6 +16,7 @@ export async function GET(req: Request)  {
             'SELECT * FROM leaveform WHERE u_id = ? ORDER BY submitted_at DESC LIMIT ? OFFSET ?',
             [user_id, pageSize, offset]
           );
+          
         console.log(rows);
       return NextResponse.json(rows);
     } catch (err) {
@@ -26,7 +27,10 @@ export async function GET(req: Request)  {
   
 
 
-
+function convertToThaiTime(dateString: string) {
+  const date = new Date(dateString);
+  return date.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+}
 
 
 

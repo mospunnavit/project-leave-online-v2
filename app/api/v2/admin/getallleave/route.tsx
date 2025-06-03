@@ -10,6 +10,7 @@ export async function GET(req: Request)  {
     const page = parseInt((getPage as string) || '1');
     const pageSize = 10;
     const offset = (page - 1) * pageSize;
+    
     try {
         const [dataleave] = await db.query(
             `SELECT l.id ,u.username, u.firstname, u.lastname, u.department, 

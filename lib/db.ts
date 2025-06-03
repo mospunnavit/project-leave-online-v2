@@ -5,7 +5,7 @@ const pool = mysql.createPool({
   port: 3306,              // พอร์ตของ MySQL
   user: 'root',
   password: '123456',
-  database: 'testdb',
+  database: 'Leave_Test',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,

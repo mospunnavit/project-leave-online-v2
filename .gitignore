@@ -43,3 +43,4 @@ mysql_data/
 mysql_data/*.sock
 mysql_data/*.index
 mysql_data/*.cnf
+

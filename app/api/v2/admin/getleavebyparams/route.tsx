@@ -46,8 +46,7 @@ export async function GET(req: Request)  {
             FROM leaveform l LEFT JOIN users u ON l.u_id = u.id ${whereClause} LIMIT ? OFFSET ?`,
             [...params, pageSize, offset]
           );
-  
-        console.log(dataleave[0].leave_date.toLocaleString("th-TH", { timeZone: "Asia/Bangkok" }));
+          
       return NextResponse.json({dataleave}, { status: 200 });
     } catch (err) {
         console.log(err)

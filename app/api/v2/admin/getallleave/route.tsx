@@ -25,6 +25,6 @@ export async function GET(req: Request)  {
         console.log(err)
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
-  } 
-  
+} 
+
 

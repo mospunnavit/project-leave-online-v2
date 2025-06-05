@@ -138,8 +138,6 @@ const UserformleaveDashboard = () => {
     //api form
     try{
       setLoading(true);
-      console.log("env api url"+process.env.NEXT_PUBLIC_API_URL);
-      console.log("ส้งไหม" + image_filename	);
       const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v2/user/leaveform", {
           method: "POST",
           headers: {

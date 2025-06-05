@@ -19,15 +19,17 @@ export async function GET(req: Request)  {
     const pageSize = 5;
     const offset = (page - 1) * pageSize;
     try {
+        //แยกเป็น hr จะดูได้หลาย แผนก
     if (session?.user?.role == "hr"){
          if (getStatus == '') {
     const [data] = await db.query(
                         `SELECT 
                             l.id,u.username, u.firstname, u.lastname, u.department, 
                             l.leave_date, l.start_time, l.end_time, 
-                            l.reason, l.leave_type, l.status, l.submitted_at, 
+                            l.reason, l.lt_code, lt_name, l.status, l.submitted_at, 
                             l.image_filename FROM leaveform l 
-                        LEFT JOIN users u ON l.u_id = u.id 
+                        LEFT JOIN users u ON l.u_id = u.id
+                        LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code
                         ORDER BY l.id 
                         LIMIT ? OFFSET ?`,
                         [ pageSize, offset]
@@ -36,9 +38,10 @@ export async function GET(req: Request)  {
             const [data] = await db.query( `SELECT 
                             l.id, u.username, u.firstname, u.lastname, u.department, 
                             l.leave_date, l.start_time, l.end_time, 
-                            l.reason, l.leave_type, l.status, l.submitted_at, 
+                            l.reason, l.lt_code, lt_name, l.status, l.submitted_at, 
                             l.image_filename FROM leaveform l 
-                        LEFT JOIN users u ON l.u_id = u.id 
+                        LEFT JOIN users u ON l.u_id = u.id
+                        LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code
                         WHERE l.status = ?
                         ORDER BY l.id 
                         LIMIT ? OFFSET ?`,
@@ -52,9 +55,10 @@ export async function GET(req: Request)  {
                         `SELECT 
                             l.id,u.username, u.firstname, u.lastname, u.department, 
                             l.leave_date, l.start_time, l.end_time, 
-                            l.reason, l.leave_type, l.status, l.submitted_at, 
+                            l.reason, l.lt_code, lt_name, l.status, l.submitted_at, 
                             l.image_filename FROM leaveform l 
-                        LEFT JOIN users u ON l.u_id = u.id 
+                        LEFT JOIN users u ON l.u_id = u.id
+                        LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code
                         WHERE u.department = ? 
                         ORDER BY l.id 
                         LIMIT ? OFFSET ?`,
@@ -64,9 +68,10 @@ export async function GET(req: Request)  {
             const [data] = await db.query( `SELECT 
                             l.id, u.username, u.firstname, u.lastname, u.department, 
                             l.leave_date, l.start_time, l.end_time, 
-                            l.reason, l.leave_type, l.status, l.submitted_at, 
+                            l.reason, l.lt_code, lt_name, l.status, l.submitted_at, 
                             l.image_filename FROM leaveform l 
-                        LEFT JOIN users u ON l.u_id = u.id 
+                        LEFT JOIN users u ON l.u_id = u.id
+                        LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code
                         WHERE u.department = ? and l.status = ?
                         ORDER BY l.id 
                         LIMIT ? OFFSET ?`,

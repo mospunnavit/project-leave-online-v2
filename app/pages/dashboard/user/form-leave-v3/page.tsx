@@ -4,10 +4,13 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loading } from "@/app/components/loading";
-type LeaveTime = {
-  startTime: string;
-  endTime: string;
+import getWorkDuration  from "@/lib/calworkduration";
+type LeaveQuota = {
+  hours: number;
+  minutes: number;
+  total: number;
 };
+
 const UserformleaveDashboard = () => {
   const { data: session } = useSession();
   const [reason, setReason] = useState('');
@@ -18,7 +21,7 @@ const UserformleaveDashboard = () => {
  
   const [leaveShift, setLeaveShift] = useState('');
   const [leaveDuration, setLeaveDuration] = useState('');
-
+  const [useLeaveQuota, setUseLeaveQuota] = useState<LeaveQuota | null>(null);
   const [leave_date, setLeave_date] = useState<string>("");
   const [start_time, setStart_time] = useState<string>("");
   const [end_time, setEnd_time] = useState<string>("");
@@ -31,7 +34,7 @@ const UserformleaveDashboard = () => {
     setToday(date);
   }, []);
   useEffect(() => {
-    if (leave_type === 'มีใบรับรองแพทย์'){
+    if (leave_type === '020004'){
       console.log("true")
     }
   }, [setLeave_type]);
@@ -42,9 +45,47 @@ const UserformleaveDashboard = () => {
   };
 
   useEffect(() => {
-      console.log(leaveShift, leaveDuration);
-  }, [leaveDuration]);
-  const insertComponent = () => {
+  if (!leaveShift || !leaveDuration) return;
+
+  if (leaveShift === "กะเช้า") {
+    if (leaveDuration === "20003") {
+      setStart_time("08:00");
+      setEnd_time("17:00");
+    } else if (leaveDuration === "20004") {
+      setStart_time("08:00");
+      setEnd_time("12:00");
+    } else if (leaveDuration === "20007") {
+      setStart_time("13:00");
+      setEnd_time("17:00");
+    }
+  } else if (leaveShift === "กะดึก") {
+    if (leaveDuration === "20003") {
+      setStart_time("20:00");
+      setEnd_time("04:30");
+    } else if (leaveDuration === "20004") {
+      setStart_time("20:00");
+      setEnd_time("00:00");
+    } else if (leaveDuration === "20007") {
+      setStart_time("01:00");
+      setEnd_time("04:30");
+    }
+  }
+}, [leaveShift, leaveDuration]);
+
+// หลัง start_time / end_time ถูกอัปเดตแล้ว ค่อยคำนวณ leave quota
+useEffect(() => {
+  if (!leaveShift || !leaveDuration || !start_time || !end_time) return;
+
+  if (leaveShift === "กะเช้า") {
+    setUseLeaveQuota(getWorkDuration(start_time, end_time, "12:00", "13:00"));
+  } else if (leaveShift === "กะดึก") {
+    setUseLeaveQuota(getWorkDuration(start_time, end_time, "00:00", "01:00"));
+  }
+}, [start_time, end_time, leaveShift, leaveDuration]);
+
+useEffect(() => {
+  console.log("Updated useLeaveQuota:", useLeaveQuota);
+}, [useLeaveQuota]);  const insertComponent = () => {
     return (
       <div className="flex flex-col mt-4">
         <label htmlFor="fileUpload" className="block mb-2 text-xl font-medium text-gray-700">
@@ -63,7 +104,7 @@ const UserformleaveDashboard = () => {
  
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
-    
+    console.log(leave_type,leave_date, leaveShift, leaveDuration, start_time, end_time, reason, leavefile);
     if (leave_date === undefined || leave_date === '') {
       return;
     }
@@ -98,7 +139,7 @@ const UserformleaveDashboard = () => {
       return;
     }
 
-    if(leave_type == "มีใบรับรองแพทย์" && leavefile == undefined){
+    if(leave_type == "020004" && leavefile == undefined){
       setError('กรุณาอัพโหลดใบรับรองแพทย์');
       return;
     }
@@ -106,7 +147,7 @@ const UserformleaveDashboard = () => {
     //handle if upload file 
     let image_filename	 = '';
     console.log("leave_type"+leave_type, leavefile);
-    if(leave_type == "มีใบรับรองแพทย์" && leavefile != undefined){
+    if(leave_type == "020004" && leavefile != undefined){
       console.log("in");
       if (leavefile.size > 0) {
        if (
@@ -122,7 +163,7 @@ const UserformleaveDashboard = () => {
         formData.append('file', leavefile);
      
         try {
-           const response = await fetch(process.env.NEXT_PUBLIC_API_URL +'/api/v2/user/uploads', {
+          const response = await fetch(process.env.NEXT_PUBLIC_API_URL +'/api/v2/user/uploads', {
           method: 'POST',
           body: formData,
         });
@@ -150,21 +191,21 @@ const UserformleaveDashboard = () => {
     //api form
     try{
       setLoading(true);
-      console.log("env api url"+process.env.NEXT_PUBLIC_API_URL);
-      console.log("ส้งไหม" + image_filename	);
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v2/user/leaveform", {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v2/user/leaveform-v3", {
           method: "POST",
           headers: {
               "Content-Type": "application/json",
           },
           body: JSON.stringify({
-              leave_type,
+              leave_date,
               start_time,
               end_time,
               reason,
-              leave_date,
-              leavefile,
-              image_filename
+              leave_type,
+              leaveDuration,
+              leaveShift,
+              useLeaveQuota: useLeaveQuota?.total,
+              image_filename 
                        
           })
       })
@@ -242,16 +283,16 @@ const UserformleaveDashboard = () => {
             onChange={(e) => setLeave_type(e.target.value)}>
             <option value="" disabled hidden>-- กรุณาเลือกประเภทการลา --</option>
             <optgroup label="ลากิจ">
-              <option value="ลากิจ">ลากิจ</option>
-              <option value="ลากิจพิเศษ">ลากิจพิเศษ</option>
+              <option value="020005">ลากิจ</option>
+              <option value="020006-1">ลากิจพิเศษ</option>
             </optgroup>
             <optgroup label="ลาป่วย">
-              <option value="มีใบรับรองแพทย์">มีใบรับรองแพทย์</option>
-              <option value="ไม่มีใบรับรองแพทย์">ไม่มีใบรับรองแพทย์</option>
-              <option value="ลาป่วย - เกินสวัสดิการ">ลาป่วย - เกินสวัสดิการ</option>
+              <option value="020004">มีใบรับรองแพทย์</option>
+              <option value="020003">ไม่มีใบรับรองแพทย์</option>
+              <option value="020007-1">ลาป่วย - เกินสวัสดิการ</option>
             </optgroup>
             <optgroup label="พักร้อน">
-              <option value="พักร้อน">พักร้อน</option>
+              <option value="020006">พักร้อน</option>
             </optgroup>
           </select>
         </div>
@@ -282,15 +323,15 @@ const UserformleaveDashboard = () => {
         </option>
 
         <optgroup label="กะเช้า">
-          <option value="เช้า|เต็มวัน">เต็มวัน (8:00 - 17:00)</option>
-          <option value="เช้า|ครึ่งวันเช้า">ครึ่งวันเช้า (8:00 - 12:00)</option>
-          <option value="เช้า|ครึ่งวันบ่าย">ครึ่งวันบ่าย (13:00 - 17:00)</option>
+          <option value="กะเช้า|20003">เต็มวัน (08:00 - 17:00)</option>
+          <option value="กะเช้า|20004">ครึ่งวันเช้า (08:00 - 12:00)</option>
+          <option value="กะเช้า|20007">ครึ่งวันบ่าย (13:00 - 17:00)</option>
         </optgroup>
 
         <optgroup label="กะดึก">
-          <option value="ดึก|เต็มวัน">เต็มวัน (20:00 - 4:30)</option>
-          <option value="ดึก|ครึ่งวันก่อนเที่ยงคืน">ครึ่งวันก่อนเที่ยงคืน (20:00 - 00:00)</option>
-          <option value="ดึก|ครึ่งวันหลึ่งตีหนึ่ง">ครึ่งวันหลึ่งตีหนึ่ง (01:00 - 4:30)</option>
+          <option value="กะดึก|20003">เต็มวัน (20:00 - 04:30)</option>
+          <option value="กะดึก|20004">ครึ่งวันก่อนเที่ยงคืน (20:00 - 00:00)</option>
+          <option value="กะดึก|20007">ครึ่งวันหลังตีหนึ่ง (01:00 - 4:30)</option>
         </optgroup>
       </select>
         </div>
@@ -361,14 +402,15 @@ const UserformleaveDashboard = () => {
             
             {/* แสดงเวลาที่เลือก */}
             <div className="mt-3 p-2 sm:p-3 bg-gray-100 rounded text-sm">
-              <div className="font-medium mb-1">เวลาที่เลือก</div>
-              <p>{start_time|| '--:--'} - {end_time || '--:--'}</p>
+              <div className="font-medium mb-1">เวลาที่เลือก  {start_time|| '--:--'} - {end_time || '--:--'}</div>
+              <div className="font-medium mb-1" >จำนวนชั่วโมงที่ลา {useLeaveQuota?.hours || 0} ชั่วโมง {useLeaveQuota?.minutes || '0'} นาที เป็นจำนวน {useLeaveQuota?.total || 0} จำนวน</div>
+              
             </div>
           </div>
         </div>
         
         {/* ส่วนอัพโหลดใบรับรองแพทย์ (ถ้าเลือกมีใบรับรองแพทย์) */}
-        {leave_type === 'มีใบรับรองแพทย์' && insertComponent()}
+        {leave_type === '020004' && insertComponent()}
         
         {/* ส่วนเหตุผล */}
         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">

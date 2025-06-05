@@ -10,7 +10,7 @@ export async function GET(req: Request)  {
     const pageSize = 5;
     const offset = (page - 1) * pageSize;
     try {
-        const [rows] = await db.query('SELECT * FROM leaveform ORDER BY id LIMIT ? OFFSET ?', [pageSize, offset]);
+        const [rows] = await db.query('SELECT * FROM leaveform l ORDER BY id LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code LIMIT ? OFFSET ?', [pageSize, offset]);
       return NextResponse.json(rows);
     } catch (err) {
         console.log(err)

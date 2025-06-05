@@ -17,14 +17,17 @@ const approveDashboard = () => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [today, setToday] = useState('');
-    const [selectStatus, setSelectStatus] = useState<String>('');
+    const [selectStatus, setSelectStatus] = useState<string>('approved');
     const [showImg, setShowImg] = useState(false);
     const [currentLeave, setCurrentLeave] = useState<Leave | null>(null);
     const [selectedImg, setSelectedImg] = useState("");
     const [searchUsername, setSearchUsername] = useState('');
     const [rejectedModal, setRejectedModal] = useState(false);
     const [confrimModal, setConfrimModal] = useState(false);
-
+     const [selectedMonth, setSelectedMonth] = useState('');
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedMonth(e.target.value); // e.g. "2025-06"
+  };
 
 
  const handleReject = (leave: Leave) => {
@@ -124,8 +127,8 @@ const approveDashboard = () => {
       }
     }
     const openImageModal = (imagePath : string) => {
-  setSelectedImg(imagePath);
-  setShowImg(true);
+    setSelectedImg(imagePath);
+    setShowImg(true);
 };
 
 // ฟังก์ชันสำหรับการปิด modal
@@ -133,34 +136,7 @@ const closeImageModal = () => {
   setShowImg(false);
 };
 
-const handleChangeStatus = async (id: number, newStatus: string) => {
-  try {
-    const response = await fetch('/api/v2/user/editstatusbyuser', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id, status: newStatus }),
-    });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Error:', data.error);
-      
-      return;
-    }
-    
-    if(response.ok){
-      console.log('Status updated successfully');
-      fetchLeaveData();
-    }
-    // คุณอาจเรียก fetch ใหม่ หรือรีเฟรชข้อมูลที่แสดง
-  } catch (err) {
-    console.error(err);
-   
-  }
-};
 
 
 const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
@@ -182,28 +158,23 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
 
       if (loading && docs.length === 0) return <Loading />;
   return (
-    <DashboardLayout title={`หัวหน้าอนุมัติ ${session?.user?.role} ${session?.user?.department}`}>
+    <DashboardLayout title={`Export to excel by ${session?.user?.role} ${session?.user?.department}`}>
       <div className="bg-white p-4 rounded shadow">
         {error && <p className="text-red-500">{error}</p>}
-        <div className="flex">
-            <div className="flex w-full text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
-            <div> <input type="text" placeholder=""/></div>
+        <div className="flex flex-col">
+            <div className="flex w-full text-xl font-bold mb-4 mr-65">  เลือกเดือนที่ต้องการ </div>
+            <div className="flex w-full text-xl font-bold mb-4 gap-4" > 
+                  <input
+        type="month"
+        id="month"
+        value={selectedMonth}
+        onChange={handleChange}
+      />
+
+
+                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Export</button>                
+            </div>
         </div>
-       <div className="flex flex-row flex-wrap gap-4 ">
-            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-                <button onClick={() => {setSelectStatus(''); setCurrentPage(1)}}>ทั้งหมด</button>
-            </div>
-            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-     
-                <button onClick={() => {setSelectStatus(roleData?.pendingStatus ?? ''); setCurrentPage(1)}}>รอการอนุมัติ</button>
-            </div>
-            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-            <button onClick={() => {setSelectStatus(roleData?.approvedStatus ?? ''); setCurrentPage(1)}}>อนุมัติแล้ว</button>
-            </div>
-            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-            <button onClick={() => {setSelectStatus(roleData?.rejectedStatus ?? ''); setCurrentPage(1)}}>ยกเลิก</button>
-            </div>
-       </div>
        <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full border border-collapse border-gray-300">
               <thead className="bg-gray-100">

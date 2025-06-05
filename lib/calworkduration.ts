@@ -1,5 +1,12 @@
-function getWorkDuration(startTime, endTime, breakStart, breakEnd) {
-  const toMinutes = (timeStr) => {
+function getWorkDuration(startTime : string, endTime : string, breakStart : string, breakEnd : string) {
+  let workAllminutes = 8 * 60;
+  // specify the start and end times
+  if(startTime =="20:00" && endTime == "04:30"){
+    console.log("true");
+    workAllminutes = 7.5 * 60;
+  }
+  
+  const toMinutes = (timeStr : string) => {
     const [h, m] = timeStr.split(":").map(Number);
     return h * 60 + m;
   };
@@ -37,10 +44,10 @@ function getWorkDuration(startTime, endTime, breakStart, breakEnd) {
 
   const hours = Math.floor(workMinutes / 60);
   const minutes = workMinutes % 60;
-  const total = parseFloat((workMinutes / (60 * 8)).toFixed(2)); // คิดจากวันทำงาน 8 ชม.
+  const total = parseFloat((workMinutes / workAllminutes).toFixed(2)); // คิดจากวันทำงาน 8 ชม.
 
   return { hours, minutes, total };
 }
 
 
-
+export default getWorkDuration;

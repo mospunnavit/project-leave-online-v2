@@ -159,7 +159,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
               <tbody>
                 {docs.map((doc, index) => (
                   <tr key={index}>
-                    <td className="border px-4 py-2">{doc.leave_type}
+                    <td className="border px-4 py-2">{doc.lt_name}
                       {doc.leave_type === "มีใบรับรองแพทย์" && <img src= {`/uploads/${doc.image_filename}`} 
                       onClick={() => openImageModal(doc.image_filename)
                       }

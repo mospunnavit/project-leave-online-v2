@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Leave } from '@/app/types/formleave';
 import { Loading } from "@/app/components/loading";
 import ModalLayout from "@/app/components/modallayout";
-
+import { Download, Loader2 } from 'lucide-react';
 
 
 const approveDashboard = () => {
@@ -25,8 +25,13 @@ const approveDashboard = () => {
     const [rejectedModal, setRejectedModal] = useState(false);
     const [confrimModal, setConfrimModal] = useState(false);
      const [selectedMonth, setSelectedMonth] = useState('');
+
+    const [isExporting, setIsExporting] = useState(false);
+
  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentPage(1);
     setSelectedMonth(e.target.value); // e.g. "2025-06"
+    
   };
 
 
@@ -82,10 +87,11 @@ const approveDashboard = () => {
     const roleData = getRoleSpecificData();
     console.log(roleData.pendingStatus, roleData.approvedStatus, roleData.rejectedStatus);
   const fetchLeaveData = async () => {
+      
       setLoading(true);
       try {
 
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebydepartmentandstatus?page=${currentPage}&status=${selectStatus}`);
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebyhr?page=${currentPage}&status=${selectStatus}&leave_date=${selectedMonth}`);
         const data = await res.json();
 
         //data {data: Leave[], length: number}
@@ -101,7 +107,7 @@ const approveDashboard = () => {
  useEffect(() => {
 
     fetchLeaveData();
-  }, [currentPage, selectStatus]);
+  }, [currentPage, selectStatus, selectedMonth]);
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);
@@ -136,8 +142,47 @@ const closeImageModal = () => {
   setShowImg(false);
 };
 
+const handleExport = async () => {
+        setIsExporting(true);
+        
+        try {
+            // สร้าง query parameters
+            // เรียก API
+            const response = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/exportexcelbyhr?$status=${selectStatus}&leave_date=${selectedMonth}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
+            if (!response.ok) {
+                throw new Error('Failed to export data');
+            }
 
+            // สร้าง blob จาก response
+            const blob = await response.blob();
+            
+            // สร้าง URL สำหรับ download
+            const url = window.URL.createObjectURL(blob);
+            
+            // สร้าง link element และ trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `leave_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(link);
+            link.click();
+            
+            // ทำความสะอาด
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            
+        } catch (error) {
+            console.error('Export error:', error);
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
 const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
   timeZone: 'Asia/Bangkok',
@@ -148,6 +193,20 @@ const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
   minute: '2-digit',
   hour12: false
 });
+
+function formatThaiDateYYYYMMDD(isoDateString : string) {
+  const date = new Date(isoDateString);
+
+  // ปรับให้เป็นเวลาไทย
+  const tzDate = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
+
+  const year = tzDate.getFullYear();
+  const month = String(tzDate.getMonth() + 1).padStart(2, '0');
+  const day = String(tzDate.getDate()).padStart(2, '0');
+
+  return `${year}${month}${day}`;
+}
+
 
 const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
   if (!dateString) return '-';
@@ -172,69 +231,44 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
       />
 
 
-                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Export</button>                
-            </div>
+ <button 
+            onClick={handleExport}
+            disabled={isExporting}
+            className="flex items-center gap-2"
+        >
+            {isExporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+                <Download className="h-4 w-4" />
+            )}
+            {isExporting ? 'Exporting...' : 'Export Excel'}
+        </button>            </div>
         </div>
        <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full border border-collapse border-gray-300">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="border px-4 py-2">ผู้ใช่</th>
-                <th className="border px-4 py-2">ชื่อ</th>
-           
-                <th className="border px-4 py-2">แผนก</th>
-                  <th className="border px-4 py-2">ประเภทการลา</th>
+                  <th className="border px-4 py-2">รหัสพนักงาน</th>
                   <th className="border px-4 py-2">วันที่ลา</th>
-                  <th className="border px-4 py-2">ช่วงเวลาที่ลา</th>
-                  <th className="border px-4 py-2">เหตุผล</th>
-                  <th className="border px-4 py-2">เวลาที่ส่งฟอร์ม</th>
-                  <th className="border px-4 py-2">สถานะ</th>
+                  <th className="border px-4 py-2">รหัสกะ</th>
+                  <th className="border px-4 py-2">รหัสผลข้อตกลงเงินหัก</th>
+                  <th className="border px-4 py-2">รหัสลักษณะการรูดบัตร</th>
+                  <th className="border px-4 py-2">วิธีลา</th>
+                  <th className="border px-4 py-2">จำนวนที่ลา</th>
                 </tr>
               </thead>
               <tbody>
                 {docs.map((doc, index) => (
                   <tr key={index}>
                     <td className="border px-4 py-2">{doc.username}</td>
-                    <td className="border px-4 py-2">{doc.firstname}  {doc.lastname}</td>
-                    <td className="border px-4 py-2">{doc.department}</td>
-                    <td className="border px-4 py-2">{doc.lt_name}
-                      {doc.lt_name === "ป่วยมีใบแพทย์(วัน)" && <img src= {`/uploads/${doc.image_filename}`} 
-                      onClick={() => openImageModal(doc.image_filename)
-                      }
-                      alt="Uploaded File" className="w-10 h-10" />}
-                    </td>
-                    <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).split(' ')[0]}</td>
-                    <td className="border px-4 py-2">{doc.start_time} - {doc.end_time}</td>
-                    <td className="border px-4 py-2">{doc.reason}</td>
-                     <td className="border px-4 py-2">
-                        {formatDateWithOffset(doc.submitted_at, 7)}
-                      
-                    </td>
-                    <td className="border px-4 py-2">
-                      <div className="flex flex-col flex-wrap gap-3">
-                      <div className="">
-                        {renderStatus(doc.status)}
-                      </div>
-                      <div >
-                         {doc.status === roleData?.pendingStatus && (
-                        <>
-                            <button
-                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                            onClick={() => handleConfrim(doc)}
-                            >
-                            อนุมัติ
-                            </button>
-                            <button
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
-                            onClick={() => handleReject(doc)}
-                            >
-                            ไม่อนุมัติ
-                            </button>
-                        </>
-                        )}
-                      </div>
-                     </div>
-                    </td>
+                    <td className="border px-4 py-2">{formatThaiDateYYYYMMDD(doc.leave_date)}</td>
+                    <td className="border px-4 py-2">00</td>
+                    <td className="border px-4 py-2">{doc.lt_code}</td>
+                    <td className="border px-4 py-2">{doc.lc_code}</td>
+                    <td className="border px-4 py-2">ตามที่บันทึก</td>
+                    <td className="border px-4 py-2">{doc.usequotaleave}</td>    
+                    
+                  
                   </tr>
                 ))}
               </tbody>

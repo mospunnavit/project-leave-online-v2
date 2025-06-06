@@ -60,7 +60,7 @@ const Sidebar = () => {
             <Home size={20} />
             <span>Leave</span>
           </Link>
-          <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/form-leave-v3" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <BookText size={20} />
             <span>Form-leave</span>
           </Link>
@@ -74,7 +74,7 @@ const Sidebar = () => {
             <Home size={20} />
             <span>Leave</span>
           </Link>
-          <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/form-leave-v3" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <BookText size={20} />
             <span>Form-leave</span>
           </Link>
@@ -92,7 +92,7 @@ const Sidebar = () => {
             <Home size={20} />
             <span>Leave</span>
           </Link>
-          <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/form-leave-v3" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <BookText size={20} />
             <span>Form-leave</span>
           </Link>
@@ -110,7 +110,7 @@ const Sidebar = () => {
             <Home size={20} />
             <span>Leave</span>
           </Link>
-          <Link href="/pages/dashboard/user/form-leave-v2" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/form-leave-v3" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <BookText size={20} />
             <span>Form-leave</span>
           </Link>
@@ -119,6 +119,12 @@ const Sidebar = () => {
             <Home size={20} />
             <span>hr-approve</span>
           </Link>
+           <span>การนำออก</span>
+           <Link href="/pages/dashboard/user/hrformleave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>hr-Export</span>
+           </Link>
+          
           </nav>
           
         )}

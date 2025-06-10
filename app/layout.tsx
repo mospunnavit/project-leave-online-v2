@@ -27,7 +27,7 @@ export default function RootLayout({
         
         <div className="font-main">  
         <AuthProviders>    
-        {children}
+          {children}
         </AuthProviders>      
 
         </div>

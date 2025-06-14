@@ -7,7 +7,8 @@ import { Leave } from '@/app/types/formleave';
 import { Loading } from "@/app/components/loading";
 import ModalLayout from "@/app/components/modallayout";
 import { Download, Loader2 } from 'lucide-react';
-
+import { X } from "lucide-react";
+import { Leave } from "@/app/types/formleave";
 
 const approveDashboard = () => {
     const { data: session, status } = useSession();    
@@ -24,28 +25,46 @@ const approveDashboard = () => {
     const [searchUsername, setSearchUsername] = useState('');
     const [rejectedModal, setRejectedModal] = useState(false);
     const [confrimModal, setConfrimModal] = useState(false);
-     const [selectedMonth, setSelectedMonth] = useState('');
-
+    const [selectedMonth, setSelectedMonth] = useState('');
+    const [from_date, setFrom_date] = useState('');
+    const [to_date, setTo_date] = useState('');
     const [isExporting, setIsExporting] = useState(false);
 
- const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentPage(1);
-    setSelectedMonth(e.target.value); // e.g. "2025-06"
-    
-  };
+    const [detailsModal, setDetailsModal] = useState(false);
 
 
- const handleReject = (leave: Leave) => {
-     setCurrentLeave({...leave});
-     setRejectedModal(true);
-     
-   };
-   const handleConfrim = (leave: Leave) => {
-     setCurrentLeave({...leave});
-     setConfrimModal(true);
-     
-   };
+  const validateDateRange = () => {
+     if(from_date && !to_date || !from_date && to_date){
+      setError('กรุณาวันที่เลือกช่วงวันที่ให้ครบถ้วน');  
+      return false;
+    }else if(to_date < from_date){
+      setError('กรุณาวันที่เลือกช่วงวันที่สิ้นสุดต้องมากกว่าวันที่เริ่มต้น');
+      return false;
+    }else if(to_date && from_date){
+      setError('');
+      return true;
+    } 
+  }
+  const handleSearch = () => {
+    if(validateDateRange()){
+      fetchLeaveData();
+    }
+  }
 
+  const handleshowDetails = (leave: Leave) => {
+    console.log(leave);
+    setCurrentLeave(leave);
+    setDetailsModal(true);
+  }
+  
+  const handlecloseDetails = () => {
+    setCurrentLeave(null);
+    setDetailsModal(false);
+  }
+
+
+
+ 
  const getRoleSpecificData = () => {
         if (!session?.user?.role) return { title: "อนุมัติการลา", statuses: [] };
 
@@ -91,7 +110,7 @@ const approveDashboard = () => {
       setLoading(true);
       try {
 
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebyhr?page=${currentPage}&status=${selectStatus}&leave_date=${selectedMonth}`);
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebyhr?page=${currentPage}&status=${selectStatus}&from_date=${from_date}&to_date=${to_date}`);
         const data = await res.json();
 
         //data {data: Leave[], length: number}
@@ -142,13 +161,15 @@ const closeImageModal = () => {
   setShowImg(false);
 };
 
+
 const handleExport = async () => {
-        setIsExporting(true);
-        
+    if(validateDateRange()){
+         setIsExporting(true);
+       
         try {
             // สร้าง query parameters
             // เรียก API
-            const response = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/exportexcelbyhr?$status=${selectStatus}&leave_date=${selectedMonth}`, {
+            const response = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/exportexcelbyhr?page=${currentPage}&status=${selectStatus}&from_date=${from_date}&to_date=${to_date}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -181,7 +202,11 @@ const handleExport = async () => {
             console.error('Export error:', error);
         } finally {
             setIsExporting(false);
-        }
+        } 
+    }else{
+      return;
+    }   
+     
     };
 
 const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
@@ -207,34 +232,22 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
   return `${year}${month}${day}`;
 }
 
-
-const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  const adjustedDate = new Date(date.getTime() + (hoursOffset * 60 * 60 * 1000));
-  return dateTimeFormatter.format(adjustedDate);
-};
-
       if (loading && docs.length === 0) return <Loading />;
   return (
     <DashboardLayout title={`Export to excel by ${session?.user?.role} ${session?.user?.department}`}>
       <div className="bg-white p-4 rounded shadow">
         {error && <p className="text-red-500">{error}</p>}
         <div className="flex flex-col">
-            <div className="flex w-full text-xl font-bold mb-4 mr-65">  เลือกเดือนที่ต้องการ </div>
+            <div className="flex w-full text-xl font-bold mb-4 mr-65">เลือกช่วงวันที่ต้องการ</div>
             <div className="flex w-full text-xl font-bold mb-4 gap-4" > 
-                  <input
-        type="month"
-        id="month"
-        value={selectedMonth}
-        onChange={handleChange}
-      />
-
-
- <button 
+              <input type="date" value={from_date} onChange={e => setFrom_date(e.target.value)} />
+              <div className="py-2">-</div>
+              <input type="date" value={to_date} onChange={e => setTo_date(e.target.value)} />
+              <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded" onClick={handleSearch}>ค้นหา</button>
+        <button 
             onClick={handleExport}
             disabled={isExporting}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
         >
             {isExporting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -255,6 +268,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                   <th className="border px-4 py-2">รหัสลักษณะการรูดบัตร</th>
                   <th className="border px-4 py-2">วิธีลา</th>
                   <th className="border px-4 py-2">จำนวนที่ลา</th>
+                  <th className="border px-4 py-2">การจัดการ</th>
                 </tr>
               </thead>
               <tbody>
@@ -267,8 +281,27 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                     <td className="border px-4 py-2">{doc.lc_code}</td>
                     <td className="border px-4 py-2">ตามที่บันทึก</td>
                     <td className="border px-4 py-2">{doc.usequotaleave}</td>    
-                    
-                  
+                        <td className="border px-4 py-2 flex gap-2">
+                          {/* ปุ่มรายละเอียด */}
+                          <button
+                            onClick={() => handleshowDetails(doc)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-3 py-1 rounded shadow"
+                          >
+                            รายละเอียด
+                          </button>
+
+                          {/* ปุ่ม Export มีเงื่อนไขสีตามค่า exported */}
+                          <button
+                            disabled={doc.exported === 1}
+                            className={`text-sm font-medium px-3 py-1 rounded shadow 
+                              ${doc.exported === 1
+                                ? 'bg-green-500 text-white cursor-default'
+                                : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}
+                            `}
+                          >
+                            {doc.exported === 1 ? 'Exported' : 'Export'}
+                          </button>
+                        </td>                  
                   </tr>
                 ))}
               </tbody>
@@ -422,8 +455,61 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
         </div>
       </div>
     )}    
+     {detailsModal && currentLeave && (
+         <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-2xl">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-800">
+                  รายละเอียดการลาของ <span className="text-blue-600">{currentLeave.username}</span>
+                </h2>
+                <button className="text-gray-400 hover:text-gray-600">
+                  <X size={24} onClick={() => setDetailsModal(false)}/>
+                </button>
+              </div>
 
-      
+              {/* Content */}
+            <div className="grid grid-cols-2 gap-4 p-4 text-sm text-gray-700">
+        <div><strong>ชื่อจริง-นามสกุล:</strong> {currentLeave.firstname} {currentLeave.lastname}</div>
+        <div><strong>แผนก:</strong> {currentLeave.department}</div>
+        <div><strong>วันที่ลา:</strong> {formatThaiDateYYYYMMDD(currentLeave.leave_date)}</div>
+        <div><strong>เวลา:</strong> {currentLeave.start_time} - {currentLeave.end_time}</div>
+        <div><strong>ประเภทการลา:</strong> {currentLeave.lt_name}</div>
+        <div><strong>จำนวนวัน:</strong> {currentLeave.usequotaleave}</div>
+        <div className="col-span-2"><strong>เหตุผล:</strong> {currentLeave.reason || '-'}</div>
+        <div>
+          <strong>สถานะ: </strong>
+          <span>
+            {currentLeave.status}
+          </span>
+        </div>
+
+        {/* รูปภาพแนบใบรับรองแพทย์ */}
+        <div>
+          <strong>แนบไฟล์:</strong><br />
+          {currentLeave.image_filename ? (
+            <div className="mt-1">
+              <p className="text-sm text-gray-600 mb-2">
+                ไฟล์: {currentLeave.image_filename}
+              </p>
+              <img
+                src={`/uploads/${currentLeave.image_filename}`}
+                alt="ใบรับรองแพทย์"
+                onClick={() => openImageModal(currentLeave.image_filename)}
+                className="w-32 h-32 object-cover border rounded cursor-pointer hover:opacity-80"
+              />
+            </div>
+          ) : (
+            <p className="text-gray-400 text-sm mt-1">ยังไม่มีไฟล์แนบ</p>
+          )}
+        </div>
+      </div>
+
+        </div>
+      </div>
+    
+      )}    
+    
     </DashboardLayout>
   );
 };

@@ -8,7 +8,7 @@ export default function HomeLayout({ children }: { children: ReactNode }) {
       <Nav />
       
       {/* Main Content */}
-      <main className="flex flex-1 justify-center items-center sm:p-12 bg-gray-50 ">
+      <main className="flex flex-1 justify-center items-center sm:p-12 bg-gray-50">
         {children}
       </main>
     </div>

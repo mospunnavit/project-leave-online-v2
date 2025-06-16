@@ -6,11 +6,14 @@ import { useEffect, useState } from "react";
 import { Users } from "@/app/types/users";
 import { X } from "lucide-react";
 import { Loading } from "@/app/components/loading";
-
-
+import { Department } from "@/app/types/department";
+import Adduserform from "./Adduserform";
 
 const approveDashboard = () => {
     const [docs, setDocs] = useState<Users[]>([]);
+    const [departmentData, setDepartmentData] = useState<Department[]>([]);
+    const [selectedDepartment, setSelectedDepartment] = useState<string>('');
+
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
@@ -22,7 +25,7 @@ const approveDashboard = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isEditPasswordModalOpen, setIsEditPasswordModalOpen] = useState(false);
-    
+    const [isAdduserModalOpen, setIsAdduserModalOpen] = useState(false);
     const [currentUser, setcurrentUser] = useState<Users | null>(null);
     const [password, setPassword] = useState<string>('');
     const [retypepassword, setRetypePassword] = useState<string>('');
@@ -42,6 +45,10 @@ const approveDashboard = () => {
   const handleDelete = (user: Users) => {
     setcurrentUser({...user});
     setIsDeleteModalOpen(true);
+  };
+
+  const handleModalAdduser = () => {
+    setIsAdduserModalOpen(true);
   };
 
   const hadleConfirmDelete = async () => {
@@ -83,7 +90,7 @@ const approveDashboard = () => {
           setcurrentUser(null);
         }
       };
-      
+  
   const handleSaveEditPassword = async () => {
     
   if (!currentUser) return;
@@ -226,7 +233,6 @@ const approveDashboard = () => {
 
         if (res.ok){ 
           setDocs(data.datauser);
-
           setHasMore(data.datauser.length < 5);
           console.log(data);
         }else{
@@ -242,11 +248,62 @@ const approveDashboard = () => {
       }
     };
 
-
+    const fetchDepartmentData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/admin/getalldepartments`);
+        const data = await res.json();
+        if (res.ok){ 
+          setDepartmentData(data.departments);
+          console.log(data.departments);
+        }else{
+          setError('API error: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        setError('API error: ' + (err || 'Unknown error'));
+        return;
+      } finally {
+        setLoading(false);
+      }
+    }
  useEffect(() => {
     fetchUserData();
   }, [currentPage]);
+  
+ useEffect(() => {
+    fetchDepartmentData();
+    console.log(departmentData);
+  }, []);
 
+   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedDepartment(e.target.value);
+  };
+
+  const handleaddUser = async (formData: any) => {
+    setLoading(true);
+    try{
+    const response = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/admin/adduser`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+    const result = await response.json();
+
+    if (response.ok) {
+      setSuccess('เพิ่มผู้ใช้ ' + formData.username + ' สําเร็จ');
+      fetchUserData();
+    } else {
+      setError('API error: ' + (result.error || 'Unknown error'));
+    }
+  }catch (error) {
+    setError('API error: ' + (error || 'Unknown error'));
+  }finally{
+    setLoading(false);
+    setIsAdduserModalOpen(false);
+  }
+  }
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);
     
@@ -280,7 +337,30 @@ const approveDashboard = () => {
           </div>
         </div>
       )}
-       <div className="flex w-full text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
+       <div className="flex w-full justify-end text-xl font-bold gap-4 mb-4 mr-65"> 
+          <span className="py-4">รหัสผู้ใช้</span>
+          <input type="text" />
+          <span className="py-4">แผนก</span>
+              <select
+        id="department"
+        name="department"
+        value={selectedDepartment}
+        onChange={handleChange}
+        className=" border border-gray-300 rounded-md text-sm"
+      >
+        <option value="" disabled>
+          -- กรุณาเลือกแผนก --
+        </option>
+        {departmentData.map((dept) => (
+          <option key={dept.id} value={dept.id}>
+            {dept.department_name}
+          </option>
+        ))}
+      </select>
+          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold w-40 px-4 py-2 rounded-lg shadow">ค้นหา</button>
+          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold w-40 px-4 py-2 rounded-lg shadow"
+          onClick={() => setIsAdduserModalOpen(true)}>เพิ่มผู้ใช้</button>
+        </div>
         
        <div className="flex flex-row flex-wrap gap-4 ">
             
@@ -471,6 +551,7 @@ const approveDashboard = () => {
           </div>
         </div>
       )}
+      
        {isDeleteModalOpen && currentUser && (
         <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
@@ -564,7 +645,7 @@ const approveDashboard = () => {
               className={`px-4 py-2 bg-blue-500 text-white rounded ${
                 hasMore || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
               }`}
-            >
+          >
               ถัดไป
             </button>
           </div>
@@ -572,7 +653,26 @@ const approveDashboard = () => {
          {loading && (
           <Loading/>
         )}
-                  
+      {isAdduserModalOpen && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">เพิ่มผู้ใช้</h2>
+              <button 
+                onClick={() => setIsAdduserModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+<Adduserform
+        departments={departmentData}
+        onSubmit={handleaddUser}
+          />
+          </div>
+           
+        </div>
+      )}
       </div>
 
 

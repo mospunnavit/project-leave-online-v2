@@ -14,13 +14,15 @@ interface UserFormProps {
 export default function UserForm({ departments, onSubmit }: UserFormProps) {
     
   const [formData, setFormData] = useState({
+  
     username: '',
     firstname: '',
     lastname: '',
     password: '',
     retypePassword: '',
     role: '',
-    department: [] as string[],
+    department: '',
+    departments: [] as string[],
   });
 
   useEffect(() => {
@@ -29,10 +31,10 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
   
   const handleDepartmentChange = (id: string) => {
   setFormData((prev) => {
-    const selected = prev.department.includes(id)
-      ? prev.department.filter((d) => d !== id) // เอาออก
-      : [...prev.department, id];              // เพิ่มเข้า
-    return { ...prev, department: selected };
+    const selected = prev.departments.includes(id)
+      ? prev.departments.filter((d) => d !== id) // เอาออก
+      : [...prev.departments, id];              // เพิ่มเข้า
+    return { ...prev, departments: selected };
   });
 };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -51,9 +53,10 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {[
-        { label: 'Username', name: 'username' },
+        
         { label: 'First Name', name: 'firstname' },
         { label: 'Last Name', name: 'lastname' },
+        { label: 'Username', name: 'username' },
       ].map(({ label, name }) => (
         <div key={name}>
           <label className="block text-sm font-medium text-gray-700">{label}</label>
@@ -67,32 +70,7 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
           />
         </div>
       ))}
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Retype Password</label>
-        <input
-          type="password"
-          name="retypePassword"
-          value={formData.retypePassword}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"
-          required
-        />
-      </div>
-
-      <div>
+        <div>
         <label className="block text-sm font-medium text-gray-700">Role</label>
         <select
           name="role"
@@ -109,17 +87,60 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
           <option value="user">User</option>
         </select>
       </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Password</label>
+        <input
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"
+          required
+        />
+      </div>
+       
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Retype Password</label>
+        <input
+          type="password"
+          name="retypePassword"
+          value={formData.retypePassword}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"
+          required
+        />
+      </div>
+
+        <div>
+        <label className="block text-sm font-medium text-gray-700">department</label>
+         <select
+        id="department"
+        name="department"
+        value={formData.department}
+        onChange={handleChange}
+        className=" border border-gray-300 rounded-md text-sm"
+      >
+        <option value="" disabled>
+          -- กรุณาเลือกแผนก --
+        </option>
+        {departments.map((dept) => (
+          <option key={dept.id} value={dept.id}>
+            {dept.department_name}
+          </option>
+        ))}
+      </select>
+      </div>
 
       <div>
        <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Departments</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">การจัดการ Departments</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {departments.map((dept) => (
                 <label key={dept.id} className="flex items-center space-x-2">
                     <input
                     type="checkbox"
                     value={dept.id}
-                    checked={formData.department.includes(dept.id.toString())}
+                    checked={formData.departments.includes(dept.id.toString())}
                     onChange={() => handleDepartmentChange(dept.id.toString())}
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                     />

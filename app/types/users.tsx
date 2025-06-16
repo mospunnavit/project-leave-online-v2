@@ -1,11 +1,37 @@
 import { RowDataPacket } from 'mysql2';
+export interface Department {
+  id: string;
+  name: string;
+}
+
 export interface Users extends RowDataPacket{
-    id?: string;
-    username: string;
-    password: string;
-    firstname?: string;
-    lastname?: string;
-    department?: string; 
-    role?: string; // make role optional
-    createdAt?: Date;
-  }
+  id: number;
+  username: string;
+  firstname: string;
+  lastname: string;
+  role: 'admin' | 'head' | 'manager' | 'hr' | 'user'; // ปรับได้ตาม roles ที่คุณมี
+  departments: Department[];
+}
+
+export interface RawUserWithDepartments extends RowDataPacket{
+  id: number;
+  username: string;
+  firstname: string;
+  lastname: string;
+  role: string;
+  departments_id: string | null;
+  departments_name: string | null;
+}
+
+export interface UserWithDepartments {
+  id: number;
+  username: string;
+  firstname: string;
+  lastname: string;
+  role: string;
+  department: string;
+  departments: {
+    id: string;
+    name: string;
+  }[];
+}

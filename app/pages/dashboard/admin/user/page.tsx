@@ -8,7 +8,7 @@ import { X } from "lucide-react";
 import { Loading } from "@/app/components/loading";
 import { Department } from "@/app/types/department";
 import Adduserform from "./Adduserform";
-
+import EdituserForm from "./Edituserform";
 const approveDashboard = () => {
     const [docs, setDocs] = useState<Users[]>([]);
     const [departmentData, setDepartmentData] = useState<Department[]>([]);
@@ -232,8 +232,8 @@ const approveDashboard = () => {
         const data = await res.json();
 
         if (res.ok){ 
-          setDocs(data.datauser);
-          setHasMore(data.datauser.length < 5);
+          setDocs(data.users);
+          setHasMore(data.users.length < 5);
           console.log(data);
         }else{
           setError('API error: ' + (data.error || 'Unknown error'));
@@ -304,6 +304,28 @@ const approveDashboard = () => {
     setIsAdduserModalOpen(false);
   }
   }
+  const handleEditUser = async (formData: any) => {
+  try {
+     setLoading(true);
+    const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/admin/${formData.id}/edituser`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+
+    if (!res.ok) throw new Error('Update failed');
+    const result = await res.json();
+    setSuccess('แก้ไขข้อมูลสําเร็จ ' + formData.username);
+  } catch (err) {
+    console.error(err);
+    setError('API error: ' + (err || 'Unknown error'));
+  } finally {
+    fetchUserData();
+    setIsEditModalOpen(false);
+    setcurrentUser(null);
+    setLoading(false);
+  }
+};
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);
     
@@ -337,7 +359,7 @@ const approveDashboard = () => {
           </div>
         </div>
       )}
-       <div className="flex w-full justify-end text-xl font-bold gap-4 mb-4 mr-65"> 
+       <div className="flex w-full justify-end flex-wrap text-xl font-bold gap-4 mb-4 mr-65"> 
           <span className="py-4">รหัสผู้ใช้</span>
           <input type="text" />
           <span className="py-4">แผนก</span>
@@ -373,7 +395,9 @@ const approveDashboard = () => {
                 <th className="border px-4 py-2">ชื่อผู้ใช้</th>
                 <th className="border px-4 py-2">ขื่อจริง</th>
                   <th className="border px-4 py-2">นามสกุล</th>
+
                   <th className="border px-4 py-2">แผนก</th>
+                  <th className="border px-4 py-2">การจัดการแผนก</th>
                   <th className="border px-4 py-2">สิทธิ์</th>
                   <th className="border px-4 py-2 w-40"> การจัดการ</th>
                 </tr>
@@ -381,13 +405,17 @@ const approveDashboard = () => {
               <tbody>
                 {docs.map((doc, index) => (
                   <tr key={index}>
-                    <td className="border px-4 py-2">{doc.username}</td>
+                    <td className="border ">{doc.username}</td>
                     <td className="border px-4 py-2">{doc.firstname}</td>
                     <td className="border px-4 py-2">{doc.lastname}</td>
-                    <td className="border px-4 py-2">{doc.department}</td>
+                    <td className="border px-4 py-2">{doc.departments.map((d) => (
+                                                      <div key={d.id}>{d.name}</div>
+                                                    ))}</td>
+                    <th className="border px-4 py-2">{doc.department}</th>                                
                     <td className="border px-4 py-2">{doc.role}</td>
-                    <td> 
-                    <div className="flex items-center space-x-2">
+                    <td className="border px-4 py-2">
+                   
+                    <div className="flex">
                           <button
                             onClick={() => handleEdit(doc)}
                             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
@@ -429,69 +457,13 @@ const approveDashboard = () => {
                 <X size={24} />
               </button>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อ</label>
-                <input
-                  type="text"
-                  name="firstname"
-                  value={currentUser.firstname}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">นามสกุล</label>
-                <input
-                  type="text"
-                  name="lastname"
-                  value={currentUser.lastname}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">แผนก</label>
-                 <input
-                  type="text"
-                  name="department"
-                  value={currentUser.department}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">สิทธิ์</label>
-                <input
-                  type="text"
-                  name="role"
-                  value={currentUser.role}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              
-             
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              >
-                บันทึก
-              </button>
-            </div>
+             <EdituserForm 
+                 departments={departmentData}
+                 user={currentUser}
+                 onSubmit={handleEditUser}
+              />
+          
+          
           </div>
         </div>
       )}

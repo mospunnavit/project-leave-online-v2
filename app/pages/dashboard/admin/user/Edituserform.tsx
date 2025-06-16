@@ -1,27 +1,28 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Department } from "@/app/types/department";
-
+import { Users } from "@/app/types/users";
 import { Loading } from "@/app/components/loading";
 
-interface UserFormProps {
+interface EdituserForm {
   departments: Department[];
+  user: Users;
   onSubmit: (formData: any) => void;
 }
 
 
 
-export default function UserForm({ departments, onSubmit }: UserFormProps) {
+export default function EdituserForm({ departments, user, onSubmit }: EdituserForm) {
     
-  const [formData, setFormData] = useState({
-    username: '',
-    firstname: '',
-    lastname: '',
-    password: '',
-    retypePassword: '',
-    role: '',
-    department: [] as string[],
-  });
+ const [formData, setFormData] = useState({
+  id: user.id,
+  username: user.username,
+  firstname: user.firstname,
+  lastname: user.lastname,
+  role: user.role,
+  department: user.department ? user.department.toString() : "",
+  departments: user.departments.map((d) => d.id),
+});
 
   useEffect(() => {
       console.log(formData);
@@ -29,10 +30,10 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
   
   const handleDepartmentChange = (id: string) => {
   setFormData((prev) => {
-    const selected = prev.department.includes(id)
-      ? prev.department.filter((d) => d !== id) // เอาออก
-      : [...prev.department, id];              // เพิ่มเข้า
-    return { ...prev, department: selected };
+    const selected = prev.departments.includes(id)
+      ? prev.departments.filter((d) => d !== id) // เอาออก
+      : [...prev.departments, id];              // เพิ่มเข้า
+    return { ...prev, departments: selected };
   });
 };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -41,10 +42,7 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.password !== formData.retypePassword) {
-      alert('รหัสผ่านไม่ตรงกัน');
-      return;
-    }
+   
     onSubmit(formData);
   };
 
@@ -68,29 +66,7 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
         </div>
       ))}
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Retype Password</label>
-        <input
-          type="password"
-          name="retypePassword"
-          value={formData.retypePassword}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"
-          required
-        />
-      </div>
+     
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Role</label>
@@ -109,7 +85,25 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
           <option value="user">User</option>
         </select>
       </div>
-
+       <div>
+        <label className="block text-sm font-medium text-gray-700">department</label>
+       <select
+  id="department"
+  name="department"
+  value={formData.department}
+  onChange={handleChange}
+  className=" border border-gray-300 rounded-md text-sm"
+>
+  <option value="" disabled>
+    -- กรุณาเลือกแผนก --
+  </option>
+  {departments.map((dept) => (
+    <option key={dept.id} value={dept.id.toString()}>
+      {dept.department_name}
+    </option>
+  ))}
+</select>
+      </div>
       <div>
        <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Departments</label>
@@ -119,7 +113,7 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
                     <input
                     type="checkbox"
                     value={dept.id}
-                    checked={formData.department.includes(dept.id.toString())}
+                    checked={formData.departments.includes(dept.id.toString())}
                     onChange={() => handleDepartmentChange(dept.id.toString())}
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                     />

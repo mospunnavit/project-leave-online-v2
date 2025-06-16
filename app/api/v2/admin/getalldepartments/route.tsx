@@ -16,7 +16,6 @@ export async function GET(req: Request)  {
             [pageSize, offset]
           );
           
-        console.log(departments);
       return NextResponse.json({departments}, { status: 200 });
     } catch (err) {
         console.log(err)

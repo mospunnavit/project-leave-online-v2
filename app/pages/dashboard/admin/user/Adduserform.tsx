@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Department } from "@/app/types/department";
 
+import { Loading } from "@/app/components/loading";
 
 interface UserFormProps {
   departments: Department[];
@@ -11,6 +12,7 @@ interface UserFormProps {
 
 
 export default function UserForm({ departments, onSubmit }: UserFormProps) {
+    
   const [formData, setFormData] = useState({
     username: '',
     firstname: '',

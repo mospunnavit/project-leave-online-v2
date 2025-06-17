@@ -396,8 +396,8 @@ const approveDashboard = () => {
                 <th className="border px-4 py-2">ขื่อจริง</th>
                   <th className="border px-4 py-2">นามสกุล</th>
 
-                  <th className="border px-4 py-2">แผนก</th>
                   <th className="border px-4 py-2">การจัดการแผนก</th>
+                  <th className="border px-4 py-2">แผนก</th>
                   <th className="border px-4 py-2">สิทธิ์</th>
                   <th className="border px-4 py-2 w-40"> การจัดการ</th>
                 </tr>
@@ -411,7 +411,7 @@ const approveDashboard = () => {
                     <td className="border px-4 py-2">{doc.departments.map((d) => (
                                                       <div key={d.id}>{d.name}</div>
                                                     ))}</td>
-                    <th className="border px-4 py-2">{doc.department}</th>                                
+                    <th className="border px-4 py-2">{doc.main_department_name}</th>                                
                     <td className="border px-4 py-2">{doc.role}</td>
                     <td className="border px-4 py-2">
                    
@@ -637,7 +637,7 @@ const approveDashboard = () => {
                 <X size={24} />
               </button>
             </div>
-<Adduserform
+        <Adduserform
         departments={departmentData}
         onSubmit={handleaddUser}
           />

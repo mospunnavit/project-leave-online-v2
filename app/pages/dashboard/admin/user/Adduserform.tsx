@@ -19,7 +19,7 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
     firstname: '',
     lastname: '',
     password: '',
-    retypePassword: '',
+    cpassword: '',
     role: '',
     department: '',
     departments: [] as string[],
@@ -43,7 +43,7 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.password !== formData.retypePassword) {
+    if (formData.password !== formData.cpassword) {
       alert('รหัสผ่านไม่ตรงกัน');
       return;
     }
@@ -103,8 +103,8 @@ export default function UserForm({ departments, onSubmit }: UserFormProps) {
         <label className="block text-sm font-medium text-gray-700">Retype Password</label>
         <input
           type="password"
-          name="retypePassword"
-          value={formData.retypePassword}
+          name="cpassword"
+          value={formData.cpassword}
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"
           required

@@ -20,7 +20,7 @@ export default function EdituserForm({ departments, user, onSubmit }: EdituserFo
   firstname: user.firstname,
   lastname: user.lastname,
   role: user.role,
-  department: user.department ? user.department.toString() : "",
+  department: user.main_department_id,
   departments: user.departments.map((d) => d.id),
 });
 

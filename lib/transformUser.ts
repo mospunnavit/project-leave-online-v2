@@ -17,7 +17,8 @@ function transformUser(raw: RawUserWithDepartments): UserWithDepartments {
     username: raw.username,
     firstname: raw.firstname,
     lastname: raw.lastname,
-    department: raw.main_department_name,
+    main_department_id: raw.main_department_id,
+    main_department_name: raw.main_department_name,
     role: raw.role,
     departments,
   };

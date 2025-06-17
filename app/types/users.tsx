@@ -10,6 +10,8 @@ export interface Users extends RowDataPacket{
   firstname: string;
   lastname: string;
   role: 'admin' | 'head' | 'manager' | 'hr' | 'user'; // ปรับได้ตาม roles ที่คุณมี
+  main_department_id: string;
+  main_department_name: string;
   departments: Department[];
 }
 
@@ -29,7 +31,8 @@ export interface UserWithDepartments {
   firstname: string;
   lastname: string;
   role: string;
-  department: string;
+  main_department_name: string;
+  main_department_id: string;
   departments: {
     id: string;
     name: string;

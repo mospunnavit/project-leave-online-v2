@@ -41,35 +41,46 @@ const approveDashboard = () => {
  const getRoleSpecificData = () => {
         if (!session?.user?.role) return { title: "อนุมัติการลา", statuses: [] };
 
-        switch (session.user.role) {
-            case 'head':
-                return {
-                    title: "หัวหน้าแผนกอนุมัติ",
-                    apiPath: "/api/user/getleavesbydepartment",
-                    pendingStatus: "waiting for head approval",
-                    approvedStatus: "waiting for manager approval",
-                    rejectedStatus: "rejected by head"
-                };
-            case 'manager':
-                return {
-                    title: "ผู้จัดการอนุมัติ",
-                    apiPath: "/api/user/getleavesformanager",
-                    pendingStatus: "waiting for manager approval",
-                    approvedStatus: "waiting for hr approval",
-                    rejectedStatus: "rejected by manager"
-                };
-            case 'hr':
-                return {
+        if (session.user.department === 'hr') {
+             return {
                     title: "HR อนุมัติ",
                     apiPath: "/api/user/getleavesforhr",
                     pendingStatus: "waiting for hr approval",
                     approvedStatus: "approved",
-                    rejectedStatus: "rejected by hr"
+                    rejectedStatus: "rejected by hr",
+                 
+                };
+        }
+        switch (session.user.role) {
+            case 'head':
+                return {
+                    title: "หัวหน้าแผนกอนุมัติ",
+                    pendingStatus: "waiting for head approval",
+                    approvedStatus: "waiting for manager approval",
+                    rejectedStatus: "rejected by head",
+                  
+                    
+                };
+            case 'manager':
+                return {
+                    title: "ผู้จัดการอนุมัติ",
+                    pendingStatus: "waiting for manager approval",
+                    approvedStatus: "waiting for hr approval",
+                    rejectedStatus: "rejected by manager",
+                  
+                    
+                };
+            case 'hr':
+                return {
+                    title: "HR อนุมัติ",
+                    pendingStatus: "waiting for hr approval",
+                    approvedStatus: "approved",
+                    rejectedStatus: "rejected by hr",
+                    
                 };
             default:
                 return {
                     title: "อนุมัติการลา",
-                    apiPath: "",
                     pendingStatus: "pending",
                     approvedStatus: "approved",
                     rejectedStatus: "rejected"
@@ -82,7 +93,7 @@ const approveDashboard = () => {
       setLoading(true);
       try {
 
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebydepartmentandstatus?page=${currentPage}&status=${selectStatus}`);
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleaveformbyuser?page=${currentPage}&status=${selectStatus}`);
         const data = await res.json();
 
         //data {data: Leave[], length: number}
@@ -98,6 +109,7 @@ const approveDashboard = () => {
  useEffect(() => {
 
     fetchLeaveData();
+    console.log(docs);
   }, [currentPage, selectStatus]);
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -123,7 +135,7 @@ const approveDashboard = () => {
                       </span>
       }
     }
-    const openImageModal = (imagePath : string) => {
+const openImageModal = (imagePath : string) => {
   setSelectedImg(imagePath);
   setShowImg(true);
 };
@@ -225,7 +237,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                   <tr key={index}>
                     <td className="border px-4 py-2">{doc.username}</td>
                     <td className="border px-4 py-2">{doc.firstname}  {doc.lastname}</td>
-                    <td className="border px-4 py-2">{doc.department}</td>
+                    <td className="border px-4 py-2">{doc.department_name}</td>
                     <td className="border px-4 py-2">{doc.lt_name}
                       {doc.lt_name === "ป่วยมีใบแพทย์(วัน)" && <img src= {`/uploads/${doc.image_filename}`} 
                       onClick={() => openImageModal(doc.image_filename)

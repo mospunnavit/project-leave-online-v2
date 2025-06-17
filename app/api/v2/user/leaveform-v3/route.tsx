@@ -36,8 +36,8 @@ export async function POST(req: Request) {
       status = "waiting for manager approval";
     }else if (session?.user?.role === "manager") {
       status = "waiting for hr approval";
-    }else if (session?.user?.role === "hr") {
-      status = "approved";
+    }else{
+      status = "waiting for head approval";
     }
   
 

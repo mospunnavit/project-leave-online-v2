@@ -21,7 +21,7 @@ export async function GET(req: Request)  {
         const params = [];
 
 
-         if (username.trim()) {
+        if (username.trim()) {
             conditions.push('u.username LIKE ?');
             params.push(`%${username.trim()}%`);
         }

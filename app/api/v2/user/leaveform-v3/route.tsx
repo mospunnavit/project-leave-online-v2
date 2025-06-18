@@ -10,16 +10,17 @@ export async function POST(req: Request) {
   try {
     const {
         leave_date,
-              start_time,
-              end_time,
-              reason,
-              leave_type,
-              leaveDuration,
-              leaveShift,
-              useLeaveQuota,
-              image_filename 
+        end_leave_date,
+        start_time,
+        end_time,
+        reason,
+        leave_type,
+        leaveDuration,
+        leaveShift,
+        useLeaveQuota,
+        image_filename 
 
-    } = await req.json();
+    }  = await req.json();
 
     // ตรวจสอบค่าว่าง
     if (!leave_date || !start_time || !end_time || !reason || !leave_type || !leaveDuration || !leaveShift || !useLeaveQuota) {
@@ -44,11 +45,12 @@ export async function POST(req: Request) {
     // บันทึกข้อมูลลง MySQL
     await db.query(
       `INSERT INTO leaveform
-      (u_id, leave_date, start_time, end_time, reason,lt_code, lc_code, leaveshift, usequotaleave, status, image_filename) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (u_id, leave_date, end_leave_date,start_time, end_time, reason,lt_code, lc_code, leaveshift, usequotaleave, status, image_filename) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         parseInt(session.user.id as string),
         leave_date,
+        end_leave_date || null,
         start_time,
         end_time,
         reason,

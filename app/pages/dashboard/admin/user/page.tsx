@@ -235,6 +235,7 @@ const approveDashboard = () => {
           setDocs(data.users);
           setHasMore(data.users.length < 5);
           console.log(data);
+          console.log(hasMore);
         }else{
           setError('API error: ' + (data.error || 'Unknown error'));
         }

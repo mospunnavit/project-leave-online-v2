@@ -21,8 +21,7 @@ const UserformleaveDashboard = () => {
   const [error, setError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [leave_type, setLeave_type,] = useState<string>('');
-  
-
+  const [continue_leave, setContinue_leave] = useState(false);
   const [leaveShift, setLeaveShift] = useState('');
   const [leaveDuration, setLeaveDuration] = useState('');
   const [useLeaveQuota, setUseLeaveQuota] = useState<LeaveQuota | null>(null);
@@ -99,9 +98,8 @@ useEffect(() => {
   }
 }, [start_time, end_time, leaveShift, leaveDuration]);
 
-useEffect(() => {
-  console.log("Updated useLeaveQuota:", useLeaveQuota);
-}, [useLeaveQuota]);  const insertComponent = () => {
+
+const insertComponentFileupload = () => {
     return (
       <div className="flex flex-col mt-4">
         <label htmlFor="fileUpload" className="block mb-2 text-xl font-medium text-gray-700">
@@ -117,6 +115,20 @@ useEffect(() => {
       </div>
     );
   };
+  const insertComponentEndLeaveDate = () => {
+    return (
+       <div className="flex-1">
+                <label className="block font-medium mb-2 text-sm sm:text-base">ถึงวันที่</label>
+                <input 
+                  type="date"
+                  className="w-full bg-white border border-gray-300 py-2 px-3 rounded text-sm sm:text-base"
+                  value={end_leave_date}
+                  onChange={(e) => setEnd_leave_date(e.target.value)}
+                />
+              </div>
+    );
+  };
+
  
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
@@ -214,6 +226,7 @@ useEffect(() => {
           },
           body: JSON.stringify({
               leave_date,
+              end_leave_date,
               start_time,
               end_time,
               reason,
@@ -225,7 +238,6 @@ useEffect(() => {
                        
           })
       })
-      console.log(res);
       const result = await res.json();
       if(res.ok){
         setError('');
@@ -245,7 +257,13 @@ useEffect(() => {
       setLoading(false);
     }
   }
-
+  useEffect(() => {
+    if(leave_type == "020007"){
+      setContinue_leave(true);
+    }else{
+      setContinue_leave(false);
+    }
+  }, [leave_type]);
   return (
     <DashboardLayout title="ฟอร์มการลา">
       <div className="bg-white p-4 rounded shadow">
@@ -306,14 +324,54 @@ useEffect(() => {
                 ))}
               </select>
         </div>
+        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+              <label className="block font-medium mb-2 text-sm sm:text-base">ลาวันเดียวหรือหลายวัน</label>
+              <div className="flex flex-colsm:flex-row gap-4">
+                
+                  <div className="flex-1">
+                     <label className="flex items-center gap-2 text-sm sm:text-base">
+                        <input
+                          type="radio"
+                          name="continue_leave"
+                          value="false"
+                          checked={continue_leave === false}
+                          onChange={() => setContinue_leave(false)}
+                        />
+                        ลาวันเดียว
+                    </label>
+                  </div>
+                  <div className="flex-1">
+                        <label className="flex items-center gap-2 text-sm sm:text-base">
+                          <input
+                            type="radio"
+                            name="continue_leave"
+                            value="true"
+                            checked={continue_leave === true}
+                            onChange={() => setContinue_leave(true)}
+                          />
+                          ลาหลายวัน
+                         </label>
+                  </div>
+              </div>
+        </div>
           <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-          <label className="block font-medium mb-2 text-sm sm:text-base">วันที่ลา</label>
-            <input 
-              type="date"
-              className="w-full bg-white border border-gray-300 py-2 px-3 rounded text-sm sm:text-base"
-              value={leave_date}
-              onChange={(e) => setLeave_date(e.target.value)}
-            />
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* กลุ่มที่ 1 */}
+              <div className="flex-1">
+                <label className="block font-medium mb-2 text-sm sm:text-base">วันที่ลา</label>
+                <input 
+                  type="date"
+                  className="w-full bg-white border border-gray-300 py-2 px-3 rounded text-sm sm:text-base"
+                  value={leave_date}
+                  onChange={(e) => setLeave_date(e.target.value)}
+                />
+              </div>
+
+              {/* กลุ่มที่ 2 */}
+              {continue_leave && insertComponentEndLeaveDate()}
+
+            </div>
+          
         </div>
          {/* ส่วนเลือกกะและช่วงเวลาการลา */}
           <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
@@ -415,7 +473,7 @@ useEffect(() => {
         </div>
         
         {/* ส่วนอัพโหลดใบรับรองแพทย์ (ถ้าเลือกมีใบรับรองแพทย์) */}
-        {leave_type === '020004' && insertComponent()}
+        {leave_type === '020004'  && insertComponentFileupload()}
         
         {/* ส่วนเหตุผล */}
         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">

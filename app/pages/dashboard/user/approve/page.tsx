@@ -100,6 +100,7 @@ const approveDashboard = () => {
         if (res.ok){ 
           setDocs(Array.isArray(data.data) ? data.data : []);
           setHasMore(data.data.length < 5);
+          console.log("data" ,data);
         }else{
           setError('API error: ' + (data.error || 'Unknown error'));
         }
@@ -177,7 +178,7 @@ const handleChangeStatus = async (id: number, newStatus: string) => {
 
     if (!response.ok) {
       console.error('Error:', data.error);
-      
+      setError(data.error);
       return;
     }
     

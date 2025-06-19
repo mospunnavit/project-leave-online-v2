@@ -396,7 +396,7 @@ const insertComponentFileupload = () => {
           <option value="กะเช้า|20003">เต็มวัน (08:00 - 17:00)</option>
           {!continue_leave && (
             <> <option value="กะเช้า|20004">ครึ่งวันเช้า (08:00 - 12:00)</option>
-          <option value="กะเช้า|20007">ครึ่งวันบ่าย (13:00 - 17:00)</option>
+              <option value="กะเช้า|20007">ครึ่งวันบ่าย (13:00 - 17:00)</option>
             </>
           )}
          

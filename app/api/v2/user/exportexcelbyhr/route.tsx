@@ -19,16 +19,17 @@ export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
     const { searchParams } = new URL(req.url);
     
-    const leave_date = searchParams.get("leave_date") || '';
+    const from_date = searchParams.get("from_date" as string) || '';
+    const to_date = searchParams.get("to_date" as string) || '';
     const status = searchParams.get("status") || 'approved';
 
     try {
         const conditions: string[] = [];
         const params: any[] = [];
 
-        if (leave_date.trim()) {
-            conditions.push('l.leave_date LIKE ?');
-            params.push(`${leave_date.trim()}%`);
+         if(from_date.trim() && to_date.trim()) {
+            conditions.push('l.leave_date BETWEEN ? AND ?');
+            params.push(from_date.trim(), to_date.trim());
         }
         if (status.trim()) {
             conditions.push('l.status = ?');

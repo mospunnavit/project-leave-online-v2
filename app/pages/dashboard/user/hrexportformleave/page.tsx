@@ -8,7 +8,6 @@ import { Loading } from "@/app/components/loading";
 import ModalLayout from "@/app/components/modallayout";
 import { Download, Loader2 } from 'lucide-react';
 import { X } from "lucide-react";
-import { Leave } from "@/app/types/formleave";
 
 const approveDashboard = () => {
     const { data: session, status } = useSession();    
@@ -17,7 +16,6 @@ const approveDashboard = () => {
     const [error, setError] = useState<String>('');
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
-    const [today, setToday] = useState('');
     const [selectStatus, setSelectStatus] = useState<string>('approved');
     const [showImg, setShowImg] = useState(false);
     const [currentLeave, setCurrentLeave] = useState<Leave | null>(null);
@@ -199,7 +197,7 @@ const handleExport = async () => {
             
             
         } catch (error) {
-            console.error('Export error:', error);
+          setError('something went wrong');
         } finally {
             setIsExporting(false);
         } 
@@ -292,7 +290,7 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
 
                           {/* ปุ่ม Export มีเงื่อนไขสีตามค่า exported */}
                           <button
-                            disabled={doc.exported === 1}
+                           
                             className={`text-sm font-medium px-3 py-1 rounded shadow 
                               ${doc.exported === 1
                                 ? 'bg-green-500 text-white cursor-default'
@@ -471,12 +469,15 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
               {/* Content */}
             <div className="grid grid-cols-2 gap-4 p-4 text-sm text-gray-700">
         <div><strong>ชื่อจริง-นามสกุล:</strong> {currentLeave.firstname} {currentLeave.lastname}</div>
-        <div><strong>แผนก:</strong> {currentLeave.department}</div>
+        <div><strong>แผนก:</strong> {currentLeave.department_name}</div>
         <div><strong>วันที่ลา:</strong> {formatThaiDateYYYYMMDD(currentLeave.leave_date)}</div>
         <div><strong>เวลา:</strong> {currentLeave.start_time} - {currentLeave.end_time}</div>
         <div><strong>ประเภทการลา:</strong> {currentLeave.lt_name}</div>
         <div><strong>จำนวนวัน:</strong> {currentLeave.usequotaleave}</div>
-        <div className="col-span-2"><strong>เหตุผล:</strong> {currentLeave.reason || '-'}</div>
+        <div ><strong>เหตุผล:</strong> {currentLeave.reason || '-'}</div>
+        <div ><strong>สถานะการนำออก:</strong> 
+        {currentLeave.exported ? 'นำออกแล้ว' : 'ยังไม่นำออก'}</div>
+
         <div>
           <strong>สถานะ: </strong>
           <span>

@@ -11,13 +11,14 @@ export async function POST(req: Request) {
     if(!session){
         return NextResponse.json({ error: 'login' }, { status: 400 });
     }
-    if(session?.user?.role == "user"){
-        return NextResponse.json({ error: "You are not authorized" }, { status: 403 });
+    if(session?.user?.role == "user" && session?.user?.department_name != "HR"){
+        return NextResponse.json({ error: 'You are not authorized' }, { status: 403 });
     }
     
     const { id, status } = await req.json();
     
     // ตรวจสอบว่า id และ status ถูกส่งมาหรือไม่
+    console.log(id, status);
     if (!id || !status) {
       return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
     }

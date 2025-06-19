@@ -8,9 +8,10 @@ export async function GET(req: Request)  {
     if(!session){
         return NextResponse.json({ error: 'login' }, { status: 400 });
     }
-    if(session?.user?.role == "user"){
-        return NextResponse.json({ error: "You are not authorized" }, { status: 403 });
+    if(session?.user?.role == "user" && session?.user?.department_name != "HR"){
+        return NextResponse.json({ error: 'You are not authorized' }, { status: 403 });
     }
+
     const user_id = session?.user?.id 
     const { searchParams } = new URL(req.url);
     const getPage = searchParams.get("page" as string) || '1';
@@ -34,7 +35,7 @@ export async function GET(req: Request)  {
             console.log("user department name in hr",session?.user?.department_name);
             const [data] = await db.query(
                 ` 
-                SELECT lf.u_id, lf.leave_date, lf.start_time, lf.end_time, lf.reason, lf.status, lf.image_filename, 
+                SELECT lf.id ,lf.u_id, lf.leave_date, lf.start_time, lf.end_time, lf.reason, lf.status, lf.image_filename, 
                 lf.submitted_at , u.username ,u.firstname, u.lastname, u.department, d.department_name, lf.lt_code, lt_name
                 FROM leaveform lf 
                 LEFT JOIN users u ON lf.u_id = u.id

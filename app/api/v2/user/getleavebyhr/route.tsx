@@ -43,10 +43,11 @@ export async function GET(req: Request)  {
         const [data] = await db.query(
             `SELECT l.id ,u.username, u.firstname, u.lastname, u.department, 
             l.leave_date, l.start_time, l.end_time, l.reason, l.lt_code , lt.lt_name, l.lc_code, l.usequotaleave,
-            l.status, l.submitted_at, l.image_filename, l.exported
+            l.status, l.submitted_at, l.image_filename, l.exported, d.department_name
             FROM leaveform l 
             LEFT JOIN users u ON l.u_id = u.id
             LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code
+            LEFT JOIN departments d ON u.department = d.id
             ${whereClause} order by l.leave_date LIMIT ? OFFSET ? `,
             [...params, pageSize, offset]
           );

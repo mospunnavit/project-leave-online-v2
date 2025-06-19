@@ -262,7 +262,9 @@ const insertComponentFileupload = () => {
       setContinue_leave(true);
     }else{
       setContinue_leave(false);
+      setEnd_leave_date('');
     }
+
   }, [leave_type]);
   return (
     <DashboardLayout title="ฟอร์มการลา">
@@ -392,14 +394,23 @@ const insertComponentFileupload = () => {
 
         <optgroup label="กะเช้า">
           <option value="กะเช้า|20003">เต็มวัน (08:00 - 17:00)</option>
-          <option value="กะเช้า|20004">ครึ่งวันเช้า (08:00 - 12:00)</option>
+          {!continue_leave && (
+            <> <option value="กะเช้า|20004">ครึ่งวันเช้า (08:00 - 12:00)</option>
           <option value="กะเช้า|20007">ครึ่งวันบ่าย (13:00 - 17:00)</option>
+            </>
+          )}
+         
         </optgroup>
 
         <optgroup label="กะดึก">
           <option value="กะดึก|20003">เต็มวัน (20:00 - 04:30)</option>
-          <option value="กะดึก|20004">ครึ่งวันก่อนเที่ยงคืน (20:00 - 00:00)</option>
-          <option value="กะดึก|20007">ครึ่งวันหลังตีหนึ่ง (01:00 - 4:30)</option>
+          {!continue_leave && (
+            <>
+            <option value="กะดึก|20004">ครึ่งวันก่อนเที่ยงคืน (20:00 - 00:00)</option>
+          <option value="กะดึก|20007">ครึ่งวันหลังตีหนึ่ง (01:00 - 4:30)</option>  
+            </>
+          )}
+          
         </optgroup>
       </select>
         </div>

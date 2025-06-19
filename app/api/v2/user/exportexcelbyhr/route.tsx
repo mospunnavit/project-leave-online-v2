@@ -71,7 +71,7 @@ export async function GET(req: Request) {
             });
         });
         const buffer = await workbook.xlsx.writeBuffer();
-
+        await db.query(`UPDATE leaveform l SET exported = 1 ${whereClause}`, params);
         return new Response(buffer, {
             headers: {
                 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -80,7 +80,7 @@ export async function GET(req: Request) {
         });
 
     } catch (err) {
-        console.error('Export Excel Error:', err);
+        console.error( err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

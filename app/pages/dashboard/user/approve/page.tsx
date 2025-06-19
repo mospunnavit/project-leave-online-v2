@@ -97,8 +97,13 @@ const approveDashboard = () => {
         const data = await res.json();
 
         //data {data: Leave[], length: number}
-        setDocs(Array.isArray(data.data) ? data.data : []);
-        setHasMore(data.data.length < 5);
+        if (res.ok){ 
+          setDocs(Array.isArray(data.data) ? data.data : []);
+          setHasMore(data.data.length < 5);
+        }else{
+          setError('API error: ' + (data.error || 'Unknown error'));
+        }
+        
         
       } catch (err) {
         console.error('Error fetching leave data', err);
@@ -115,23 +120,36 @@ const approveDashboard = () => {
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);
 
-    
+  const statusTranslations: { [key: string]: string } = {
+  'waiting for head approval': 'รอหัวหน้าอนุมัติ',
+  'waiting for manager approval': 'รอผู้จัดการอนุมัติ',
+  'waiting for hr approval': 'รอ HR อนุมัติ',
+  'rejected by head': 'ปฏิเสธโดยหัวหน้า',
+  'rejected by hr': 'ปฏิเสธโดย HR',
+  'rejected by manager': 'ปฏิเสธโดยผู้จัดการ',
+  'approved': 'อนุมัติแล้ว',
+  'waiting': 'รอดำเนินการ',
+};
+const translateStatus = (status: string): string => {
+  return statusTranslations[status] || status; // ถ้าไม่มีคำแปล ให้คืนค่าเดิม
+};
     const renderStatus = (status: string) => {
+      console.log("Test"+ status, roleData.pendingStatus);
       if (status === roleData.pendingStatus) {
         return <span className={`px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800`}>
-                        {status}
+                        {translateStatus(status)}
                       </span>
       }else if(status === roleData.approvedStatus || status === "approved"){
            return <span className={`px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800`}>
-                        {status}
+                         {translateStatus(status)}
                       </span>
       }else if(status.includes("rejected")){
             return  <span className={`px-2 py-1 rounded text-xs font-medium bg-red-200 text-red-800`}>
-                        {status}
+                         {translateStatus(status)}
                       </span>
       }else{
         return    <span className={`px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
-                        {status}
+                         {translateStatus(status)}
                       </span>
       }
     }

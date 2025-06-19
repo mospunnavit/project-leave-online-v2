@@ -36,29 +36,42 @@ const UserDashboard = () => {
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);
+  const statusTranslations: { [key: string]: string } = {
+  'waiting for head approval': 'รอหัวหน้าอนุมัติ',
+  'waiting for manager approval': 'รอผู้จัดการอนุมัติ',
+  'waiting for hr approval': 'รอ HR อนุมัติ',
+  'rejected by head': 'ปฏิเสธโดยหัวหน้า',
+  'rejected by hr': 'ปฏิเสธโดย HR',
+  'rejected by manager': 'ปฏิเสธโดยผู้จัดการ',
+  'approved': 'อนุมัติแล้ว',
+  'waiting': 'รอดำเนินการ',
+};
+const translateStatus = (status: string): string => {
+  return statusTranslations[status] || status; // ถ้าไม่มีคำแปล ให้คืนค่าเดิม
+};
   const renderStatus = (status: string) => {
   if (status.includes("waiting")) {
     return (
       <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-        {status}
+        {translateStatus(status)}
       </span>
     );
   } else if (status.includes("rejected")) {
     return (
       <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-        {status}
+        {translateStatus(status)}
       </span>
     );
   } else if (status.includes("approved")) {
     return (
       <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-        {status}
+        {translateStatus(status)}
       </span>
     );
   } else {
     return (
       <span className="px-2 py-1 rounded text-xs font-medium bg-white text-black">
-        {status}
+        {translateStatus(status)}
       </span>
     );
   }

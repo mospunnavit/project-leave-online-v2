@@ -104,7 +104,7 @@ const Sidebar = () => {
           </nav>
           
         )}
-        {session?.user?.role === 'hr' && (
+        {session?.user?.role === 'hr' || session?.user?.department_name === 'HR' && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
             <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
@@ -120,7 +120,7 @@ const Sidebar = () => {
             <span>hr-approve</span>
           </Link>
            <span>การนำออก</span>
-           <Link href="/pages/dashboard/user/hrformleave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+           <Link href="/pages/dashboard/user/hrexportformleave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>hr-Export</span>
            </Link>

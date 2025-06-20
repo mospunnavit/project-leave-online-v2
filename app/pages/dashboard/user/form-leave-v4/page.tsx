@@ -171,7 +171,12 @@ const insertComponentFileupload = () => {
       setError('กรุณาอัพโหลดใบรับรองแพทย์');
       return;
     }
-
+    if(continue_leave){
+      if(end_leave_date === undefined || end_leave_date === ''){
+        setError('กรุณเลือกวันที่สิ้นสุดการลา');
+        return;
+      }
+    }
     //handle if upload file 
     let image_filename	 = '';
     console.log("leave_type"+leave_type, leavefile);
@@ -219,7 +224,7 @@ const insertComponentFileupload = () => {
     //api form
     try{
       setLoading(true);
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v2/user/leaveform-v3", {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v2/user/leaveform-v4", {
           method: "POST",
           headers: {
               "Content-Type": "application/json",
@@ -257,6 +262,7 @@ const insertComponentFileupload = () => {
       setLoading(false);
     }
   }
+
   useEffect(() => {
     if(leave_type == "020007"){
       setContinue_leave(true);
@@ -264,7 +270,6 @@ const insertComponentFileupload = () => {
       setContinue_leave(false);
       setEnd_leave_date('');
     }
-
   }, [leave_type]);
   return (
     <DashboardLayout title="ฟอร์มการลา">

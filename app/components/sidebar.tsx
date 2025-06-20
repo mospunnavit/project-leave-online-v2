@@ -54,7 +54,7 @@ const Sidebar = () => {
           </nav>
           
         )}
-        {session?.user?.role === 'user' && (
+        {session?.user?.role === 'user' && session?.user?.department_name != 'HR' && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
             <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
@@ -68,7 +68,7 @@ const Sidebar = () => {
           
         )}
 
-        {session?.user?.role === 'head' && (
+        {session?.user?.role === 'head' && session?.user?.department_name != 'HR' && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
             <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
@@ -86,7 +86,7 @@ const Sidebar = () => {
           </nav>
         )}
 
-        {session?.user?.role === 'manager' && (
+        {session?.user?.role === 'manager' && session?.user?.department_name != 'HR' && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
             <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />

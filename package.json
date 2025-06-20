@@ -21,7 +21,9 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-toastify": "^11.0.5",
-    "toast": "^0.5.4"
+    "toast": "^0.5.4",
+    "util": "^0.12.5",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.10",

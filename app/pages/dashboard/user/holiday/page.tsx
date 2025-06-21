@@ -32,17 +32,13 @@ const approveDashboard = () => {
 
 
   const validateDateRange = () => {
-  
-     if((from_date === '' && to_date !== '') || (from_date !== '' && to_date === '')){
-      console.log("in1" , from_date, to_date);
+     if(from_date && !to_date || !from_date && to_date){
       setError('กรุณาวันที่เลือกช่วงวันที่ให้ครบถ้วน');  
       return false;
     }else if(to_date < from_date){
       setError('กรุณาวันที่เลือกช่วงวันที่สิ้นสุดต้องมากกว่าวันที่เริ่มต้น');
-       console.log("in3" , from_date, to_date);
       return false;
     }else if(to_date && from_date){
-       console.log("in2" , from_date, to_date);
       setError('');
       return true;
     } 
@@ -66,8 +62,48 @@ const approveDashboard = () => {
 
 
 
+ 
+ const getRoleSpecificData = () => {
+        if (!session?.user?.role) return { title: "อนุมัติการลา", statuses: [] };
 
-   const fetchLeaveData = async () => {
+        switch (session.user.role) {
+            case 'head':
+                return {
+                    title: "หัวหน้าแผนกอนุมัติ",
+                    apiPath: "/api/user/getleavesbydepartment",
+                    pendingStatus: "waiting for head approval",
+                    approvedStatus: "waiting for manager approval",
+                    rejectedStatus: "rejected by head"
+                };
+            case 'manager':
+                return {
+                    title: "ผู้จัดการอนุมัติ",
+                    apiPath: "/api/user/getleavesformanager",
+                    pendingStatus: "waiting for manager approval",
+                    approvedStatus: "waiting for hr approval",
+                    rejectedStatus: "rejected by manager"
+                };
+            case 'hr':
+                return {
+                    title: "HR อนุมัติ",
+                    apiPath: "/api/user/getleavesforhr",
+                    pendingStatus: "waiting for hr approval",
+                    approvedStatus: "approved",
+                    rejectedStatus: "rejected by hr"
+                };
+            default:
+                return {
+                    title: "อนุมัติการลา",
+                    apiPath: "",
+                    pendingStatus: "pending",
+                    approvedStatus: "approved",
+                    rejectedStatus: "rejected"
+                };
+        }
+    };
+    const roleData = getRoleSpecificData();
+    console.log(roleData.pendingStatus, roleData.approvedStatus, roleData.rejectedStatus);
+  const fetchLeaveData = async () => {
       
       setLoading(true);
       try {
@@ -93,6 +129,26 @@ const approveDashboard = () => {
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);
 
+    
+    const renderStatus = (status: string) => {
+      if (status === roleData.pendingStatus) {
+        return <span className={`px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800`}>
+                        {status}
+                      </span>
+      }else if(status === roleData.approvedStatus || status === "approved"){
+           return <span className={`px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800`}>
+                        {status}
+                      </span>
+      }else if(status.includes("rejected")){
+            return  <span className={`px-2 py-1 rounded text-xs font-medium bg-red-200 text-red-800`}>
+                        {status}
+                      </span>
+      }else{
+        return    <span className={`px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
+                        {status}
+                      </span>
+      }
+    }
     const openImageModal = (imagePath : string) => {
     setSelectedImg(imagePath);
     setShowImg(true);
@@ -331,8 +387,50 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
             </div>
           </div>
         )}
-        
-
+          {rejectedModal && currentLeave && (
+  <ModalLayout onClose={() => setRejectedModal(false)}>
+    <h2 className="text-lg font-semibold mb-4">ไม่อนุมัติการลาของ {currentLeave.username}  {currentLeave.firstname} {currentLeave.lastname}</h2>
+    <div className="flex justify-end gap-2">
+      <button
+        onClick={() => {
+          handleChangeStatus(currentLeave.id, roleData?.rejectedStatus ?? '');
+          setRejectedModal(false);
+        }}
+        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+      >
+        ยืนยัน
+      </button>
+      <button
+        onClick={() => setRejectedModal(false)}
+        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+      >
+        ยกเลิก
+      </button>
+    </div>
+  </ModalLayout>
+)}
+{confrimModal && currentLeave && (
+<ModalLayout onClose={() => setConfrimModal(false)}>
+    <h2 className="text-lg font-semibold mb-4">ยืนยันการลาของ {currentLeave.username} {currentLeave.firstname} {currentLeave.lastname}</h2>
+    <div className="flex justify-end gap-2">
+      <button
+        onClick={() => {
+          handleChangeStatus(currentLeave.id, roleData?.approvedStatus ?? '');
+          setConfrimModal(false);
+        }}
+        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        ยืนยัน
+      </button>
+      <button
+        onClick={() => setConfrimModal(false)}
+        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+      >
+        ยกเลิก
+      </button>
+    </div>
+  </ModalLayout>
+)}
 
       </div>
       {showImg && (

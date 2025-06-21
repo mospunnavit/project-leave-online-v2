@@ -1,7 +1,7 @@
 'use client'; // Only if you're using the app directory
 import Link from 'next/link';
 import { Home, Phone, X, Menu, BookText, SquareCheckBig } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { useSession } from 'next-auth/react';
 
@@ -12,6 +12,9 @@ const Sidebar = () => {
     console.log("logout");
     signOut({ callbackUrl: '/login' }); // Redirect ไปที่หน้า login หลัง logout
   };
+  useEffect(() => {
+    console.log("session", session);
+  })
   return (
     <>
       {/* Button to open/close the sidebar (Hamburger / X) */}
@@ -104,7 +107,8 @@ const Sidebar = () => {
           </nav>
           
         )}
-        {session?.user?.role === 'hr' || session?.user?.department_name === 'HR' && (
+        
+        {(session?.user?.role === 'hr' || session?.user?.department_name === 'HR') && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
             <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />

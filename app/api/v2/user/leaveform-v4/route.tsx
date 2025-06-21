@@ -60,7 +60,7 @@ export async function POST(req: Request) {
                 [leave_date, end_leave_date,]
             )
             const gettotalholiday = totalholiday[0];
-            console.log(totalholiday[0]);
+            console.log(gettotalholiday);
         }
     }
     await db.query(

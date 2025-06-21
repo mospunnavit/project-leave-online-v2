@@ -387,50 +387,8 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
             </div>
           </div>
         )}
-          {rejectedModal && currentLeave && (
-  <ModalLayout onClose={() => setRejectedModal(false)}>
-    <h2 className="text-lg font-semibold mb-4">ไม่อนุมัติการลาของ {currentLeave.username}  {currentLeave.firstname} {currentLeave.lastname}</h2>
-    <div className="flex justify-end gap-2">
-      <button
-        onClick={() => {
-          handleChangeStatus(currentLeave.id, roleData?.rejectedStatus ?? '');
-          setRejectedModal(false);
-        }}
-        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-      >
-        ยืนยัน
-      </button>
-      <button
-        onClick={() => setRejectedModal(false)}
-        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-      >
-        ยกเลิก
-      </button>
-    </div>
-  </ModalLayout>
-)}
-{confrimModal && currentLeave && (
-<ModalLayout onClose={() => setConfrimModal(false)}>
-    <h2 className="text-lg font-semibold mb-4">ยืนยันการลาของ {currentLeave.username} {currentLeave.firstname} {currentLeave.lastname}</h2>
-    <div className="flex justify-end gap-2">
-      <button
-        onClick={() => {
-          handleChangeStatus(currentLeave.id, roleData?.approvedStatus ?? '');
-          setConfrimModal(false);
-        }}
-        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-      >
-        ยืนยัน
-      </button>
-      <button
-        onClick={() => setConfrimModal(false)}
-        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-      >
-        ยกเลิก
-      </button>
-    </div>
-  </ModalLayout>
-)}
+        
+
 
       </div>
       {showImg && (

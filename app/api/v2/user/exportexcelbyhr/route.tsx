@@ -41,7 +41,8 @@ export async function GET(req: Request) {
                l.leave_date, l.lt_code, l.lc_code, l.usequotaleave
              FROM leaveform l 
              LEFT JOIN users u ON l.u_id = u.id
-             LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code 
+             LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code
+              
              ${whereClause}`,
             [...params]
         );

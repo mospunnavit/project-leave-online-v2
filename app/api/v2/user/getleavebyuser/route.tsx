@@ -17,7 +17,6 @@ export async function GET(req: Request)  {
             [user_id, pageSize, offset]
           );
           
-        console.log(rows);
       return NextResponse.json(rows);
     } catch (err) {
         console.log(err)

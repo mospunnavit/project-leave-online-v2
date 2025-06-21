@@ -19,6 +19,9 @@ export async function GET(req: Request)  {
     const page = parseInt((getPage as string) || '1');
     const pageSize = 5;
     const offset = (page - 1) * pageSize;
+    if(session?.user?.role == "user"){
+        return NextResponse.json({ error: 'You are not authorized' }, { status: 403 });
+    }
     try {
 
         const conditions = [];

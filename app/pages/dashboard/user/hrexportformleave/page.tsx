@@ -111,7 +111,7 @@ const handleExport = async () => {
         try {
             // สร้าง query parameters
             // เรียก API
-            const response = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/exportexcelbyhr?page=${currentPage}&status=${selectStatus}&from_date=${from_date}&to_date=${to_date}`, {
+            const response = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/exportexcelbyhrv2?status=${selectStatus}&from_date=${from_date}&to_date=${to_date}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

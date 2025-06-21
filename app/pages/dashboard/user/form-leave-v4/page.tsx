@@ -162,8 +162,8 @@ const insertComponentFileupload = () => {
       setError('กรุณาระบุเหตุผล');
       return;
     }
-    if(diffInDays < 3 && (leave_type == "ลากิจ" || leave_type == "ลากิจพิเศษ" || leave_type == "พักร้อน")){
-      setError('ไม่สามารถลากิจก่อนวันลาน้อยกว่า 3 วันได้');
+    if(diffInDays < 3 && (leave_type == "020005" || leave_type == "020006-1" || leave_type == "020006")){
+      setError('ไม่สามารถลากิจหรือพักร้อนก่อนวันลาน้อยกว่า 3 วันได้');
       return;
     }
 
@@ -216,6 +216,7 @@ const insertComponentFileupload = () => {
         } 
         }catch{
           setError('เกิดข้อผิดพลาดในการอัปโหลดไฟล์');
+          return;
 
         }
       

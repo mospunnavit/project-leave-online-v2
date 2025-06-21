@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { authOptions } from '@/lib/authOptions';
 import { getServerSession } from 'next-auth';
+import { RowDataPacket } from 'mysql2';
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
+  
   if (!session) {
     return NextResponse.json({ error: 'login' }, { status: 400 });
   }
@@ -41,12 +43,14 @@ export async function POST(req: Request) {
       status = "waiting for head approval";
     }
   
-
+    console.log("end leave", end_leave_date);
     // หากลาต่อเนื่องคำนวณจำนวนวันใหม่
     if (end_leave_date != null && end_leave_date != undefined) {
+     
         const start_leave_date = new Date(leave_date);
         const end_leave_date2 = new Date(end_leave_date);
-        const diffTime = (end_leave_date2.getTime() - start_leave_date.getTime());
+        const diffTime = (end_leave_date2.getTime() - (start_leave_date.getTime() - 86400000));
+        console.log(end_leave_date2.getTime() - start_leave_date.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         console.log(diffDays);
         if (diffDays < 0){ 
@@ -58,12 +62,37 @@ export async function POST(req: Request) {
             const totalholiday = await db.query(
                 `SELECT COUNT(*) as totalholiday from holiday where date BETWEEN ? AND ?`,
                 [leave_date, end_leave_date,]
-            )
-            const gettotalholiday = totalholiday[0];
-            console.log(gettotalholiday);
+            ) as RowDataPacket[];
+            console.log("totalholiday",totalholiday);
+            const gettotalholiday  = totalholiday[0][0].totalholiday;
+            const continue_leave_useQuota = diffDays - gettotalholiday;
+            
+            if(continue_leave_useQuota < 0 || continue_leave_useQuota == 0){
+              return NextResponse.json({ error: 'ช่วงที่เลือกเป็นวันหยุดของบริษัททั้งหมด' }, { status: 400 });
+            }
+             await db.query(
+              `INSERT INTO leaveform
+              (u_id, leave_date, end_leave_date,start_time, end_time, reason,lt_code, lc_code, leaveshift, usequotaleave, status, image_filename) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                parseInt(session.user.id as string),
+                leave_date,
+                end_leave_date || null,
+                start_time,
+                end_time,
+                reason,
+                leave_type,
+                leaveDuration,
+                leaveShift,
+                continue_leave_useQuota,
+                status,
+                image_filename || null,
+              ]
+            );
+            
         }
-    }
-    await db.query(
+    }else{
+       await db.query(
       `INSERT INTO leaveform
       (u_id, leave_date, end_leave_date,start_time, end_time, reason,lt_code, lc_code, leaveshift, usequotaleave, status, image_filename) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -82,6 +111,8 @@ export async function POST(req: Request) {
         image_filename || null,
       ]
     );
+    }
+   
 
     return NextResponse.json({ message: 'Leave request submitted successfully!' }, { status: 200 });
 

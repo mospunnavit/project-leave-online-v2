@@ -50,10 +50,27 @@ const Sidebar = () => {
             <BookText size={20} />
             <span>Form leave</span>
             </Link>
+            <Link href="/pages/dashboard/admin/departments" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <BookText size={20} />
+            <span>departments</span>
+            </Link>
+             <Link href="/pages/dashboard/admin/holidays" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <BookText size={20} />
+            <span>holidays</span>
+            </Link>
             <Link href="/pages/dashboard/admin/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>User</span>
             </Link>
+             <Link href="/pages/dashboard/user/approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <SquareCheckBig size={20} />
+            <span>approve</span>
+          </Link>
+           <span>การนำออก</span>
+           <Link href="/pages/dashboard/user/hrexportformleave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>hr-Export</span>
+           </Link>
           </nav>
           
         )}

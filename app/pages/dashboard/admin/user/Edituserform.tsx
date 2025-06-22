@@ -78,11 +78,11 @@ export default function EdituserForm({ departments, user, onSubmit }: EdituserFo
           required
         >
           <option value="">-- เลือก Role --</option>
-          <option value="admin">Admin</option>
+          <option value="admin">admin</option>
           <option value="head">head</option>
            <option value="manager">manager</option>
-            <option value="hr">Hr</option>
-          <option value="user">User</option>
+            <option value="hr">hr</option>
+          <option value="user">user</option>
         </select>
       </div>
        <div>

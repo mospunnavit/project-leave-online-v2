@@ -2,7 +2,7 @@ import { RawUserWithDepartments } from '@/app/types/users';
 import { UserWithDepartments } from '@/app/types/users';
 
 
-
+//map the raw data to the UserWithDepartments type
 function transformUser(raw: RawUserWithDepartments): UserWithDepartments {
   const ids = raw.departments_id?.split(',').map(id => id.trim()) ?? [];
   const names = raw.departments_name?.split(',').map(name => name.trim()) ?? [];

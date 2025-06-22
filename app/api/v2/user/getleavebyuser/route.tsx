@@ -13,7 +13,9 @@ export async function GET(req: Request)  {
     const offset = (page - 1) * pageSize;
     try {
         const [rows] = await db.query(
-            'SELECT * FROM leaveform l LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code WHERE u_id = ? ORDER BY submitted_at DESC LIMIT ? OFFSET ?',
+            `SELECT * FROM leaveform l 
+            LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code WHERE u_id = ? 
+            ORDER BY submitted_at DESC LIMIT ? OFFSET ?`,
             [user_id, pageSize, offset]
           );
           

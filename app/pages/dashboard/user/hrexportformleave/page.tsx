@@ -89,6 +89,10 @@ const approveDashboard = () => {
 
     fetchLeaveData();
   }, [currentPage, selectStatus, selectedMonth]);
+   useEffect(() => {
+
+    console.log(docs);
+  }, [docs]);
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);
@@ -217,7 +221,8 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
                 {docs.map((doc, index) => (
                   <tr key={index}>
                     <td className="border px-4 py-2">{doc.username}</td>
-                    <td className="border px-4 py-2">{formatThaiDateYYYYMMDD(doc.leave_date)}</td>
+                    <td className="border px-4 py-2">{formatThaiDateYYYYMMDD(doc.leave_date)} 
+                     {doc.end_leave_date && ` - ${formatThaiDateYYYYMMDD(doc.end_leave_date)}`}</td>
                     <td className="border px-4 py-2">00</td>
                     <td className="border px-4 py-2">{doc.lt_code}</td>
                     <td className="border px-4 py-2">{doc.lc_code}</td>
@@ -225,6 +230,7 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
                     <td className="border px-4 py-2">{doc.usequotaleave}</td>    
                         <td className="border px-4 py-2 flex gap-2">
                           {/* ปุ่มรายละเอียด */}
+                          <div>
                           <button
                             onClick={() => handleshowDetails(doc)}
                             className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-3 py-1 rounded shadow"
@@ -243,6 +249,7 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
                           >
                             {doc.exported === 1 ? 'Exported' : 'Export'}
                           </button>
+                          </div>
                         </td>                  
                   </tr>
                 ))}

@@ -34,7 +34,7 @@ export async function GET(req: Request)  {
         
         const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-        if(session?.user?.department_name == "HR"){
+        if(session?.user?.department_name == "HR" || session?.user?.role == "admin"){
             console.log("user department name in hr",session?.user?.department_name);
             const [data] = await db.query(
                 ` 

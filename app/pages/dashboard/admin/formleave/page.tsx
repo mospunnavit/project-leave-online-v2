@@ -266,13 +266,13 @@ useEffect(() => {
    const fecthLeavedata = async () => {
       setLoading(true);
       try {
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/admin/getallLeave?page=${currentPage}`);
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/admin/getallleave?page=${currentPage}`);
         const data = await res.json();
 
         if (res.ok){ 
           setDocs(data.dataleave);
 
-          setHasMore(data.dataleave.length <10);
+          setHasMore(data.dataleave.length <5);
           console.log(hasMore)
           console.log(data);
         }else{

@@ -15,7 +15,7 @@ const DepartmentDashboard = () => {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage] = useState<number>(3);
+  const [itemsPerPage] = useState<number>(10);
   const { data: session, status } = useSession();    
   const [today, setToday] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

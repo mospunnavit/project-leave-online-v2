@@ -11,13 +11,13 @@ export async function GET(req: Request)  {
  
     try {
         const [holidays] = await db.query(
-            'SELECT * FROM holiday',
+            'SELECT * FROM holiday order by date desc',
            
           );
           
       return NextResponse.json({holidays}, { status: 200 });
-    } catch (err) {
-        console.log(err)
+    } catch (err : Error | any) {
+       
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
   } 

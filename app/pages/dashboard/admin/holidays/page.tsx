@@ -23,8 +23,9 @@ const HolidayDashboard = () => {
   
   // Form states for add/edit
   const [formData, setFormData] = useState({
-    date: '',
-    remark: ''
+    holiday_date: '',
+    holiday_remark: '',
+    is_sunday: false
   });
 
   // คำนวณข้อมูลสำหรับหน้าปัจจุบัน
@@ -127,8 +128,9 @@ const HolidayDashboard = () => {
   const handleEdit = (holiday: Holiday) => {
     setCurrentHoliday(holiday);
     setFormData({
-      date: formatDateForInput(holiday.date),
-      remark: holiday.remark
+      holiday_date: formatDateForInput(holiday.date),
+      holiday_remark: holiday.remark,
+      is_sunday: holiday.sunday
     });
     setIsEditModalOpen(true);
   };
@@ -180,7 +182,7 @@ const HolidayDashboard = () => {
         setSuccess('เพิ่มวันหยุดสำเร็จ');
         fetchHolidayData();
         setIsAddHolidayModalOpen(false);
-        setFormData({ date: '', remark: '' });
+        setFormData({ holiday_date: '', holiday_remark: '' , is_sunday: false});
         setCurrentPage(1);
       } else {
         const data = await res.json();
@@ -190,6 +192,7 @@ const HolidayDashboard = () => {
       setError('เกิดข้อผิดพลาด: ' + err);
     } finally {
       setLoading(false);
+      setIsAddHolidayModalOpen(false);
     }
   };
 
@@ -200,7 +203,7 @@ const HolidayDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + `/api/v2/admin/updateholiday/${currentHoliday.id}`, {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + `/api/v2/admin/editholiday/${currentHoliday.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -213,7 +216,8 @@ const HolidayDashboard = () => {
         fetchHolidayData();
         setIsEditModalOpen(false);
         setCurrentHoliday(null);
-        setFormData({ date: '', remark: '' });
+        setFormData({ holiday_date: '', holiday_remark: '' , is_sunday: false});
+
       } else {
         const data = await res.json();
         setError('เกิดข้อผิดพลาด: ' + (data.error || 'Unknown error'));
@@ -222,6 +226,7 @@ const HolidayDashboard = () => {
       setError('เกิดข้อผิดพลาด: ' + err);
     } finally {
       setLoading(false);
+      setIsEditModalOpen(false);
     }
   };
 
@@ -487,8 +492,8 @@ const HolidayDashboard = () => {
                   </label>
                   <input
                     type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                    value={formData.holiday_date}
+                    onChange={(e) => setFormData({...formData, holiday_date: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                     required
                   />
@@ -499,15 +504,29 @@ const HolidayDashboard = () => {
                     รายละเอียด
                   </label>
                   <textarea
-                    value={formData.remark}
-                    onChange={(e) => setFormData({...formData, remark: e.target.value})}
+                    value={formData.holiday_remark}
+                    onChange={(e) => setFormData({...formData, holiday_remark: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                     rows={3}
                     placeholder="ระบุรายละเอียดวันหยุด"
                     required
                   />
                 </div>
-
+               <div className="space-y-2">
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <input
+              type="checkbox"
+              id="is_sunday"
+              checked={formData.is_sunday}
+              onChange={(e) => setFormData({...formData, is_sunday: e.target.checked})}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            />
+            <label htmlFor="is_sunday" className="text-sm font-medium text-gray-700 cursor-pointer select-none">
+              เป็นวันอาทิตย์
+            </label>
+          </div>
+        
+        </div>
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
@@ -550,8 +569,8 @@ const HolidayDashboard = () => {
                   </label>
                   <input
                     type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                    value={formData.holiday_date}
+                    onChange={(e) => setFormData({...formData, holiday_date: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                     required
                   />
@@ -562,15 +581,26 @@ const HolidayDashboard = () => {
                     รายละเอียด
                   </label>
                   <textarea
-                    value={formData.remark}
-                    onChange={(e) => setFormData({...formData, remark: e.target.value})}
+                    value={formData.holiday_remark}
+                    onChange={(e) => setFormData({...formData, holiday_remark: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                     rows={3}
                     placeholder="ระบุรายละเอียดวันหยุด"
                     required
                   />
                 </div>
-
+                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <input
+                    type="checkbox"
+                    id="is_sunday"
+                    checked={formData.is_sunday}
+                    onChange={(e) => setFormData({...formData, is_sunday: e.target.checked})}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <label htmlFor="is_sunday" className="text-sm font-medium text-gray-700 cursor-pointer select-none">
+                    เป็นวันอาทิตย์
+                  </label>
+                </div>
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"

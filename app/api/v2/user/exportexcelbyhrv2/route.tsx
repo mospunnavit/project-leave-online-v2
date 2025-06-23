@@ -80,7 +80,7 @@ export async function GET(req: Request) {
                 lt_code: data.lt_code,
                 lc_code: data.lc_code,
                 leave_method: 'ตามที่บันทึก',
-                usequotaleave: '1',
+                usequotaleave: data.usequotaleave,
             });
             }else{
                 const startDate = new Date(data.leave_date);

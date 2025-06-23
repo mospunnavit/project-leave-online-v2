@@ -10,12 +10,12 @@ export async function GET(req: Request)  {
   
  
     try {
-        const [departments] = await db.query(
+        const [holidays] = await db.query(
             'SELECT * FROM holiday',
            
           );
           
-      return NextResponse.json({departments}, { status: 200 });
+      return NextResponse.json({holidays}, { status: 200 });
     } catch (err) {
         console.log(err)
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

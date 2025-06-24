@@ -16,6 +16,7 @@ export async function GET(req: Request)  {
     const { searchParams } = new URL(req.url);
     const getPage = searchParams.get("page" as string) || '1';
     const getStatus = searchParams.get("status" as string) || '';
+    const getUsername = searchParams.get("username" as string) || '';
     const page = parseInt((getPage as string) || '1');
     const pageSize = 5;
     const offset = (page - 1) * pageSize;
@@ -31,7 +32,10 @@ export async function GET(req: Request)  {
             conditions.push('lf.status = ?');
             params.push(getStatus.trim());
         }
-        
+        if (getUsername.trim() != '') {
+            conditions.push('u.username like ?');
+            params.push(getUsername.trim() + '%');
+        }
         const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
         if(session?.user?.department_name == "HR" || session?.user?.role == "admin"){

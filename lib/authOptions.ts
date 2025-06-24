@@ -53,13 +53,17 @@ export const authOptions = {
 
   session: {
     strategy: "jwt" as SessionStrategy,
+    maxAge: 60
   },
   secret: process.env.NEXTAUTH_SECRET,
 
   pages: {
     signIn: '/login',
     logout: '/login',
+  }, jwt: {
+    maxAge: 60
   },
+  
 
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: User | AdapterUser | Users }) {

@@ -7,7 +7,9 @@ import { Leave } from '@/app/types/formleave';
 import { Loading } from "@/app/components/loading";
 import ModalLayout from "@/app/components/modallayout";
 
-
+interface DepartmentManagement {
+  departments: string;
+}
 
 const approveDashboard = () => {
     const { data: session, status } = useSession();    
@@ -24,7 +26,7 @@ const approveDashboard = () => {
     const [searchUsername, setSearchUsername] = useState('');
     const [rejectedModal, setRejectedModal] = useState(false);
     const [confrimModal, setConfrimModal] = useState(false);
-    const [getdepartmentsManagement, setdepartmentsManagement] = useState<[]>([]);
+    const [getdepartmentsManagement, setdepartmentsManagement] = useState<DepartmentManagement[]>([]);
 
 
  const handleReject = (leave: Leave) => {
@@ -93,7 +95,7 @@ const approveDashboard = () => {
       setLoading(true);
       try {
 
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleaveformbyuser?page=${currentPage}&status=${selectStatus}`);
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleaveformbyuser?page=${currentPage}&status=${selectStatus}&username=${searchUsername}`);
         const data = await res.json();
 
         //data {data: Leave[], length: number}
@@ -112,6 +114,12 @@ const approveDashboard = () => {
         setLoading(false);
       }
     };
+    const handleSearch = async () => {
+      if (searchUsername == '') return;
+      fetchLeaveData();
+      setSearchUsername('');
+      setCurrentPage(1);
+    }
     const fecthDepartmentsManagement = async () => {
         try {
           const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/user/getdepartmentmanagement');
@@ -226,43 +234,111 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
   const adjustedDate = new Date(date.getTime() + (hoursOffset * 60 * 60 * 1000));
   return dateTimeFormatter.format(adjustedDate);
 };
+const [activeButton, setActiveButton] = useState('all'); // 'all', 'pending', 'approved', 'rejected'
 
+// ฟังก์ชันสำหรับจัดการการคลิก
+const handleStatusChange = (status : string, buttonType : string) => {
+  setSelectStatus(status);
+  setCurrentPage(1);
+  setActiveButton(buttonType);
+};
+
+// สร้างข้อมูลปุ่ม
+const buttonData = [
+  {
+    id: 'all',
+    label: 'ทั้งหมด',
+    status: '',
+    icon: '📋'
+  },
+  {
+    id: 'pending',
+    label: 'รอการอนุมัติ',
+    status: roleData?.pendingStatus ?? '',
+    icon: '⏳'
+  },
+  {
+    id: 'approved',
+    label: 'อนุมัติแล้ว',
+    status: roleData?.approvedStatus ?? '',
+    icon: '✅'
+  },
+  {
+    id: 'rejected',
+    label: 'ยกเลิก',
+    status: roleData?.rejectedStatus ?? '',
+    icon: '❌'
+  }
+];
       if (loading && docs.length === 0) return <Loading />;
   return (
     <DashboardLayout title={`หัวหน้าอนุมัติ ${session?.user?.role} ${session?.user?.department}`}>
-      <div className="bg-white p-4 rounded shadow">
+      <div className="flex flex-col bg-white p-4 rounded shadow gap-4">
         {error && <p className="text-red-500">{error}</p>}
-        <div className="flex">
-            <div className="flex w-full text-xl font-bold mb-4 mr-65">  
+        <div className="flex flex-col sm:flex-row">
+            <div className="flex w-full text-xl font-bold mb-4 ">  
             {getdepartmentsManagement.map((item, index) => (
                 <div className = "flex"key={index}>
-                  <p>จัดการแผนก: </p>
-                 <p>{(item.departments || '').split(',').map(dep => dep.trim()).join(' ')}</p>
+                  <p className="truncate">จัดการแผนก: </p>
+                 <p className="truncate">{(item.departments || '').split(',').map(dep => dep.trim()).join(' ')}</p>
                 </div>
               ))}
                             
             </div>
             <div className="flex justify-end w-full gap-2 items-center">
-              <span>ชื่อผู้ใช้</span>
-            <input type="text" placeholder="" className=" border-gray-300 px-2 py-1 rounded "/>
-            <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">ค้นหา</button>
+              <div className="truncate">ชื่อผู้ใช้</div>
+            <input
+              type="text"
+              value={searchUsername}
+              onChange={(e) => setSearchUsername(e.target.value)}
+              placeholder="ค้นหารหัสพนักงาน"
+              className="border border-black shadow-md px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button 
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+             onClick={handleSearch}>ค้นหา</button>
             </div>
         </div>
-       <div className="flex flex-row flex-wrap gap-4 ">
-            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-                <button onClick={() => {setSelectStatus(''); setCurrentPage(1)}}>ทั้งหมด</button>
-            </div>
-            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-     
-                <button onClick={() => {setSelectStatus(roleData?.pendingStatus ?? ''); setCurrentPage(1)}}>รอการอนุมัติ</button>
-            </div>
-            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-            <button onClick={() => {setSelectStatus(roleData?.approvedStatus ?? ''); setCurrentPage(1)}}>อนุมัติแล้ว</button>
-            </div>
-            <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">
-            <button onClick={() => {setSelectStatus(roleData?.rejectedStatus ?? ''); setCurrentPage(1)}}>ยกเลิก</button>
-            </div>
-       </div>
+       <div className="flex flex-row flex-wrap gap-4 mb-6">
+    {buttonData.map((button) => (
+      <div 
+        key={button.id}
+        className="flex flex-col w-full sm:w-[calc(25%-0.75rem)]"
+      >
+        <button
+          onClick={() => handleStatusChange(button.status, button.id)}
+          className={`
+            flex-1 relative p-4 rounded-lg shadow-md transition-all duration-300 ease-in-out
+            transform hover:scale-105 hover:shadow-lg
+            ${activeButton === button.id
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+            }
+            focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50
+          `}
+        >
+          {/* Active indicator */}
+          {activeButton === button.id && (
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+          )}
+          
+          {/* Content */}
+          <div className="flex flex-col items-center space-y-2">
+            <span className="text-2xl">{button.icon}</span>
+            <span className="font-medium text-sm sm:text-base">
+              {button.label}
+            </span>
+          </div>
+          
+          {/* Bottom border for active state */}
+          <div className={`
+            absolute bottom-0 left-0 right-0 h-1 rounded-b-lg transition-all duration-300
+            ${activeButton === button.id ? 'bg-yellow-400' : 'bg-transparent'}
+          `}></div>
+        </button>
+      </div>
+    ))}
+  </div>
        <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full border border-collapse border-gray-300">
               <thead className="bg-gray-100">
@@ -274,7 +350,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                   <th className="border px-4 py-2">ประเภทการลา</th>
                   <th className="border px-4 py-2">วันที่ลา</th>
                   <th className="border px-4 py-2">ช่วงเวลาที่ลา</th>
-                  <th className="border px-4 py-2">เหตุผล</th>
+                  <th className="border px-4 py-2 max-w-[150px] break-words">เหตุผล</th>
                   <th className="border px-4 py-2">เวลาที่ส่งฟอร์ม</th>
                   <th className="border px-4 py-2">สถานะ</th>
                 </tr>
@@ -293,7 +369,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                     </td>
                     <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).split(' ')[0]}</td>
                     <td className="border px-4 py-2">{doc.start_time} - {doc.end_time}</td>
-                    <td className="border px-4 py-2">{doc.reason}</td>
+                    <td className="border px-4 py-2 max-w-[150px] break-words">{doc.reason}</td>
                      <td className="border px-4 py-2">
                         {formatDateWithOffset(doc.submitted_at, 7)}
                       

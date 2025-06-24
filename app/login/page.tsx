@@ -1,7 +1,8 @@
 "use client"
-import React, { useState } from 'react'
+import React, { use, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter,  useSearchParams } from 'next/navigation'
+
 import { signIn } from 'next-auth/react'
 import { getSession } from 'next-auth/react'
 import {Loading } from '@/app/components/loading'
@@ -45,7 +46,14 @@ function LoginPage() {
             console.log(err);
         }
     }
-   
+  const  searchParams    = useSearchParams();
+   useEffect(() => {
+    if (searchParams.get('expired') === '1'){
+        setError("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+        console.log("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+    }
+      
+   }, [searchParams])
 
   return (
             <div className='flex-grow'>

@@ -203,27 +203,7 @@ const approveDashboard = () => {
 };
 
   // Function สำหรับจัดการการเปลี่ยนแปลงข้อมูลใน form แก้ไข
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    if (!currentUser) return;
-    
-    const { name, value } = e.target;
-    
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setcurrentUser({
-        ...currentUser,
-        [parent]: {
-          ...currentUser[parent as keyof Users] as object,
-          [child]: value
-        }
-      });
-    } else {
-      setcurrentUser({
-        ...currentUser,
-        [name]: value
-      });
-    }
-  };
+
 
    const fetchUserData = async () => {
       setLoading(true);

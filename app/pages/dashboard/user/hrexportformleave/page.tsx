@@ -7,7 +7,6 @@ import { Leave } from '@/app/types/formleave';
 import { Loading } from "@/app/components/loading";
 import ModalLayout from "@/app/components/modallayout";
 import { Download, Loader2 } from 'lucide-react';
-import { Leavetypes } from "@/app/types/leavetypes";
 import { X } from "lucide-react";
 
 const approveDashboard = () => {
@@ -28,19 +27,10 @@ const approveDashboard = () => {
     const [from_date, setFrom_date] = useState('');
     const [to_date, setTo_date] = useState('');
     const [isExporting, setIsExporting] = useState(false);
-    const [getLeaveType, setGetLeaveType] = useState<Leavetypes[]>([]);
     
     const [detailsModal, setDetailsModal] = useState(false);
 
-    const fetchLeaveType = async () => {
-    try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v2/shared/getleavetypes");
-      const data = await res.json();
-      setGetLeaveType(data.dataleavetypes);
-    } catch (error) {
-      console.error("Error fetching leave types:", error);
-    }
-  }
+   
 
   const validateDateRange = () => {
   
@@ -98,9 +88,7 @@ const approveDashboard = () => {
 
     fetchLeaveData();
   }, [currentPage, selectStatus, selectedMonth]);
-  useEffect(() => {
-    fetchLeaveType();
-  }, []);
+
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);

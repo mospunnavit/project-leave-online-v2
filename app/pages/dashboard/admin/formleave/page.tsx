@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Loading } from "@/app/components/loading";
 import { Leave } from "@/app/types/formleave";
+import { Leavetypes } from "@/app/types/leavetypes";
 
-
-const approveDashboard = () => {
+const adminformDashboard = () => {
     const [docs, setDocs] = useState<Leave[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
@@ -25,6 +25,8 @@ const approveDashboard = () => {
     const [password, setPassword] = useState<string>('');
     const [retypepassword, setRetypePassword] = useState<string>('');
     const [leaveFile, setLeaveFile] = useState<File>();
+    const [getLeaveType, setGetLeaveType] = useState<Leavetypes[]>([]);
+    
 
 const openImageModal = (imagePath : string) => {
   setSelectedImg(imagePath);
@@ -56,9 +58,15 @@ const closeImageModal = () => {
       .toISOString()
       .split('T')[0]
   : '';
+  const adjustedEndLeaveDate = leave.end_leave_date
+  ? new Date(new Date(leave.end_leave_date).getTime() + 7 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0]
+  : '';
   setcurrentLeave({
   ...leave,
   leave_date: adjustedLeaveDate,
+  end_leave_date: adjustedEndLeaveDate
 });
   setIsEditModalOpen(true);
  }
@@ -70,9 +78,15 @@ const closeImageModal = () => {
       .toISOString()
       .split('T')[0]
   : '';
+  const adjustedEndLeaveDate = leave.end_leave_date
+  ? new Date(new Date(leave.leave_date).getTime() + 7 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0]
+  : '';
   setcurrentLeave({
   ...leave,
   leave_date: adjustedLeaveDate,
+  end_leave_date: adjustedEndLeaveDate,
 });
     setIsDeleteModalOpen(true);
   };
@@ -137,12 +151,15 @@ const closeImageModal = () => {
       body: JSON.stringify({
         id: currentLeave.id,
         leave_date: currentLeave.leave_date.slice(0, 10),
+        end_leave_date: currentLeave.end_leave_date.slice(0, 10) || null,
         start_time: currentLeave.start_time,
         end_time: currentLeave.end_time,
         reason: currentLeave.reason,
-        leave_type: currentLeave.leave_type,
+        lt_code: currentLeave.lt_code,
         status: currentLeave.status,
-        image_filename: currentLeave.image_filename
+        image_filename: currentLeave.image_filename,
+        usequotaleave: currentLeave.usequotaleave
+        
         // สามารถเพิ่ม field อื่นๆ จาก currentUser ที่นี่ถ้าต้องการ
       })
     });
@@ -150,7 +167,11 @@ const closeImageModal = () => {
     // ตรวจสอบว่า response เป็น OK หรือไม่
     if (!response.ok) {
       setError(error);
-      throw new Error(`API responded with status: ${response.status}`);
+      if (response.status === 400) {
+        setError('กรุณากรอกข้อมูลให้ครบเพื่่อทำการแก้ไข');
+        return
+      }
+      throw new Error(`API responded with status: ${response.status} `);
     }
 
     // แปลง response เป็น JSON
@@ -163,6 +184,7 @@ const closeImageModal = () => {
     // toast.success('บันทึกการแก้ไขเรียบร้อย');
     
   } catch (error) {
+    
     setError('API error: ' + (error || 'Unknown error'));
     
     // อาจแสดง toast หรือการแจ้งเตือนเมื่อเกิดข้อผิดพลาด
@@ -175,7 +197,7 @@ const closeImageModal = () => {
   }
 };
 const handleUploadFile = async (leave: Leave, leaveFile: File) => {
-  if (leave.leave_type === "มีใบรับรองแพทย์" && leaveFile !== null) {
+  if (leave.lt_name === "มีใบรับรองแพทย์" && leaveFile !== null) {
     console.log("in");
     
     if (leaveFile.size > 0) {
@@ -235,11 +257,19 @@ const handleUploadFile = async (leave: Leave, leaveFile: File) => {
     }
   }
 };
-
+ const fetchLeaveType = async () => {
+    try {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/v2/shared/getleavetypes");
+      const data = await res.json();
+      setGetLeaveType(data.dataleavetypes);
+    } catch (error) {
+      console.error("Error fetching leave types:", error);
+    }
+  }
 // เพิ่ม useEffect เพื่อดู state changes
 useEffect(() => {
-  console.log('Updated image_filename:', currentLeave?.image_filename);
-}, [currentLeave?.image_filename]);
+  fetchLeaveType();
+}, []);
   // Function สำหรับจัดการการเปลี่ยนแปลงข้อมูลใน form แก้ไข
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     if (!currentLeave) return;
@@ -272,7 +302,7 @@ useEffect(() => {
         if (res.ok){ 
           setDocs(data.dataleave);
 
-          setHasMore(data.dataleave.length <5);
+          setHasMore(data.dataleave.length <10);
           console.log(hasMore)
           console.log(data);
         }else{
@@ -354,13 +384,15 @@ useEffect(() => {
                      <td className="border px-4 py-2">{doc.id}</td>
                     <td className="border px-4 py-2">{doc.username}</td>
                     <td className="border px-4 py-2">{doc.firstname} {doc.lastname}</td>
-                    <td className="border px-4 py-2">{doc.department}</td>
-                    <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).slice(0, 10)}</td>
+                    <td className="border px-4 py-2">{doc.department_name}</td>
+                    <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).slice(0, 10)}
+                       {doc.end_leave_date && ` - ${formatDateWithOffset(doc.end_leave_date, 7).slice(0, 10)}`}
+                    </td>
                     <td className="border px-4 py-2">{doc.start_time.slice(0, 5)} - {doc.end_time.slice(0, 5)}</td>
                     
 
-                    <td className="border px-4 py-2">{doc.leave_type}
-                      {doc.leave_type === "มีใบรับรองแพทย์" && <img src= {`/uploads/${doc.image_filename}`} 
+                    <td className="border px-4 py-2">{doc.lt_name}
+                      {doc.lt_name === "มีใบรับรองแพทย์" && <img src= {`/uploads/${doc.image_filename}`} 
                       onClick={() => openImageModal(doc.image_filename)
                       }
                       alt="Uploaded File" className="w-10 h-10" />}
@@ -459,12 +491,24 @@ useEffect(() => {
               type="date"
               name="leave_date"
                value={
-    currentLeave.leave_date
-  }       
+                    currentLeave.leave_date
+                  }       
               onChange={handleInputChange}
               className="w-full p-2 border rounded"
             />
           </div>
+          {currentLeave.end_leave_date && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ถึงวันที่</label>
+              <input
+                type="date"
+                name="end_leave_date"
+                value={currentLeave.end_leave_date}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+              />
+            </div>
+          )}
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">เหตุผลการลา</label>
@@ -482,21 +526,15 @@ useEffect(() => {
             <label className="block text-sm font-medium text-gray-700 mb-1">ประเภทการลา</label>
              <select
               name="leave_type"
-              value={currentLeave.leave_type || ''}
+              value={currentLeave.lt_code || ''}
               onChange={handleInputChange}
               className="w-full p-2 border rounded">
               <option value="" disabled hidden>-- กรุณาเลือกประเภทการลา --</option>
-            <optgroup label="ลากิจ">
-              <option value="ลากิจ">ลากิจ</option>
-              <option value="ลากิจพิเศษ">ลากิจพิเศษ</option>
-            </optgroup>
-            <optgroup label="ลาป่วย">
-              <option value="มีใบรับรองแพทย์">มีใบรับรองแพทย์</option>
-              <option value="ไม่มีใบรับรองแพทย์">ไม่มีใบรับรองแพทย์</option>
-            </optgroup>
-            <optgroup label="พักร้อน">
-              <option value="พักร้อน">พักร้อน</option>
-            </optgroup>
+            {getLeaveType.map((type) => (
+                  <option key={type.lt_name} value={type.lt_code}>
+                    {type.lt_name}
+                  </option>
+                ))}
           </select>
           </div>
           
@@ -518,9 +556,19 @@ useEffect(() => {
               <option value="approved">approved</option>
             </select>
           </div>
-          
+           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">จำนวนที่ลา</label>
+            <input
+              type="text"
+              name="usequotaleave"
+              value={currentLeave.usequotaleave || ''}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded"
+              placeholder="จำนวนที่ลา"
+            />
+          </div>
           {/* แสดงส่วนอัปโหลดไฟล์เฉพาะเมื่อเลือก "มีใบรับรองแพทย์" */}
-         {currentLeave.leave_type === "มีใบรับรองแพทย์" && (
+         {currentLeave.lt_name === "มีใบรับรองแพทย์" && (
     <>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">เลือกไฟล์</label>
@@ -728,4 +776,4 @@ useEffect(() => {
   );
 };
 
-export default approveDashboard;
+export default adminformDashboard;

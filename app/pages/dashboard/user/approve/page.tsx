@@ -24,7 +24,7 @@ const approveDashboard = () => {
     const [searchUsername, setSearchUsername] = useState('');
     const [rejectedModal, setRejectedModal] = useState(false);
     const [confrimModal, setConfrimModal] = useState(false);
-
+    const [getdepartmentsManagement, setdepartmentsManagement] = useState<[]>([]);
 
 
  const handleReject = (leave: Leave) => {
@@ -112,10 +112,26 @@ const approveDashboard = () => {
         setLoading(false);
       }
     };
+    const fecthDepartmentsManagement = async () => {
+        try {
+          const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/user/getdepartmentmanagement');
+          const data = await res.json();
+          if (res.ok) {
+            setdepartmentsManagement(data.departmentsManagement || []);
+            console.log("sss", data.departmentsManagement);
+          } else {
+            setError('API error: ' + (data.error || 'Unknown error'));
+          }
+        } catch (err) {
+          setError('API error: ' + (err || 'Unknown error'));
+        }
+    }
  useEffect(() => {
 
     fetchLeaveData();
+    fecthDepartmentsManagement();
     console.log(docs);
+    console.log(getdepartmentsManagement);
   }, [currentPage, selectStatus]);
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -217,8 +233,20 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
       <div className="bg-white p-4 rounded shadow">
         {error && <p className="text-red-500">{error}</p>}
         <div className="flex">
-            <div className="flex w-full text-xl font-bold mb-4 mr-65">  วัน ณ ปัจจุบัน {today} </div>
-            <div> <input type="text" placeholder=""/></div>
+            <div className="flex w-full text-xl font-bold mb-4 mr-65">  
+            {getdepartmentsManagement.map((item, index) => (
+                <div className = "flex"key={index}>
+                  <p>จัดการแผนก: </p>
+                 <p>{(item.departments || '').split(',').map(dep => dep.trim()).join(' ')}</p>
+                </div>
+              ))}
+                            
+            </div>
+            <div className="flex justify-end w-full gap-2 items-center">
+              <span>ชื่อผู้ใช้</span>
+            <input type="text" placeholder="" className=" border-gray-300 px-2 py-1 rounded "/>
+            <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">ค้นหา</button>
+            </div>
         </div>
        <div className="flex flex-row flex-wrap gap-4 ">
             <div className="flex flex-col w-full sm:w-[calc(25%-0.75rem)] bg-white p-4 rounded shadow">

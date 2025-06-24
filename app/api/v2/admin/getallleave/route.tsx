@@ -13,7 +13,7 @@ export async function GET(req: Request)  {
     const to_date = searchParams.get("to_date" as string) || '';
     const status = searchParams.get("status" as string) || '';
     const page = parseInt((getPage as string) || '1');
-    const pageSize = 5;
+    const pageSize = 10;
     const offset = (page - 1) * pageSize;
 
     try {

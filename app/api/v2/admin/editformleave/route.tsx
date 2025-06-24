@@ -11,15 +11,13 @@ export async function PUT(req: Request) {
     //     return NextResponse.json({ error: 'login' }, { status: 400 });
     // }
     
-    const { id, leave_date, start_time, end_time, reason , leave_type, status, image_filename } = await req.json();
-    console.log("imgae_filename", image_filename)
+    const { id, leave_date, end_leave_date, start_time, end_time, reason , lt_code, status, image_filename, usequotaleave} = await req.json();
     // ตรวจสอบว่า id และ status ถูกส่งมาหรือไม่
-    if (!id || !leave_date || !start_time || !end_time || !reason || !leave_type || !status) {
+    if (!id || !leave_date || !start_time || !end_time || !reason || !lt_code || !status) {
       return NextResponse.json({ error: 'Missing inputs' }, { status: 400 });
     }
-
-    // อัปเดต status ในฐานข้อมูล
-    const [result] = await db.query('UPDATE leaveform SET leave_date = ?, start_time = ?, end_time = ?, reason = ?, leave_type = ?, status = ?, image_filename = ? WHERE id = ?', [leave_date, start_time, end_time, reason, leave_type, status, image_filename ,id]);
+   // อัปเดต status ในฐานข้อมูล
+    const [result] = await db.query('UPDATE leaveform SET leave_date = ?, end_leave_date = ?,start_time = ?, end_time = ?, reason = ?, lt_code = ?, status = ?, image_filename = ?, usequotaleave = ? WHERE id = ?', [leave_date, end_leave_date,start_time, end_time, reason, lt_code, status, image_filename , usequotaleave,id]);
 
     // ตรวจสอบว่ามีการอัปเดตจริงหรือไม่
     if ((result as any).affectedRows === 0) {

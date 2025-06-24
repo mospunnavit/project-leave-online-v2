@@ -114,7 +114,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
        <div className="flex flex-row flex-wrap gap-4 ">
           <div className="flex flex-col w-full sm:w-[calc(50%-0.5rem)] bg-white p-4 rounded shadow">
               <label htmlFor="">ชื่อ: {session?.user?.firstname}  {session?.user?.lastname}</label>
-              <label htmlFor="">แผนก: {session?.user?.department}</label>
+              <label htmlFor="">แผนก: {session?.user?.department_name}</label>
           </div>
           <div className="flex flex-col w-full sm:w-[calc(50%-0.5rem)] bg-white p-4 rounded shadow">ข้อมูลการประเภทการลา
               <table className="min-w-full border border-collapse border-gray-300">
@@ -173,7 +173,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                 {docs.map((doc, index) => (
                   <tr key={index}>
                     <td className="border px-4 py-2">{doc.lt_name}
-                      {doc.leave_type === "มีใบรับรองแพทย์" && <img src= {`/uploads/${doc.image_filename}`} 
+                      {doc.lt_name === "มีใบรับรองแพทย์" && <img src= {`/uploads/${doc.image_filename}`} 
                       onClick={() => openImageModal(doc.image_filename)
                       }
                       alt="Uploaded File" className="w-10 h-10" />}
@@ -188,7 +188,11 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                     </td>
                     <td className="border px-4 py-2">
                       {renderStatus(doc.status)}
-                    </td>
+                  {doc.exported === 1 ? (
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">นำออกแล้ว</span>
+                  ) : (
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-gray-200 text-gray-600">ยังไม่ได้นำออก</span>
+                  )}                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -200,7 +204,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
             {docs.map((doc, index) => (
               <div key={index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">{doc.leave_type}</span>
+                  <span className="font-medium">{doc.lt_name}</span>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
                     doc.status === 'อนุมัติ' ? 'bg-green-100 text-green-800' : 
                     doc.status === 'รออนุมัติ' ? 'bg-yellow-100 text-yellow-800' : 

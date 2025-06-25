@@ -6,7 +6,7 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const path = req.nextUrl.pathname; 
   const now = Math.floor(Date.now() / 1000);
-
+  const apiPath = '/api/v2';
   // ถ้าไม่มี token ให้ redirect ไป /login พร้อม query expired=1
   if (!token) {
     if (path !== '/login') { // ป้องกัน redirect loop
@@ -33,12 +33,12 @@ export async function middleware(req: NextRequest) {
   }
 
   // เช็ค role สำหรับ admin path
-  if (path.startsWith('/pages/dashboard/admin') && token.role !== 'admin') {
+  if ((path.startsWith('/pages/dashboard/admin') || path.startsWith(apiPath + '/admin')) && token.role !== 'admin' && token.role !== 'hr') {
     return NextResponse.redirect(new URL('/unauthorized', req.url));
   }
 
   // เช็ค role สำหรับ user path — อนุญาตหลาย role ที่กำหนด
-  if (path.startsWith('/pages/dashboard/user') && !(token.role === 'user' || token.role === 'head' || token.role === 'manager' || token.role === 'hr')) {
+  if (path.startsWith('/pages/dashboard/user') && !(token.role === 'user' || token.role === 'head' || token.role === 'manager' || token.role === 'hr' || token.role === 'admin')) {
     return NextResponse.redirect(new URL('/unauthorized', req.url));
   }
 
@@ -46,5 +46,8 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|favicon.ico).*)'],
+  matcher: [
+    '/((?!api/auth|_next|favicon.ico).*)', // ✅ ยกเว้น /api/auth/*
+    '/api/v2/:path*',                      // ✅ ตรวจเฉพาะ /api/v2/*
+  ],
 };

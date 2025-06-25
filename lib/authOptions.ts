@@ -53,7 +53,7 @@ export const authOptions = {
 
   session: {
     strategy: "jwt" as SessionStrategy,
-    maxAge: 60
+    maxAge: 60  * 30
   },
   secret: process.env.NEXTAUTH_SECRET,
 
@@ -61,7 +61,7 @@ export const authOptions = {
     signIn: '/login',
     logout: '/login',
   }, jwt: {
-    maxAge: 60
+    maxAge: 60  * 30
   },
   
 

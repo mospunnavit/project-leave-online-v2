@@ -311,7 +311,7 @@ const buttonData = [
             flex-1 relative p-4 rounded-lg shadow-md transition-all duration-300 ease-in-out
             transform hover:scale-105 hover:shadow-lg
             ${activeButton === button.id
-              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-black hover:shadow-lg scale-105'
               : 'bg-white text-gray-700 hover:bg-gray-50'
             }
             focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50

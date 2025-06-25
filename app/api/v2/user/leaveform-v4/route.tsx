@@ -3,6 +3,8 @@ import db from '@/lib/db';
 import { authOptions } from '@/lib/authOptions';
 import { getServerSession } from 'next-auth';
 import { RowDataPacket } from 'mysql2';
+import getWorkDuration  from "@/lib/calworkduration";
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   
@@ -25,6 +27,7 @@ export async function POST(req: Request) {
     }  = await req.json();
 
     // ตรวจสอบค่าว่าง
+    console.log(leave_date, start_time, end_time, reason, leave_type, leaveDuration, leaveShift, useLeaveQuota, image_filename);
     if (!leave_date || !start_time || !end_time || !reason || !leave_type || !leaveDuration || !leaveShift || !useLeaveQuota) {
       return NextResponse.json({ error: 'Please fill in all required fields.' }, { status: 400 });
     }
@@ -43,10 +46,10 @@ export async function POST(req: Request) {
       status = "waiting for head approval";
     }
   
-    console.log("end leave", end_leave_date);
-    // หากลาต่อเนื่องคำนวณจำนวนวันใหม่
-    if (end_leave_date != null && end_leave_date != undefined) {
-     
+    console.log("end leave ++++ ", typeof(end_leave_date));
+    // หากลาต่อเนื่องต้องมีค่า end_leave_date เพื่อคำนวณโควต้าใหม่จำนวนวันใหม่
+    if (end_leave_date){
+        console.log("end_leave_date", end_leave_date);
         const start_leave_date = new Date(leave_date);
         const end_leave_date2 = new Date(end_leave_date);
         const diffTime = (end_leave_date2.getTime() - (start_leave_date.getTime() - 86400000));
@@ -70,6 +73,7 @@ export async function POST(req: Request) {
             if(continue_leave_useQuota < 0 || continue_leave_useQuota == 0){
               return NextResponse.json({ error: 'ช่วงที่เลือกเป็นวันหยุดของบริษัททั้งหมด' }, { status: 400 });
             }
+          
              await db.query(
               `INSERT INTO leaveform
               (u_id, leave_date, end_leave_date,start_time, end_time, reason,lt_code, lc_code, leaveshift, usequotaleave, status, image_filename) 

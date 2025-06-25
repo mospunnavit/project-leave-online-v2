@@ -94,8 +94,10 @@ useEffect(() => {
   if (leaveShift === "กะเช้า") {
     setUseLeaveQuota(getWorkDuration(start_time, end_time, "12:00", "13:00"));
   } else if (leaveShift === "กะดึก") {
+    console.log("start_time: ", start_time);
     setUseLeaveQuota(getWorkDuration(start_time, end_time, "00:00", "01:00"));
   }
+  console.log("useLeaveQuota: ", useLeaveQuota);
 }, [start_time, end_time, leaveShift, leaveDuration]);
 
 
@@ -265,13 +267,12 @@ const insertComponentFileupload = () => {
   }
 
   useEffect(() => {
-    if(leave_type == "020007"){
-      setContinue_leave(true);
-    }else{
-      setContinue_leave(false);
+    setEnd_leave_date('');
+    setLeave_date('');
+    if(continue_leave == false){
       setEnd_leave_date('');
     }
-  }, [leave_type]);
+  }, [leave_type, continue_leave]);
   return (
     <DashboardLayout title="ฟอร์มการลา">
       <div className="bg-white p-4 rounded shadow">

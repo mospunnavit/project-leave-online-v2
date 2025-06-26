@@ -41,54 +41,70 @@ const approveDashboard = () => {
    };
 
  const getRoleSpecificData = () => {
-        if (!session?.user?.role) return { title: "อนุมัติการลา", statuses: [] };
+    if (!session?.user?.role) return { title: "อนุมัติการลา", statuses: [] };
 
-        if (session.user.department === 'hr') {
-             return {
-                    title: "HR อนุมัติ",
-                    apiPath: "/api/user/getleavesforhr",
-                    pendingStatus: "waiting for hr approval",
-                    approvedStatus: "approved",
-                    rejectedStatus: "rejected by hr",
-                 
-                };
+    if (session.user.department_name === 'HR') {
+        if (session.user.role === 'hr' || session.user.role === 'user') {
+            return {
+                title: "HR อนุมัติ",
+                apiPath: "/api/user/getleavesforhr",
+                pendingStatus: "waiting for hr approval",
+                approvedStatus: "approved",
+                rejectedStatus: "rejected by hr",
+                hrapproval: true // แก้ไข typo จาก hraprroval เป็น hrapproval
+            };
+        } else if (session.user.role === 'manager') {
+            return {
+                title: "ผู้จัดการอนุมัติ",
+                apiPath: "/api/user/getleavesformanager",
+                pendingStatus: "waiting for manager approval",
+                approvedStatus: "waiting for hr approval",
+                rejectedStatus: "rejected by manager",
+                hrapproval: true
+            };
+        } else if (session.user.role === 'head') {
+            return {
+                title: "หัวหน้าแผนกอนุมัติ",
+                apiPath: "/api/user/getleavesbydepartment",
+                pendingStatus: "waiting for head approval",
+                approvedStatus: "waiting for manager approval",
+                rejectedStatus: "rejected by head",
+                hrapproval: true
+            };
         }
-        switch (session.user.role) {
-            case 'head':
-                return {
-                    title: "หัวหน้าแผนกอนุมัติ",
-                    pendingStatus: "waiting for head approval",
-                    approvedStatus: "waiting for manager approval",
-                    rejectedStatus: "rejected by head",
-                  
-                    
-                };
-            case 'manager':
-                return {
-                    title: "ผู้จัดการอนุมัติ",
-                    pendingStatus: "waiting for manager approval",
-                    approvedStatus: "waiting for hr approval",
-                    rejectedStatus: "rejected by manager",
-                  
-                    
-                };
-            case 'hr':
-                return {
-                    title: "HR อนุมัติ",
-                    pendingStatus: "waiting for hr approval",
-                    approvedStatus: "approved",
-                    rejectedStatus: "rejected by hr",
-                    
-                };
-            default:
-                return {
-                    title: "อนุมัติการลา",
-                    pendingStatus: "pending",
-                    approvedStatus: "approved",
-                    rejectedStatus: "rejected"
-                };
-        }
-    };
+    }
+    
+    switch (session.user.role) {
+        case 'head':
+            return {
+                title: "หัวหน้าแผนกอนุมัติ",
+                pendingStatus: "waiting for head approval",
+                approvedStatus: "waiting for manager approval",
+                rejectedStatus: "rejected by head",
+            };
+        case 'manager':
+            return {
+                title: "ผู้จัดการอนุมัติ",
+                pendingStatus: "waiting for manager approval",
+                approvedStatus: "waiting for hr approval",
+                rejectedStatus: "rejected by manager",
+            };
+        case 'hr':
+            return {
+                title: "HR อนุมัติ",
+                pendingStatus: "waiting for hr approval",
+                approvedStatus: "approved",
+                rejectedStatus: "rejected by hr",
+            };
+        default:
+            return {
+                title: "อนุมัติการลา",
+                pendingStatus: "pending",
+                approvedStatus: "approved",
+                rejectedStatus: "rejected"
+            };
+    }
+};
     const roleData = getRoleSpecificData();
     console.log(roleData.pendingStatus, roleData.approvedStatus, roleData.rejectedStatus);
   const fetchLeaveData = async () => {
@@ -135,11 +151,8 @@ const approveDashboard = () => {
         }
     }
  useEffect(() => {
-
     fetchLeaveData();
     fecthDepartmentsManagement();
-    console.log(docs);
-    console.log(getdepartmentsManagement);
   }, [currentPage, selectStatus]);
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -190,6 +203,7 @@ const closeImageModal = () => {
 
 const handleChangeStatus = async (id: number, newStatus: string) => {
   try {
+   
     const response = await fetch('/api/v2/user/editstatusbyuser', {
       method: 'POST',
       headers: {
@@ -217,7 +231,35 @@ const handleChangeStatus = async (id: number, newStatus: string) => {
   }
 };
 
+const aprrovebyhr = async (id: number ) => {
+  try {
+   
+    const response = await fetch('/api/v2/user/approveleaveformbyhr', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id }),
+    });
 
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Error:', data.error);
+      setError(data.error);
+      return;
+    }
+    
+    if(response.ok){
+      console.log('Status updated successfully');
+      fetchLeaveData();
+    }
+    // คุณอาจเรียก fetch ใหม่ หรือรีเฟรชข้อมูลที่แสดง
+  } catch (err) {
+    console.error(err);
+   
+  }
+};
 const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
   timeZone: 'Asia/Bangkok',
   day: 'numeric',
@@ -380,21 +422,38 @@ const buttonData = [
                         {renderStatus(doc.status)}
                       </div>
                       <div >
-                         {doc.status === roleData?.pendingStatus && (
-                        <>
-                            <button
-                            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                            onClick={() => handleConfrim(doc)}
-                            >
-                            อนุมัติ
-                            </button>
-                            <button
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
-                            onClick={() => handleReject(doc)}
-                            >
-                            ไม่อนุมัติ
-                            </button>
-                        </>
+                      {(doc.status === roleData?.pendingStatus 
+                          ) && (
+                            <>
+                                <button
+                                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                    onClick={() => handleConfrim(doc)}
+                                >
+                                    อนุมัติ
+                                </button>
+                                <button
+                                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
+                                    onClick={() => handleReject(doc)}
+                                >
+                                    ไม่อนุมัติ
+                                </button>
+                            </>
+                        )}
+                        {(roleData?.hrapproval && doc.status === "waiting for hr approval") && (
+                            <>
+                                <button
+                                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                    onClick={() => handleConfrim(doc)}
+                                >
+                                    อนุมัติ
+                                </button>
+                                <button
+                                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
+                                    onClick={() => handleReject(doc)}
+                                >
+                                    ไม่อนุมัติ
+                                </button>
+                            </>
                         )}
                       </div>
                      </div>
@@ -490,6 +549,7 @@ const buttonData = [
   <ModalLayout onClose={() => setRejectedModal(false)}>
     <h2 className="text-lg font-semibold mb-4">ไม่อนุมัติการลาของ {currentLeave.username}  {currentLeave.firstname} {currentLeave.lastname}</h2>
     <div className="flex justify-end gap-2">
+       
       <button
         onClick={() => {
           handleChangeStatus(currentLeave.id, roleData?.rejectedStatus ?? '');
@@ -499,6 +559,7 @@ const buttonData = [
       >
         ยืนยัน
       </button>
+
       <button
         onClick={() => setRejectedModal(false)}
         className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
@@ -512,15 +573,30 @@ const buttonData = [
 <ModalLayout onClose={() => setConfrimModal(false)}>
     <h2 className="text-lg font-semibold mb-4">ยืนยันการลาของ {currentLeave.username} {currentLeave.firstname} {currentLeave.lastname}</h2>
     <div className="flex justify-end gap-2">
-      <button
-        onClick={() => {
-          handleChangeStatus(currentLeave.id, roleData?.approvedStatus ?? '');
-          setConfrimModal(false);
-        }}
-        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-      >
-        ยืนยัน
-      </button>
+        {(roleData?.hrapproval && currentLeave.status === "waiting for hr approval") ? (
+  <>
+    <button
+      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+       onClick={() => {
+      handleChangeStatus(currentLeave.id, 'approved');
+      setConfrimModal(false);
+    }}
+    >
+      อนุมัติ
+    </button>
+  </>
+) : (
+  <button
+    onClick={() => {
+      handleChangeStatus(currentLeave.id, roleData?.approvedStatus ?? '');
+      setConfrimModal(false);
+    }}
+    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+  >
+    ยืนยัน
+  </button>
+)}
+      
       <button
         onClick={() => setConfrimModal(false)}
         className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"

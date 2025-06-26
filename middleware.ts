@@ -33,7 +33,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // เช็ค role สำหรับ admin path
-  if ((path.startsWith('/pages/dashboard/admin') || path.startsWith(apiPath + '/admin')) && token.role !== 'admin' && token.role !== 'hr') {
+  if ((path.startsWith('/pages/dashboard/admin') || path.startsWith(apiPath + '/admin')) && token.role !== 'admin') {
+    console.log(apiPath + '/admin');
+    console.log(token.role);
     return NextResponse.redirect(new URL('/unauthorized', req.url));
   }
 

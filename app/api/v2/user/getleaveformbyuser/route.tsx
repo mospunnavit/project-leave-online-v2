@@ -42,7 +42,7 @@ export async function GET(req: Request)  {
             console.log("user department name in hr",session?.user?.department_name);
             const [data] = await db.query(
                 ` 
-                SELECT lf.id ,lf.u_id, lf.leave_date, lf.start_time, lf.end_time, lf.reason, lf.status, lf.image_filename, 
+                SELECT lf.id ,lf.u_id, lf.leave_date, lf.end_leave_date, lf.start_time, lf.end_time, lf.reason, lf.status, lf.image_filename, 
                 lf.submitted_at , u.username ,u.firstname, u.lastname, u.department, d.department_name, lf.lt_code, lt_name
                 FROM leaveform lf 
                 LEFT JOIN users u ON lf.u_id = u.id
@@ -58,7 +58,7 @@ export async function GET(req: Request)  {
             console.log("user department name in 2",session?.user?.department, user_id);
              const [data] = await db.query(
                         ` 
-                        SELECT lf.id, lf.u_id, lf.leave_date, lf.start_time, lf.end_time, lf.reason, lf.status, lf.image_filename, 
+                        SELECT lf.id, lf.u_id, lf.leave_date, lf.end_leave_date, lf.start_time, lf.end_time, lf.reason, lf.status, lf.image_filename, 
                         lf.submitted_at , u.username ,u.firstname, u.lastname, u.department, d.department_name, lf.lt_code, lt_name
                         FROM leaveform lf 
                         LEFT JOIN users u ON lf.u_id = u.id

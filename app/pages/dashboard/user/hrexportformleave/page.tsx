@@ -258,7 +258,7 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
             {docs.map((doc, index) => (
               <div key={index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">{doc.selectedLeavetype}</span>
+                  <span className="font-medium">{doc.lc_name}</span>
                   <span className="px-2 py-1 rounded text-xs font-medium 
                   bg-green-100 text-green-800">
                     {doc.status}
@@ -268,11 +268,11 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-gray-500">วันที่ลา</p>
-                    <p>{doc.leaveDays}</p>
+                    <p>{doc.leave_date}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">ช่วงเวลา</p>
-                    <p>{doc.periodTime}</p>
+                    <p>{doc.start_time} - {doc.end_time}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-500">เหตุผล</p>
@@ -280,7 +280,7 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-500">เวลาที่ส่งฟอร์ม</p>
-                    <p>{doc.createdAt}</p>
+                    <p>{doc.submitted_at}</p>
                   </div>
                 </div>
               </div>

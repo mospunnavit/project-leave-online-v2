@@ -231,35 +231,6 @@ const handleChangeStatus = async (id: number, newStatus: string) => {
   }
 };
 
-const aprrovebyhr = async (id: number ) => {
-  try {
-   
-    const response = await fetch('/api/v2/user/approveleaveformbyhr', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Error:', data.error);
-      setError(data.error);
-      return;
-    }
-    
-    if(response.ok){
-      console.log('Status updated successfully');
-      fetchLeaveData();
-    }
-    // คุณอาจเรียก fetch ใหม่ หรือรีเฟรชข้อมูลที่แสดง
-  } catch (err) {
-    console.error(err);
-   
-  }
-};
 const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
   timeZone: 'Asia/Bangkok',
   day: 'numeric',
@@ -319,6 +290,7 @@ const buttonData = [
         {error && <p className="text-red-500">{error}</p>}
         <div className="flex flex-col sm:flex-row">
             <div className="flex w-full text-xl font-bold mb-4 ">  
+              
             {getdepartmentsManagement.map((item, index) => (
                 <div className = "flex"key={index}>
                   <p className="truncate">จัดการแผนก: </p>
@@ -409,7 +381,8 @@ const buttonData = [
                       }
                       alt="Uploaded File" className="w-10 h-10" />}
                     </td>
-                    <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).split(' ')[0]}</td>
+                    <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).slice(0, 10)}
+                       {doc.end_leave_date && ` - ${formatDateWithOffset(doc.end_leave_date, 7).slice(0, 10)}`}</td>
                     <td className="border px-4 py-2">{doc.start_time} - {doc.end_time}</td>
                     <td className="border px-4 py-2 max-w-[150px] break-words">{doc.reason}</td>
                      <td className="border px-4 py-2">
@@ -469,7 +442,7 @@ const buttonData = [
             {docs.map((doc, index) => (
               <div key={index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">{doc.selectedLeavetype}</span>
+                  <span className="font-medium">{doc.lt_name}</span>
                   <span className="px-2 py-1 rounded text-xs font-medium 
                   bg-green-100 text-green-800">
                     {doc.status}
@@ -479,11 +452,12 @@ const buttonData = [
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-gray-500">วันที่ลา</p>
-                    <p>{doc.leaveDays}</p>
+                    <p>{formatDateWithOffset(doc.leave_date, 7).slice(0, 10)}
+                       {doc.end_leave_date && ` - ${formatDateWithOffset(doc.end_leave_date, 7).slice(0, 10)}`}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">ช่วงเวลา</p>
-                    <p>{doc.periodTime}</p>
+                    <p>{doc.start_time} - {doc.end_time}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-500">เหตุผล</p>
@@ -491,7 +465,42 @@ const buttonData = [
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-500">เวลาที่ส่งฟอร์ม</p>
-                    <p>{doc.createdAt}</p>
+                    <p> {formatDateWithOffset(doc.submitted_at, 7)}</p>
+                  </div>
+                  <div>
+                     {(doc.status === roleData?.pendingStatus 
+                          ) && (
+                            <>
+                                <button
+                                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                    onClick={() => handleConfrim(doc)}
+                                >
+                                    อนุมัติ
+                                </button>
+                                <button
+                                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
+                                    onClick={() => handleReject(doc)}
+                                >
+                                    ไม่อนุมัติ
+                                </button>
+                            </>
+                        )}
+                        {(roleData?.hrapproval && doc.status === "waiting for hr approval") && (
+                            <>
+                                <button
+                                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                    onClick={() => handleConfrim(doc)}
+                                >
+                                    อนุมัติ
+                                </button>
+                                <button
+                                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
+                                    onClick={() => handleReject(doc)}
+                                >
+                                    ไม่อนุมัติ
+                                </button>
+                            </>
+                        )}
                   </div>
                 </div>
               </div>

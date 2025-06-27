@@ -323,7 +323,7 @@ const HolidayDashboard = () => {
         {/* Mobile Cards */}
         <div className="md:hidden space-y-4">
           {currentItems.map((leavetype, index) => (
-            <div key={leavetype.id || index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
+            <div key={leavetype.lt_id || index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
                   <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold">

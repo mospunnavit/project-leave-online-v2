@@ -703,11 +703,11 @@ useEffect(() => {
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-500">แผนก</p>
-                    <p>{doc.department}</p>
+                    <p>{doc.department_name}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-500">สิทธิ</p>
-                    <p>{doc.role}</p>
+                    <p></p>
                   </div>
                 </div>
               </div>

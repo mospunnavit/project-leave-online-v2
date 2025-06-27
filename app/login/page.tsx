@@ -1,89 +1,94 @@
-"use client"
-import React, { use, useEffect, useState } from 'react'
+'use client';
+import React, { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter,  useSearchParams } from 'next/navigation'
-
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { getSession } from 'next-auth/react'
-import {Loading } from '@/app/components/loading'
+import { Loading } from '@/app/components/loading'
 
-function LoginPage() {
-
+// แยก component ที่ใช้ useSearchParams ออกมา
+function LoginForm() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
 
-    const handleSubmit = async (e : React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
-        
-        try{
+
+        try {
             const res = await signIn("credentials", {
                 username,
                 password,
                 redirect: false,
             })
-            if(res?.error){
+            if (res?.error) {
                 setLoading(false);
                 setError(res.error);
-            }else{
-                const updatedSession = await getSession(); 
+            } else {
+                const updatedSession = await getSession();
                 const role = updatedSession?.user?.role;
                 console.log(role)
                 setLoading(true);
-                if(role === "admin"){
+                if (role === "admin") {
                     router.push("/pages/dashboard/admin");
-                }else if(role === "user" || role === "head" || role === "manager" || role === "hr"){
+                } else if (role === "user" || role === "head" || role === "manager" || role === "hr") {
                     router.push("/pages/dashboard/user");
-                }else{
+                } else {
                     router.push("/");
                 }
             }
-        }catch(err){
+        } catch (err) {
             setLoading(false);
             console.log(err);
         }
     }
-  const  searchParams    = useSearchParams();
-   useEffect(() => {
-    if (searchParams.get('expired') === '1'){
-        setError("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
-        console.log("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
-    }
-      
-   }, [searchParams])
 
-  return (
-            <div className='flex-grow'>
-                <div className="flex justify-center items-center min-h-screen">
-                    <div className='w-[450px] shadow-xl p-10 mt-5 rounded-xl st border-black border-2 '>
+    useEffect(() => {
+        const expired = searchParams.get("expired");
+        if (expired === "1") {
+            setError("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+        }
+    }, [searchParams]);
+
+    return (
+        <div className='flex-grow'>
+            <div className="flex justify-center items-center min-h-screen">
+                <div className='w-[450px] shadow-xl p-10 mt-5 rounded-xl st border-black border-2 '>
                     <div className="flex justify-center mb-5">
                         <h3 className="text-3xl">เข้าสู่ระบบ</h3>
-                        </div>
-                        <hr className='my-3' />
-                        <form onSubmit={handleSubmit}>
-                            {error  && <p className='text-red-500'>{error}</p>}
-                            <label htmlFor="">ชื่อผู้ใช้</label>
-                            <input type="text" onChange={(e) => setUsername(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your email' />
-                            <label htmlFor="">รหัสผ่าน</label>
-                            <input type="password" onChange={(e) => setPassword(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your password' />
-                            <div className='flex justify-end'>
-                                
-                            
-                            <button type='submit' className='bg-blue-500 text-white border py-2 px-3 rounded text-lg my-2 mt-5'>เข้าสู่ระบบ</button>
-                             </div>
-                        </form>
-                        <hr className='my-3' />
-                        <p>Go to <Link href="/register" className='text-blue-500 hover:underline'>Register</Link> Page</p>
                     </div>
+                    <hr className='my-3' />
+                    <form onSubmit={handleSubmit}>
+                        {error && <p className='text-red-500'>{error}</p>}
+                        <label htmlFor="">ชื่อผู้ใช้</label>
+                        <input type="text" onChange={(e) => setUsername(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your email' />
+                        <label htmlFor="">รหัสผ่าน</label>
+                        <input type="password" onChange={(e) => setPassword(e.target.value)} className='w-full bg-gray-200 border py-2 px-3 rounded text-lg my-2' placeholder='Enter your password' />
+                        <div className='flex justify-end'>
+                            <button type='submit' className='bg-blue-500 text-white border py-2 px-3 rounded text-lg my-2 mt-5'>เข้าสู่ระบบ</button>
+                        </div>
+                    </form>
+                    <hr className='my-3' />
+                    <p>Go to <Link href="/register" className='text-blue-500 hover:underline'>Register</Link> Page</p>
                 </div>
-                 {loading && (
-                    <Loading/>
-                )}
             </div>
-            
-  )
+
+            {loading && (
+                <Loading />
+            )}
+        </div>
+    )
 }
+
+function LoginPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <LoginForm />
+        </Suspense>
+    )
+}
+
 export default LoginPage

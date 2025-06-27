@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       status = "waiting for head approval";
     }
   
-    console.log("end leave ++++ ", typeof(end_leave_date));
+    
     // หากลาต่อเนื่องต้องมีค่า end_leave_date เพื่อคำนวณโควต้าใหม่จำนวนวันใหม่
     if (end_leave_date){
         console.log("end_leave_date", end_leave_date);

@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Leave } from '@/app/types/formleave';
 import { useSession } from "next-auth/react";
 import { Loading } from "@/app/components/loading";
+import { Leavetypes } from "@/app/types/leavetypes";
+
 const UserDashboard = () => {
     const [docs, setDocs] = useState<Leave[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -14,7 +16,8 @@ const UserDashboard = () => {
     const [selectedImg, setSelectedImg] = useState("");
     const [searchUsername, setSearchUsername] = useState('');
     const { data: session, status } = useSession();
-    
+    const [selectYear, setSelectYear] = useState('');
+    const [getLeaveTypeTotal, setGetLeaveTypeTotal] = useState<Leavetypes[]>([]);
     useEffect(() => {
     const fetchLeaveData = async () => {
       setLoading(true);
@@ -25,7 +28,10 @@ const UserDashboard = () => {
         if (res.ok) {
           if(data.length == 0){
             setError('ไม่พบข้อมูลการลา');
+            setDocs([]);
+            setHasMore(true);
           }else{
+            setError('');
             setDocs(data);
             setHasMore(data.length < 5);
           }
@@ -57,6 +63,24 @@ const UserDashboard = () => {
   'approved': 'อนุมัติแล้ว',
   'waiting': 'รอดำเนินการ',
 };
+
+const fecthDataleavetypetotal = async () => {
+  try {
+    const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/user/gettotalleaveformbyuser');
+    const data = await res.json();
+    if (res.ok) {
+        const leaveData = data.leave_types_total || [];
+        setGetLeaveTypeTotal(leaveData);
+        console.log("leavetype from fetch:", leaveData); // ✅ ได้ทันที
+    }
+  } catch (err) {
+    console.log(err);
+  }
+}
+useEffect(() => {
+  fecthDataleavetypetotal();
+
+}, []);
 const translateStatus = (status: string): string => {
   return statusTranslations[status] || status; // ถ้าไม่มีคำแปล ให้คืนค่าเดิม
 };
@@ -129,36 +153,24 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
           </div>
           <div className="flex flex-col w-full sm:w-[calc(50%-0.5rem)] bg-white p-4 rounded shadow">ข้อมูลการประเภทการลา
               <table className="min-w-full border border-collapse border-gray-300">
-                 <thead>
-                  <tr>
-                      <th className="border px-4 py-2">ประเภทการลา</th>
-                      <th className="border px-4 py-2">ลาได้</th>
-                      <th className="border px-4 py-2">ใช้ไปแล้ว</th>
-                      <th className="border px-4 py-2">คงเหลือ</th>
-                  </tr>
-                 </thead>
-                 <tbody>
-                  <tr>
-                    <td className="border px-4 py-2">ลากิจ</td>
-                        <td className="border px-4 py-2">1</td>
-                        <td className="border px-4 py-2">1</td>
-                        <td className="border px-4 py-2">0</td>
-                   </tr>     
-
-                    <tr>
-                    <td className="border px-4 py-2">ลาป่วย </td>
-                        <td className="border px-4 py-2">1</td>
-                        <td className="border px-4 py-2">1</td>
-                        <td className="border px-4 py-2">0</td>
-                     </tr>   
-                   <tr>
-                    <td className="border px-4 py-2">ลาพักร้อน</td>
-                        <td className="border px-4 py-2">1</td>
-                        <td className="border px-4 py-2">1</td>
-                        <td className="border px-4 py-2">0</td>
-                       </tr> 
-                    
-                  </tbody>
+                  <thead>
+    <tr>
+      <th className="border px-4 py-2">ประเภทการลา</th>
+      <th className="border px-4 py-2">ลาได้</th>
+      <th className="border px-4 py-2">ใช้ไปแล้ว</th>
+      <th className="border px-4 py-2">คงเหลือ</th>
+    </tr>
+  </thead>
+  <tbody>
+    {getLeaveTypeTotal.map((item, index) => (
+      <tr key={index}>
+        <td className="border px-4 py-2">{item.lt_name}</td>
+        <td className="border px-4 py-2">{item.quotaperyear}</td>
+        <td className="border px-4 py-2">{item.used_quota}</td>
+        <td className="border px-4 py-2">{item.left_quota}</td>
+      </tr>
+    ))}
+  </tbody>
               </table>
           </div>
        </div>
@@ -189,7 +201,9 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                       }
                       alt="Uploaded File" className="w-10 h-10" />}
                     </td>
-                    <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).split(' ')[0]}</td>
+                     <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).slice(0, 10)}
+                       {doc.end_leave_date && ` - ${formatDateWithOffset(doc.end_leave_date, 7).slice(0, 10)}`}
+                    </td>
                     <td className="border px-4 py-2">{doc.start_time.slice(0, 5)} - {doc.end_time.slice(0, 5)}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
                 
@@ -216,19 +230,20 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
               <div key={index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium">{doc.lt_name}</span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    doc.status === 'อนุมัติ' ? 'bg-green-100 text-green-800' : 
-                    doc.status === 'รออนุมัติ' ? 'bg-yellow-100 text-yellow-800' : 
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {doc.status}
-                  </span>
+                
+                     {renderStatus(doc.status)}
+                  {doc.exported === 1 ? (
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">นำออกแล้ว</span>
+                  ) : (
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-gray-200 text-gray-600">ยังไม่ได้นำออก</span>
+                  )} 
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-gray-500">วันที่ลา</p>
-                    <p>{doc.leave_date.substring(0, 10)}</p>
+                    <p>{formatDateWithOffset(doc.leave_date, 7).slice(0, 10)}
+                       {doc.end_leave_date && ` - ${formatDateWithOffset(doc.end_leave_date, 7).slice(0, 10)}`}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">ช่วงเวลา</p>
@@ -240,7 +255,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-500">เวลาที่ส่งฟอร์ม</p>
-                    <p>{doc.submitted_at}</p>
+                    <p> {formatDateWithOffset(doc.submitted_at, 7)}</p>
                   </div>
                 </div>
               </div>

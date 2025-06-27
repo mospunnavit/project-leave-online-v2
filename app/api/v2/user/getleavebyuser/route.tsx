@@ -28,10 +28,7 @@ export async function GET(req: Request)  {
   
 
 
-function convertToThaiTime(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
-}
+
 
 
 

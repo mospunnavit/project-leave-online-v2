@@ -133,7 +133,7 @@ const HolidayDashboard = () => {
     
     setLoading(true);
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + `/api/v2/admin/deleteleavetype/${currentLeavetype.id}`, {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + `/api/v2/admin/deleteleavetype/${currentLeavetype.lt_id}`, {
         method: 'DELETE'
       });
       
@@ -191,7 +191,7 @@ const HolidayDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + `/api/v2/admin/editleavetype/${currentLeavetype.id}`, {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + `/api/v2/admin/editleavetype/${currentLeavetype.lt_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -284,7 +284,7 @@ const HolidayDashboard = () => {
           <table className="min-w-full border border-collapse border-gray-300">
             <thead className="bg-gray-100">
               <tr>
-                <th className="border items-center px-4 py-2 w-16">ลำดับ</th>
+                <th className="border items-center px-4 py-2 w-16">ไอดี</th>
                 <th className="border items-center px-4 py-2 w-32">รหัสการลา</th>
                 <th className="border items-center px-4 py-2">ชื่อ</th>
                 <th className="border px-4 py-2 w-32">โควต้าต่อปี</th>
@@ -293,8 +293,8 @@ const HolidayDashboard = () => {
             </thead>
             <tbody>
               {leavetypeData.map((leavetype, index) => (
-                <tr key={leavetype.id || index}>
-                  <td className="border px-4 py-2 text-center">{getGlobalIndex(index)}</td>
+                <tr key={leavetype.lt_id || index}>
+                  <td className="border px-4 py-2 text-center">{leavetype.lt_id}</td>
                   <td className="border px-4 py-2 text-center">{leavetype.lt_code}</td>
                   <td className="border px-4 py-2">{leavetype.lt_name}</td>
                   <td className="border px-4 py-2 text-center">{leavetype.quotaperyear}</td>

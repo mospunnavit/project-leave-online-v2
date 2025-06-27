@@ -12,7 +12,7 @@ export async function PUT(
 
   try {
         await db.query(
-    `UPDATE leave_types SET date = ?, remark = ?, sunday = ? WHERE id = ?`,
+    `UPDATE leave_types SET lt_code = ?, lt_name = ?, quotaperyear = ? WHERE lt_id = ?`,
     [lt_code, lt_name, quotaperyear, lt_id]
   );
     return NextResponse.json({ success: true });

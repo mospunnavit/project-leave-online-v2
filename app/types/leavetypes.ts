@@ -1,5 +1,5 @@
 export interface Leavetypes {
-    id: number;
+    id_it: number;
     lt_code: string;
     lt_name: string;
     quotaperyear: number;

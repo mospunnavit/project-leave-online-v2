@@ -10,7 +10,7 @@ export async function DELETE(
 
   try {
         await db.query(
-    `DELETE FROM leave_types WHERE id = ?`,
+    `DELETE FROM leave_types WHERE lt_id = ?`,
     [lt_id]
   );
     return NextResponse.json({ success: true });

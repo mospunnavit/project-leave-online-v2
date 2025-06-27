@@ -21,11 +21,22 @@ const UserDashboard = () => {
       try {
         const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebyuser?page=${currentPage}`);
         const data = await res.json();
-        setDocs(data);
-        setHasMore(data.length < 5);
-        console.log(data);
+        
+        if (res.ok) {
+          if(data.length == 0){
+            setError('ไม่พบข้อมูลการลา');
+          }else{
+            setDocs(data);
+            setHasMore(data.length < 5);
+          }
+          
+        }
+        if (!res.ok) {
+          setError('API error: ' + (data.error || 'Unknown error'));
+        }
+       
       } catch (err) {
-        console.error('Error fetching leave data', err);
+        setError('something went wrong');
       } finally {
         setLoading(false);
       }

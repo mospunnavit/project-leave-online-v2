@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     } catch (err: Error | any) {
         console.log(err);
         if(err.code === 'ER_DUP_ENTRY') {
-            return NextResponse.json({ error: 'leavetypes already exists' }, { status: 400 });
+            return NextResponse.json({ error: 'leavetype_code already exists' }, { status: 400 });
         }
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

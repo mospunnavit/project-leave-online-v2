@@ -66,6 +66,10 @@ const Sidebar = () => {
             <SquareCheckBig size={20} />
             <span>approve</span>
           </Link>
+            <Link href="/pages/dashboard/user/form-leave-v4" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <BookText size={20} />
+            <span>Form-leave</span>
+            </Link>
            <span>การนำออก</span>
            <Link href="/pages/dashboard/user/hrexportformleave" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
@@ -80,7 +84,7 @@ const Sidebar = () => {
             <Home size={20} />
             <span>Leave</span>
           </Link>
-          <Link href="/pages/dashboard/user/form-leave-v3" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/form-leave-v4" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <BookText size={20} />
             <span>Form-leave</span>
           </Link>
@@ -94,7 +98,7 @@ const Sidebar = () => {
             <Home size={20} />
             <span>Leave</span>
           </Link>
-          <Link href="/pages/dashboard/user/form-leave-v3" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/form-leave-v4" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <BookText size={20} />
             <span>Form-leave</span>
           </Link>
@@ -112,7 +116,7 @@ const Sidebar = () => {
             <Home size={20} />
             <span>Leave</span>
           </Link>
-          <Link href="/pages/dashboard/user/form-leave-v3" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/form-leave-v4" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <BookText size={20} />
             <span>Form-leave</span>
           </Link>
@@ -131,7 +135,7 @@ const Sidebar = () => {
             <Home size={20} />
             <span>Leave</span>
           </Link>
-          <Link href="/pages/dashboard/user/form-leave-v3" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/form-leave-v4" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <BookText size={20} />
             <span>Form-leave</span>
           </Link>

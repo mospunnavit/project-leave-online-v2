@@ -51,7 +51,6 @@ const approveDashboard = () => {
                 pendingStatus: "waiting for hr approval",
                 approvedStatus: "approved",
                 rejectedStatus: "rejected by hr",
-                hrapproval: true // แก้ไข typo จาก hraprroval เป็น hrapproval
             };
         } else if (session.user.role === 'manager') {
             return {
@@ -133,7 +132,6 @@ const approveDashboard = () => {
     const handleSearch = async () => {
       if (searchUsername == '') return;
       fetchLeaveData();
-      setSearchUsername('');
       setCurrentPage(1);
     }
     const fecthDepartmentsManagement = async () => {
@@ -152,9 +150,11 @@ const approveDashboard = () => {
     }
  useEffect(() => {
     fetchLeaveData();
-    fecthDepartmentsManagement();
+ 
   }, [currentPage, selectStatus]);
-
+  useEffect(() => {
+    fecthDepartmentsManagement();
+  }, [])
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);
 

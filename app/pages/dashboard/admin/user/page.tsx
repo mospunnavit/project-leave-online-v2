@@ -14,10 +14,11 @@ const approveDashboard = () => {
     const [departmentData, setDepartmentData] = useState<Department[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState<string>('');
 
+    const [searchUsername, setSearchUsername] = useState('');
+    const [searchDepartment, setSearchDepartment] = useState('');
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
-
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const { data: session, status } = useSession();    
@@ -30,6 +31,10 @@ const approveDashboard = () => {
     const [password, setPassword] = useState<string>('');
     const [retypepassword, setRetypePassword] = useState<string>('');
     
+ const handleSearch = () => {
+  fetchUserData();
+
+   };
  const handleEdit = (user: Users) => {
     setcurrentUser({...user});
     setIsEditModalOpen(true);
@@ -208,12 +213,13 @@ const approveDashboard = () => {
    const fetchUserData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/admin/getalluser?page=${currentPage}`);
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/admin/getalluser?page=${currentPage}&username=${searchUsername}&department=${selectedDepartment}`);
         const data = await res.json();
 
         if (res.ok){ 
           setDocs(data.users);
           setHasMore(data.users.length < 5);
+          
           console.log(data);
           console.log(hasMore);
         }else{
@@ -342,7 +348,9 @@ const approveDashboard = () => {
       )}
        <div className="flex w-full justify-end flex-wrap text-xl font-bold gap-4 mb-4 mr-65"> 
           <span className="py-4">รหัสผู้ใช้</span>
-          <input type="text" />
+          <input type="text" 
+          value={searchUsername}
+          onChange={(e) => setSearchUsername(e.target.value)}/>
           <span className="py-4">แผนก</span>
               <select
         id="department"
@@ -351,7 +359,7 @@ const approveDashboard = () => {
         onChange={handleChange}
         className=" border border-gray-300 rounded-md text-sm"
       >
-        <option value="" disabled>
+        <option value="" >
           -- กรุณาเลือกแผนก --
         </option>
         {departmentData.map((dept) => (
@@ -360,7 +368,8 @@ const approveDashboard = () => {
           </option>
         ))}
       </select>
-          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold w-40 px-4 py-2 rounded-lg shadow">ค้นหา</button>
+          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold w-40 px-4 py-2 rounded-lg shadow"
+          onClick={() => handleSearch()}>ค้นหา</button>
           <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold w-40 px-4 py-2 rounded-lg shadow"
           onClick={() => setIsAdduserModalOpen(true)}>เพิ่มผู้ใช้</button>
         </div>

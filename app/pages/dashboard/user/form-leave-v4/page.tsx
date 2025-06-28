@@ -251,6 +251,10 @@ const insertComponentFileupload = () => {
         setError('');
         setShowSuccess(true);
       
+      if(res.status == 409){
+        setError(result.error || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+        console.log("sfsdfdsf"+result.error);
+      }
       // รอ 2.5 วินาทีแล้วเปลี่ยนหน้า
       setTimeout(() => {
         router.push("/pages/dashboard/user"); // เปลี่ยนเป็น path ที่ต้องการ redirect ไป

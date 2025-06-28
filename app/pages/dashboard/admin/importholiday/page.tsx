@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
+import DashboardLayout from '@/app/components/dashboardLayout';
+import { useSession } from 'next-auth/react';
 
 export default function UploadHolidayPage() {
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState('');
-
+  const { data: session } = useSession();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
     setFile(selectedFile);
@@ -41,7 +43,10 @@ export default function UploadHolidayPage() {
   };
 
   return (
+        <DashboardLayout title={`admin ${session?.user?.role} ${session?.user?.department}`}>
+
     <div className="max-w-md mx-auto mt-10 p-4 border rounded shadow">
+      
       <h1 className="text-xl font-semibold mb-4">อัปโหลดไฟล์วันหยุด (.xls)</h1>
 
       <form onSubmit={handleSubmit}>
@@ -61,5 +66,8 @@ export default function UploadHolidayPage() {
 
       {message && <p className="mt-4 text-sm text-gray-700">{message}</p>}
     </div>
+
+    </DashboardLayout>
+
   );
 }

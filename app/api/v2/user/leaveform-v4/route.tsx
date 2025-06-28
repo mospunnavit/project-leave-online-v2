@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/authOptions';
 import { getServerSession } from 'next-auth';
 import { RowDataPacket } from 'mysql2';
 import getWorkDuration  from "@/lib/calworkduration";
-
+import formatDateWithOffset from "@/lib/formatDatetoThai";
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   
@@ -45,7 +45,54 @@ export async function POST(req: Request) {
     }else{
       status = "waiting for head approval";
     }
-  
+    // check ว่า เคยลาไปแล้วหรือยัง
+    //หากลาหลายวันจะต้องมีค่า end_leave_date
+    let checkleave: any = [];
+
+      if (end_leave_date) {
+        const [rows] = await db.query(
+          `SELECT * FROM leaveform 
+          WHERE u_id = ? AND (
+            ? BETWEEN leave_date AND end_leave_date 
+            OR ? BETWEEN leave_date AND end_leave_date
+            OR leave_date BETWEEN ? AND ? 
+            OR end_leave_date BETWEEN ? AND ?
+          )`,
+          [
+            session?.user?.id,
+            leave_date,
+            end_leave_date,
+            leave_date,
+            end_leave_date,
+            leave_date,
+            end_leave_date
+          ]
+        );
+        checkleave = rows;
+      } else {
+        const [rows] = await db.query(
+          `SELECT * FROM leaveform 
+          WHERE u_id = ? AND (
+            leave_date = ? 
+            OR end_leave_date = ? 
+            OR ? BETWEEN leave_date AND end_leave_date
+          )`,
+          [session?.user?.id, leave_date, leave_date, leave_date]
+        );
+        checkleave = rows;
+      }
+ 
+     
+      if (checkleave.length > 0) {
+        return Response.json({
+          error: "พบรายการลาที่ซ้ำกันหรือเคยลาไปแล้ว", 
+          conflict: checkleave 
+        }, { status: 409 }); // 409 = Conflict
+      }
+
+
+   
+    
     
     // หากลาต่อเนื่องต้องมีค่า end_leave_date เพื่อคำนวณโควต้าใหม่จำนวนวันใหม่
     if (end_leave_date){
@@ -64,7 +111,7 @@ export async function POST(req: Request) {
         }else{
             const totalholiday = await db.query(
                 `SELECT COUNT(*) as totalholiday from holiday where date BETWEEN ? AND ?`,
-                [leave_date, end_leave_date,]
+                [leave_date, end_leave_date]
             ) as RowDataPacket[];
             console.log("totalholiday",totalholiday);
             const gettotalholiday  = totalholiday[0][0].totalholiday;

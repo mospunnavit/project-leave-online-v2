@@ -18,6 +18,7 @@ const UserDashboard = () => {
     const { data: session, status } = useSession();
     const [selectYear, setSelectYear] = useState('');
     const [getLeaveTypeTotal, setGetLeaveTypeTotal] = useState<Leavetypes[]>([]);
+    
     useEffect(() => {
     const fetchLeaveData = async () => {
       setLoading(true);
@@ -129,11 +130,11 @@ const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
   day: 'numeric',
   month: 'numeric',
   year: 'numeric', 
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false
 });
-
+  useEffect(() => {
+    const currentYear = new Date().getFullYear().toString();
+    setSelectYear(currentYear); // จะอัปเดตทุกครั้งที่โหลด
+  }, []);
 const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
@@ -151,7 +152,20 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
               <label htmlFor="">ชื่อ: {session?.user?.firstname}  {session?.user?.lastname}</label>
               <label htmlFor="">แผนก: {session?.user?.department_name}</label>
           </div>
-          <div className="flex flex-col w-full sm:w-[calc(50%-0.5rem)] bg-white p-4 rounded shadow">ข้อมูลการประเภทการลา
+          <div className="flex flex-col w-full sm:w-[calc(50%-0.5rem)] bg-white p-4 rounded shadow">
+          <div className="flex flex-row flex-wrap gap-4">
+            <input
+  type="number"
+  min="2000"
+  max="2099"
+  className="border w-16 sm:w-48 px-3 py-2 rounded"
+  value={selectYear}
+  onChange={(e) => setSelectYear(e.target.value)}
+  placeholder="กรอกปี เช่น 2025"
+/>
+<button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">ค้นหา</button>
+</div>
+            ข้อมูลการประเภทการลา
               <table className="min-w-full border border-collapse border-gray-300">
                   <thead>
     <tr>
@@ -161,6 +175,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
       <th className="border px-4 py-2">คงเหลือ</th>
     </tr>
   </thead>
+  
   <tbody>
     {getLeaveTypeTotal.map((item, index) => (
       <tr key={index}>
@@ -201,7 +216,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                       }
                       alt="Uploaded File" className="w-10 h-10" />}
                     </td>
-                     <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).slice(0, 10)}
+                     <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).slice(0, 15)}
                        {doc.end_leave_date && ` - ${formatDateWithOffset(doc.end_leave_date, 7).slice(0, 10)}`}
                     </td>
                     <td className="border px-4 py-2">{doc.start_time.slice(0, 5)} - {doc.end_time.slice(0, 5)}</td>

@@ -15,7 +15,7 @@ export async function GET(req: Request)  {
     try {
         const [leave_types_total] = await db.query(
             `SELECT lt.lt_code, lt.lt_name, lt.quotaperyear, 
-            SUM(CASE WHEN lt.lt_code = l.lt_code THEN l.usequotaleave ELSE 0 END) AS used_quota, 
+            SUM(CASE WHEN lt.lt_code = l.lt_code AND l.status = 'approved' THEN l.usequotaleave ELSE 0 END) AS used_quota, 
             lt.quotaperyear - SUM(CASE WHEN lt.lt_code = l.lt_code THEN l.usequotaleave ELSE 0 END) 
             AS left_quota FROM leave_types lt CROSS JOIN (SELECT DISTINCT u.id FROM users u WHERE u.id = ?) 
             u LEFT JOIN leaveform l ON l.lt_code = lt.lt_code AND l.u_id = u.id GROUP BY lt.lt_code, lt.lt_name, lt.quotaperyear ORDER BY lt.lt_code;`,

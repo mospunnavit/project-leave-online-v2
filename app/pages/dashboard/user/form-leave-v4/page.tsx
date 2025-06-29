@@ -136,8 +136,21 @@ const insertComponentFileupload = () => {
     e.preventDefault();
     console.log(leave_type,leave_date, leaveShift, leaveDuration, start_time, end_time, reason, leavefile);
     if (leave_date === undefined || leave_date === '') {
+      setError('กรุณาระบุวันที่ลา');
       return;
     }
+    if(continue_leave){
+      if (end_leave_date === undefined || end_leave_date === '') {
+        setError('กรุณาระบุวันที่สิ้นสุดการลา');
+        return;
+      }
+      if (end_leave_date < leave_date || end_leave_date === leave_date) {
+        setError('วันที่สิ้นสุดการลาต้องมากกว่าวันที่เริ่มการลาหรือไม่ใช่วันเดียวกัน');
+        return;
+      }
+    }
+
+
     const leaveDate = new Date(leave_date);  // leave_date คือ string จาก input
     const today = new Date();
    
@@ -164,6 +177,7 @@ const insertComponentFileupload = () => {
       setError('กรุณาระบุเหตุผล');
       return;
     }
+    
     if(diffInDays < 3 && (leave_type == "020005" || leave_type == "020006-1" || leave_type == "020006")){
       setError('ไม่สามารถลากิจหรือพักร้อนก่อนวันลาน้อยกว่า 3 วันได้');
       return;
@@ -335,8 +349,9 @@ const insertComponentFileupload = () => {
                     {type.lt_name}
                   </option>
                 ))}
+              
               </select>
-        </div>
+        </div> 
         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
               <label className="block font-medium mb-2 text-sm sm:text-base">ลาวันเดียวหรือหลายวัน</label>
               <div className="flex flex-colsm:flex-row gap-4">
@@ -493,7 +508,10 @@ const insertComponentFileupload = () => {
            
           </div>
         </div>
-        
+         <div className="mt-3 p-2 sm:p-3 bg-gray-100 rounded text-sm">
+              <div className="font-medium mb-1">เวลาที่เลือก  {start_time|| '--:--'} - {end_time || '--:--'}</div>
+              
+            </div>
         {/* ส่วนอัพโหลดใบรับรองแพทย์ (ถ้าเลือกมีใบรับรองแพทย์) */}
         {leave_type === '020004'  && insertComponentFileupload()}
         

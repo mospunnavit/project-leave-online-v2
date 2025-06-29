@@ -3,8 +3,7 @@ import db from '@/lib/db';
 import { authOptions } from '@/lib/authOptions';
 import { getServerSession } from 'next-auth';
 import { RowDataPacket } from 'mysql2';
-import getWorkDuration  from "@/lib/calworkduration";
-import formatDateWithOffset from "@/lib/formatDatetoThai";
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   
@@ -45,6 +44,16 @@ export async function POST(req: Request) {
     }else{
       status = "waiting for head approval";
     }
+    //check ว่าไม่ลาข้ามปี
+    if(end_leave_date){
+      const leaveDate = new Date(leave_date);
+      const endLeaveDate = new Date(end_leave_date);
+      const leaveDateYear = leaveDate.getFullYear();
+      const endLeaveDateYear = endLeaveDate.getFullYear();
+      if (leaveDateYear !== endLeaveDateYear) {
+        return NextResponse.json({ error: 'ไม่สามารถลาข้ามปีได้.' }, { status: 400 });
+    }
+  }
     // check ว่า เคยลาไปแล้วหรือยัง
     //หากลาหลายวันจะต้องมีค่า end_leave_date
     let checkleave: any = [];
@@ -103,8 +112,8 @@ export async function POST(req: Request) {
         console.log(end_leave_date2.getTime() - start_leave_date.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         console.log(diffDays);
-        if (diffDays < 0){ 
-            return NextResponse.json({ error: 'กรุณาเลือกวันสิ้นสุดลาให้มากกว่าวันเริ่มต้น' }, { status: 400 });
+        if (diffDays <= 0){ 
+            return NextResponse.json({ error: 'กรุณาเลือกวันสิ้นสุดลาให้มากกว่าวันเริ่มต้นหรือไม่เป็นวันเดียวกัน' }, { status: 400 });
         }
         if (diffDays < 1){
             return NextResponse.json({ error: 'หากลาต่อเนื่องกรุณาเลือกวันที่ไม่ใช้วันเดียวกัน' }, { status: 400 });

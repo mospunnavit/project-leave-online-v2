@@ -102,8 +102,47 @@ const approveDashboard = () => {
 const closeImageModal = () => {
   setShowImg(false);
 };
+const handleExportbyID = async (id : number) => {
 
+  try {
+    const response = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/exportexcelbyhrv2/${id}`, {
+         method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
+            if (!response.ok) {
+                throw new Error('Failed to export data');
+            }
+
+            // สร้าง blob จาก response
+            const blob = await response.blob();
+            
+            // สร้าง URL สำหรับ download
+            const url = window.URL.createObjectURL(blob);
+            
+            // สร้าง link element และ trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `leave_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(link);
+            link.click();
+            
+            // ทำความสะอาด
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            
+        } catch (error) {
+          setError('something went wrong');
+        } finally {
+            setIsExporting(false);
+        } 
+     
+       
+     
+  };
 const handleExport = async () => {
     if(validateDateRange()){
          setIsExporting(true);
@@ -236,12 +275,13 @@ function formatThaiDateYYYYMMDD(isoDateString : string) {
 
                           {/* ปุ่ม Export มีเงื่อนไขสีตามค่า exported */}
                           <button
-                           
+                           onClick={() => handleExportbyID(doc.id)}
                             className={`text-sm font-medium px-3 py-1 rounded shadow 
                               ${doc.exported === 1
                                 ? 'bg-green-500 text-white cursor-default'
                                 : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}
                             `}
+                            
                           >
                             {doc.exported === 1 ? 'Exported' : 'Export'}
                           </button>

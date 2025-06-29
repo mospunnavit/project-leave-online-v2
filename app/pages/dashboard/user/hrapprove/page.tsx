@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Leave } from '@/app/types/formleave';
 import { Loading } from "@/app/components/loading";
 import ModalLayout from "@/app/components/modallayout";
+import { useRouter } from 'next/navigation';
 
 interface DepartmentManagement {
   departments: string;
@@ -26,7 +27,7 @@ const approveDashboard = () => {
     const [searchUsername, setSearchUsername] = useState('');
     const [rejectedModal, setRejectedModal] = useState(false);
     const [confrimModal, setConfrimModal] = useState(false);
-    const [getdepartmentsManagement, setdepartmentsManagement] = useState<DepartmentManagement[]>([]);
+    const router = useRouter();
 
 
  const handleReject = (leave: Leave) => {
@@ -42,37 +43,27 @@ const approveDashboard = () => {
 
  const getRoleSpecificData = () => {
     if (!session?.user?.role) return { title: "อนุมัติการลา", statuses: [] };
-    
-    switch (session.user.role) {
-        case 'head':
-            return {
-                title: "หัวหน้าแผนกอนุมัติ",
-                pendingStatus: "waiting for head approval",
-                approvedStatus: "waiting for manager approval",
-                rejectedStatus: "rejected by head",
-            };
-        case 'manager':
-            return {
-                title: "ผู้จัดการอนุมัติ",
-                pendingStatus: "waiting for manager approval",
-                approvedStatus: "waiting for hr approval",
-                rejectedStatus: "rejected by manager",
-            };
-        case 'hr':
+
+        if (session.user.role === 'hr' || session.user.department_name === 'HR' || session.user.role === 'admin') {
             return {
                 title: "HR อนุมัติ",
                 pendingStatus: "waiting for hr approval",
                 approvedStatus: "approved",
                 rejectedStatus: "rejected by hr",
             };
-        default:
+        } else {
+            router.push("/pages/dashboard/user");
             return {
-                title: "อนุมัติการลา",
-                pendingStatus: "pending",
-                approvedStatus: "approved",
-                rejectedStatus: "rejected"
+                title: "",
+                pendingStatus: "",
+                approvedStatus: "",
+                rejectedStatus: "",
             };
+        
     }
+    
+   
+    
 };
     const roleData = getRoleSpecificData();
     console.log(roleData.pendingStatus, roleData.approvedStatus, roleData.rejectedStatus);
@@ -104,27 +95,12 @@ const approveDashboard = () => {
       fetchLeaveData();
       setCurrentPage(1);
     }
-    const fecthDepartmentsManagement = async () => {
-        try {
-          const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/user/getdepartmentmanagement');
-          const data = await res.json();
-          if (res.ok) {
-            setdepartmentsManagement(data.departmentsManagement || []);
-            console.log("sss", data.departmentsManagement);
-          } else {
-            setError('API error: ' + (data.error || 'Unknown error'));
-          }
-        } catch (err) {
-          setError('API error: ' + (err || 'Unknown error'));
-        }
-    }
+   
  useEffect(() => {
     fetchLeaveData();
  
   }, [currentPage, selectStatus]);
-  useEffect(() => {
-    fecthDepartmentsManagement();
-  }, [])
+ 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => prev + 1);
 
@@ -141,7 +117,7 @@ const approveDashboard = () => {
 const translateStatus = (status: string): string => {
   return statusTranslations[status] || status; // ถ้าไม่มีคำแปล ให้คืนค่าเดิม
 };
-    const renderStatus = (status: string) => {
+const renderStatus = (status: string) => {
       console.log("Test"+ status, roleData.pendingStatus);
       if (status === roleData.pendingStatus) {
         return <span className={`px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800`}>
@@ -161,6 +137,7 @@ const translateStatus = (status: string): string => {
                       </span>
       }
     }
+ 
 const openImageModal = (imagePath : string) => {
   setSelectedImg(imagePath);
   setShowImg(true);
@@ -206,7 +183,9 @@ const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
   day: 'numeric',
   month: 'numeric',
   year: 'numeric', 
- 
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
 });
 
 const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
@@ -253,22 +232,16 @@ const buttonData = [
 ];
       if (loading && docs.length === 0) return <Loading />;
   return (
-    <DashboardLayout title={`${session?.user?.role} อนุมัติ`}>
+    <DashboardLayout title={`การอนุมัติ ${session?.user?.department_name}`}>
       <div className="flex flex-col bg-white p-4 rounded shadow gap-4">
         {error && <p className="text-red-500">{error}</p>}
         <div className="flex flex-col sm:flex-row">
             <div className="flex w-full text-xl font-bold mb-4 ">  
-              
-            {getdepartmentsManagement.map((item, index) => (
-                <div className = "flex"key={index}>
-                  <p className="truncate">จัดการแผนก: </p>
-                 <p className="truncate">{(item.departments || '').split(',').map(dep => dep.trim()).join(' ')}</p>
-                </div>
-              ))}
+        
                             
             </div>
             <div className="flex justify-end w-full gap-2 items-center">
-              <div className="truncate">ชื่อผู้ใช้ชื่อ:</div>
+              <div className="truncate">ชื่อผู้ใช้</div>
             <input
               type="text"
               value={searchUsername}
@@ -362,7 +335,7 @@ const buttonData = [
                       <div className="">
                         {renderStatus(doc.status)}
                       </div>
-                      <div >
+                      <div className="flex h-10">
                       {(doc.status === roleData?.pendingStatus 
                           ) && (
                             <>
@@ -373,14 +346,14 @@ const buttonData = [
                                     อนุมัติ
                                 </button>
                                 <button
-                                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
+                                    className="truncate bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
                                     onClick={() => handleReject(doc)}
                                 >
                                     ไม่อนุมัติ
                                 </button>
                             </>
                         )}
-                     
+                       
                       </div>
                      </div>
                     </td>
@@ -390,7 +363,7 @@ const buttonData = [
             </table>
           </div>
           
-           {/* การ์ดประวัติการลาสำหรับหน้าจอขนาดเล็ก */}
+          {/* การ์ดประวัติการลาสำหรับหน้าจอขนาดเล็ก */}
           <div className="md:hidden space-y-4">
             {docs.map((doc, index) => (
               <div key={index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
@@ -519,7 +492,9 @@ const buttonData = [
     <h2 className="text-lg font-semibold mb-4">ยืนยันการลาของ {currentLeave.username} {currentLeave.firstname} {currentLeave.lastname}</h2>
     <div className="flex justify-end gap-2">
        
-  <button
+    
+      
+   <button
     onClick={() => {
       handleChangeStatus(currentLeave.id, roleData?.approvedStatus ?? '');
       setConfrimModal(false);

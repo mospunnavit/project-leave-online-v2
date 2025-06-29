@@ -42,6 +42,36 @@ const approveDashboard = () => {
 
  const getRoleSpecificData = () => {
     if (!session?.user?.role) return { title: "อนุมัติการลา", statuses: [] };
+
+    if (session.user.department_name === 'HR') {
+        if (session.user.role === 'hr' || session.user.role === 'user') {
+            return {
+                title: "HR อนุมัติ",
+                apiPath: "/api/user/getleavesforhr",
+                pendingStatus: "waiting for hr approval",
+                approvedStatus: "approved",
+                rejectedStatus: "rejected by hr",
+            };
+        } else if (session.user.role === 'manager') {
+            return {
+                title: "ผู้จัดการอนุมัติ",
+                apiPath: "/api/user/getleavesformanager",
+                pendingStatus: "waiting for manager approval",
+                approvedStatus: "waiting for hr approval",
+                rejectedStatus: "rejected by manager",
+                hrapproval: true
+            };
+        } else if (session.user.role === 'head') {
+            return {
+                title: "หัวหน้าแผนกอนุมัติ",
+                apiPath: "/api/user/getleavesbydepartment",
+                pendingStatus: "waiting for head approval",
+                approvedStatus: "waiting for manager approval",
+                rejectedStatus: "rejected by head",
+                hrapproval: true
+            };
+        }
+    }
     
     switch (session.user.role) {
         case 'head':
@@ -206,7 +236,9 @@ const dateTimeFormatter = new Intl.DateTimeFormat('th-TH', {
   day: 'numeric',
   month: 'numeric',
   year: 'numeric', 
- 
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
 });
 
 const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
@@ -253,7 +285,7 @@ const buttonData = [
 ];
       if (loading && docs.length === 0) return <Loading />;
   return (
-    <DashboardLayout title={`${session?.user?.role} อนุมัติ`}>
+    <DashboardLayout title={` ${session?.user?.role} ${session?.user?.department}`}>
       <div className="flex flex-col bg-white p-4 rounded shadow gap-4">
         {error && <p className="text-red-500">{error}</p>}
         <div className="flex flex-col sm:flex-row">
@@ -268,7 +300,7 @@ const buttonData = [
                             
             </div>
             <div className="flex justify-end w-full gap-2 items-center">
-              <div className="truncate">ชื่อผู้ใช้ชื่อ:</div>
+              <div className="truncate">ชื่อผู้ใช้</div>
             <input
               type="text"
               value={searchUsername}
@@ -380,7 +412,22 @@ const buttonData = [
                                 </button>
                             </>
                         )}
-                     
+                        {(roleData?.hrapproval && doc.status === "waiting for hr approval") && (
+                            <>
+                                <button
+                                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                    onClick={() => handleConfrim(doc)}
+                                >
+                                    อนุมัติ
+                                </button>
+                                <button
+                                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
+                                    onClick={() => handleReject(doc)}
+                                >
+                                    ไม่อนุมัติ
+                                </button>
+                            </>
+                        )}
                       </div>
                      </div>
                     </td>
@@ -390,14 +437,16 @@ const buttonData = [
             </table>
           </div>
           
-           {/* การ์ดประวัติการลาสำหรับหน้าจอขนาดเล็ก */}
+          {/* การ์ดประวัติการลาสำหรับหน้าจอขนาดเล็ก */}
           <div className="md:hidden space-y-4">
             {docs.map((doc, index) => (
               <div key={index} className="bg-gray-50 p-3 rounded shadow-sm border border-gray-200">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">{doc.firstname } {doc.lastname} {doc.lt_name}</span>
-                 
-                    {renderStatus(doc.status)}
+                  <span className="font-medium">{doc.lt_name}</span>
+                  <span className="px-2 py-1 rounded text-xs font-medium 
+                  bg-green-100 text-green-800">
+                    {doc.status}
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -436,7 +485,22 @@ const buttonData = [
                                 </button>
                             </>
                         )}
-                        
+                        {(roleData?.hrapproval && doc.status === "waiting for hr approval") && (
+                            <>
+                                <button
+                                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                    onClick={() => handleConfrim(doc)}
+                                >
+                                    อนุมัติ
+                                </button>
+                                <button
+                                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2"
+                                    onClick={() => handleReject(doc)}
+                                >
+                                    ไม่อนุมัติ
+                                </button>
+                            </>
+                        )}
                   </div>
                 </div>
               </div>
@@ -518,7 +582,19 @@ const buttonData = [
 <ModalLayout onClose={() => setConfrimModal(false)}>
     <h2 className="text-lg font-semibold mb-4">ยืนยันการลาของ {currentLeave.username} {currentLeave.firstname} {currentLeave.lastname}</h2>
     <div className="flex justify-end gap-2">
-       
+        {(roleData?.hrapproval && currentLeave.status === "waiting for hr approval") ? (
+  <>
+    <button
+      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+       onClick={() => {
+      handleChangeStatus(currentLeave.id, 'approved');
+      setConfrimModal(false);
+    }}
+    >
+      อนุมัติ
+    </button>
+  </>
+) : (
   <button
     onClick={() => {
       handleChangeStatus(currentLeave.id, roleData?.approvedStatus ?? '');
@@ -528,7 +604,7 @@ const buttonData = [
   >
     ยืนยัน
   </button>
-
+)}
       
       <button
         onClick={() => setConfrimModal(false)}

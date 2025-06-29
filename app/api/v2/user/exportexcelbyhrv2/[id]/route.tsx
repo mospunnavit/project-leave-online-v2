@@ -1,10 +1,8 @@
-// pages/api/users.ts
 import db from '@/lib/db';
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import ExcelJS from 'exceljs';
-
 
 function formatThaiDateYYYYMMDD(isoDateString: string): string {
   const date = new Date(isoDateString);
@@ -14,32 +12,14 @@ function formatThaiDateYYYYMMDD(isoDateString: string): string {
   const day = String(tzDate.getDate()).padStart(2, '0');
   return `${year}${month}${day}`;
 }
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> } // ✅ แก้ไข 1: เพิ่ม Promise
+) {
+  const { id } = await params; // ✅ แก้ไข 2: await params แล้ว destructure
+  const leaveformId = parseInt(id); // ✅ แก้ไข 3: ไม่ต้อง await parseInt
 
-export async function GET(req: Request) {
-    const session = await getServerSession(authOptions);
-    const { searchParams } = new URL(req.url);
-    
-    const from_date = searchParams.get("from_date" as string) || '';
-    const to_date = searchParams.get("to_date" as string) || '';
-    const status = searchParams.get("status") || 'approved';
-
-    try {
-        const conditions: string[] = [];
-        const params: any[] = [];
-
-
-        if(from_date.trim() && to_date.trim()) {
-            conditions.push('(l.leave_date BETWEEN ? AND ? OR l.end_leave_date BETWEEN ? AND ?)');
-            params.push(from_date.trim(), to_date.trim(), from_date.trim(), to_date.trim());
-            
-        }
-        
-        if(status.trim()) {
-            conditions.push('l.status = ?');
-            params.push(status.trim());
-        }
-        console.log(params);
-        const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  try {
         const [datas] = await db.query(
             `SELECT l.id ,u.username, u.firstname, u.lastname, u.department, 
             l.leave_date, l.end_leave_date, l.start_time, l.end_time, l.reason, l.lt_code , lt.lt_name, l.lc_code, l.usequotaleave,
@@ -48,10 +28,11 @@ export async function GET(req: Request) {
             LEFT JOIN users u ON l.u_id = u.id
             LEFT JOIN leave_types lt ON l.lt_code = lt.lt_code
             LEFT JOIN departments d ON u.department = d.id
-            ${whereClause} order by l.leave_date`,
-            [...params]
+            where l.id = ? order by l.leave_date`,
+            [leaveformId]
           );
-        const [holidays] = await db.query(`SELECT date FROM holiday`) as any;
+  
+     const [holidays] = await db.query(`SELECT date FROM holiday`) as any;
         const holidaysArray = holidays.map((row: any) => new Date(row.date).toISOString());
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Leaveinformations');
@@ -80,11 +61,12 @@ export async function GET(req: Request) {
                 usequotaleave: parseFloat(data.usequotaleave) === 1.00 ? "1" : data.usequotaleave
             });
             }else{
+                console.log("inside",data);
                 const startDate = new Date(data.leave_date);
                 const endDate = new Date(data.end_leave_date);
-                const fromDate = new Date(from_date + 'T00:00:00+07:00');
-                const toDate = new Date(to_date + 'T00:00:00+07:00');
+            
                 let currentDate = new Date(startDate);
+                
                 while (currentDate <= endDate) {
                     console.log(currentDate);
                     console.log(formatThaiDateYYYYMMDD(currentDate.toISOString()));
@@ -95,20 +77,8 @@ export async function GET(req: Request) {
                         currentDate.setDate(currentDate.getDate() + 1); // อย่าลืมเพิ่มวันก่อน continue
                         continue;
                     }
-                    //ก่อนวันที่เลือกไม่นับ
-                    console.log("current and from",currentDate.toISOString() , fromDate);
-                    console.log("current and from",currentDate , fromDate);
-                    if(currentDate.toISOString() < fromDate.toISOString()){
-                        currentDate.setDate(currentDate.getDate() + 1);
-                        console.log('before leave selected', currentDate);
-                         continue;
-
-                    }
-                    if(currentDate.toISOString() > toDate.toISOString()){
-                        currentDate.setDate(currentDate.getDate() + 1);
-                        console.log('after leave selected', currentDate);
-                         continue;
-                    }
+                   
+                   
                     
                     worksheet.addRow({
                         username: data.username,
@@ -125,7 +95,7 @@ export async function GET(req: Request) {
            
         });
         const buffer = await workbook.xlsx.writeBuffer();
-        await db.query(`UPDATE leaveform l SET exported = 1 ${whereClause}`, params);
+        await db.query(`UPDATE leaveform l SET exported = 1 where l.id = ?`, [leaveformId]);
         return new Response(buffer, {
             headers: {
                 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -133,8 +103,9 @@ export async function GET(req: Request) {
             },
         });
 
-    } catch (err) {
-        console.error( err);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-    }
+  }catch (err) {
+      console.log(err);
+  }
+  return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
+   
 }

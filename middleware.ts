@@ -8,17 +8,15 @@ export async function middleware(req: NextRequest) {
   const now = Math.floor(Date.now() / 1000);
   const apiPath = '/api/v2';
   // ถ้าไม่มี token ให้ redirect ไป /login พร้อม query expired=1
+ 
   if (!token) {
     if (path !== '/login') { // ป้องกัน redirect loop
       const loginUrl = new URL('/login', req.url);
-      loginUrl.searchParams.set('expired', '1');
       return NextResponse.redirect(loginUrl);
     }
     return NextResponse.next();
   }
-
-  // เช็คเวลาหมดอายุ token (exp เป็นวินาที)
-  if (token.exp && (token.exp as number) < now) {
+   if (token.exp && (token.exp as number) < now) {
     if (path !== '/login') {
       const loginUrl = new URL('/login', req.url);
       loginUrl.searchParams.set('expired', '1');
@@ -26,6 +24,8 @@ export async function middleware(req: NextRequest) {
     }
     return NextResponse.next();
   }
+  // เช็คเวลาหมดอายุ token (exp เป็นวินาที)
+  
 
   // ถ้า login แล้วพยายามเข้า /login ให้ redirect ไปหน้า dashboard (ตาม role หรือ default)
   if (path === '/login') {

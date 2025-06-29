@@ -1,6 +1,6 @@
 'use client';
 import DashboardLayout from "@/app/components/dashboardLayout";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Leave } from '@/app/types/formleave';
 import { useSession } from "next-auth/react";
 import { Loading } from "@/app/components/loading";
@@ -18,29 +18,33 @@ const UserDashboard = () => {
     const { data: session, status } = useSession();
     const [selectYear, setSelectYear] = useState('');
     const [getLeaveTypeTotal, setGetLeaveTypeTotal] = useState<Leavetypes[]>([]);
-    
-    useEffect(() => {
+    const leavedetails = useRef<HTMLDivElement>(null);
+    const handleSearch = () => {
+      setCurrentPage(1);
+      
+      fetchLeaveData();
+
+      scrolltoleavedetails();
+    }
+    const scrolltoleavedetails = () => {
+      leavedetails.current?.scrollIntoView({ behavior: 'smooth' });
+    }
     const fetchLeaveData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebyuser?page=${currentPage}`);
+        const res = await fetch(process.env.NEXT_PUBLIC_API_URL +`/api/v2/user/getleavebyuser?page=${currentPage}&year=${selectYear}`);
         const data = await res.json();
         
         if (res.ok) {
-          if(data.length == 0){
-            setError('ไม่พบข้อมูลการลา');
-            setDocs([]);
-            setHasMore(true);
-          }else{
             setError('');
             setDocs(data);
             setHasMore(data.length < 5);
-          }
-          
         }
-        if (!res.ok) {
-          setError('API error: ' + (data.error || 'Unknown error'));
+        if(res.status === 404){
+          setDocs([]);
+          setError('ไม่พบข้อมูล');
         }
+        
        
       } catch (err) {
         setError('something went wrong');
@@ -48,6 +52,8 @@ const UserDashboard = () => {
         setLoading(false);
       }
     };
+    useEffect(() => {
+      
 
     fetchLeaveData();
   }, [currentPage]);
@@ -67,7 +73,7 @@ const UserDashboard = () => {
 
 const fecthDataleavetypetotal = async () => {
   try {
-    const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/v2/user/gettotalleaveformbyuser');
+    const res = await fetch(process.env.NEXT_PUBLIC_API_URL + `/api/v2/user/gettotalleaveformbyuser?year=${selectYear}`);
     const data = await res.json();
     if (res.ok) {
         const leaveData = data.leave_types_total || [];
@@ -158,12 +164,13 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
   type="number"
   min="2000"
   max="2099"
-  className="border w-16 sm:w-48 px-3 py-2 rounded"
+  className="border w-20 sm:w-48 px-3 py-2 rounded"
   value={selectYear}
   onChange={(e) => setSelectYear(e.target.value)}
   placeholder="กรอกปี เช่น 2025"
 />
-<button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">ค้นหา</button>
+<button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+onClick={handleSearch}>ค้นหา</button>
 </div>
             ข้อมูลการประเภทการลา
               <table className="min-w-full border border-collapse border-gray-300">
@@ -190,7 +197,7 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
           </div>
        </div>
         {/* Content */}
-        <div>
+        <div ref={leavedetails}>
           <h1 className="text-xl font-bold mb-4">ข้อมูลประวัติการลา</h1>
           {error && <p className="text-red-500 mb-2">{error}</p>}
           
@@ -211,13 +218,13 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                 {docs.map((doc, index) => (
                   <tr key={index}>
                     <td className="border px-4 py-2">{doc.lt_name}
-                      {doc.lt_name === "มีใบรับรองแพทย์" && <img src= {`/uploads/${doc.image_filename}`} 
+                      {doc.image_filename !=  null && <img src= {`/uploads/${doc.image_filename}`} 
                       onClick={() => openImageModal(doc.image_filename)
                       }
                       alt="Uploaded File" className="w-10 h-10" />}
                     </td>
-                     <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7).slice(0, 15)}
-                       {doc.end_leave_date && ` - ${formatDateWithOffset(doc.end_leave_date, 7).slice(0, 10)}`}
+                     <td className="border px-4 py-2">{formatDateWithOffset(doc.leave_date, 7)}
+                       {doc.end_leave_date && ` - ${formatDateWithOffset(doc.end_leave_date, 7)}`}
                     </td>
                     <td className="border px-4 py-2">{doc.start_time.slice(0, 5)} - {doc.end_time.slice(0, 5)}</td>
                     <td className="border px-4 py-2">{doc.reason}</td>
@@ -257,8 +264,8 @@ const formatDateWithOffset = (dateString : string, hoursOffset = 0) => {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-gray-500">วันที่ลา</p>
-                    <p>{formatDateWithOffset(doc.leave_date, 7).slice(0, 10)}
-                       {doc.end_leave_date && ` - ${formatDateWithOffset(doc.end_leave_date, 7).slice(0, 10)}`}</p>
+                    <p>{formatDateWithOffset(doc.leave_date, 7)}
+                       {doc.end_leave_date && ` - ${formatDateWithOffset(doc.end_leave_date, 7)}`}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">ช่วงเวลา</p>

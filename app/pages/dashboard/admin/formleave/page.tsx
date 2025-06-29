@@ -392,7 +392,7 @@ useEffect(() => {
                     
 
                     <td className="border px-4 py-2">{doc.lt_name}
-                      {doc.lt_name === "มีใบรับรองแพทย์" && <img src= {`/uploads/${doc.image_filename}`} 
+                      {doc.image_filename !=  null && <img src= {`/uploads/${doc.image_filename}`} 
                       onClick={() => openImageModal(doc.image_filename)
                       }
                       alt="Uploaded File" className="w-10 h-10" />}

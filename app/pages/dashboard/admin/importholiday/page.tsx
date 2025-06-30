@@ -43,7 +43,7 @@ export default function UploadHolidayPage() {
   };
 
   return (
-        <DashboardLayout title={`admin ${session?.user?.role} ${session?.user?.department}`}>
+        <DashboardLayout title={`นำเข้าข้อมูลวันหยุด`}>
 
     <div className="max-w-md mx-auto mt-10 p-4 border rounded shadow">
       

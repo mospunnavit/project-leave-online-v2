@@ -79,8 +79,13 @@ const Sidebar = () => {
             <Home size={20} />
             <span>hr-Export</span>
            </Link>
+            <span>การนำเข้า</span>
+        <Link href="/pages/dashboard/admin/importholiday" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+            <Home size={20} />
+            <span>import-holiday</span>
+           </Link>
           </nav>
-          
+
         )}
         {session?.user?.role === 'user' && session?.user?.department_name != 'HR' && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
@@ -133,7 +138,7 @@ const Sidebar = () => {
           
         )}
         
-        {(session?.user?.department_name === 'HR') && (
+        {(session?.user?.role === 'hr' || session?.user?.department_name === 'HR') && (
           <nav className="mt-6 flex flex-col space-y-2 px-4">
             <Link href="/pages/dashboard/user" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
@@ -144,15 +149,7 @@ const Sidebar = () => {
             <span>Form-leave</span>
           </Link>
           <span>การอนุมัติ</span>
-          {(session?.user?.role === 'head' || session?.user?.role === 'manager') && (
-            <Link href="/pages/dashboard/user/approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
-            <SquareCheckBig size={20} />
-            <span>approve</span>
-          </Link>
-          )
-
-          }
-          <Link href="/pages/dashboard/user/hrapprove" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
+          <Link href="/pages/dashboard/user/approve" className="flex items-center space-x-3 px-3 py-2 rounded hover:bg-gray-700">
             <Home size={20} />
             <span>hr-approve</span>
           </Link>

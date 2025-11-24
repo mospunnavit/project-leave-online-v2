@@ -1,17 +1,30 @@
 // app/api/import-holiday/route.ts
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { authOptions } from "@/lib/authOptions";
+import { getServerSession } from "next-auth";
 import * as XLSX from "xlsx";
 
 export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (session?.user?.role !== "admin") {
+    return NextResponse.json({ error: "You are not authorized" }, { status: 403 });
+  }
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
-
+    
     if (!file) {
       return NextResponse.json({ error: "ไม่พบไฟล์ที่อัปโหลด" }, { status: 400 });
     }
 
+    const allowedExtensions = ['.xls']; // เพิ่ม '.xlsx' ได้ถ้าต้องการ
+    const filename = file.name.toLowerCase();
+    const isValidExtension = allowedExtensions.some(ext => filename.endsWith(ext));
+
+    if (!isValidExtension) {
+      return NextResponse.json({ error: "อนุญาตให้เฉพาะไฟล์ .xls เท่านั้น" }, { status: 400 });
+    }
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
